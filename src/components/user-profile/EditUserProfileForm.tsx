@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Save, User } from "lucide-react";
+import { Loader2, Save, User, Image } from "lucide-react"; // Adicionado Image icon
 
 const formSchema = z.object({
   first_name: z.string().optional(),
@@ -150,7 +150,7 @@ export function EditUserProfileForm() {
           name="avatar_url"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>URL do Avatar</FormLabel>
+              <FormLabel className="flex items-center gap-2"><Image className="h-4 w-4" /> URL do Avatar</FormLabel>
               <FormControl>
                 <Input placeholder="https://exemplo.com/avatar.jpg" {...field} />
               </FormControl>
