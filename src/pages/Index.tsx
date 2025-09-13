@@ -1,7 +1,8 @@
 import { ServiceOrderSummary } from "@/components/dashboard/ServiceOrderSummary";
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
-import { SalesSummary } from "@/components/dashboard/SalesSummary"; // New import
-import { POSSalesSummary } from "@/components/dashboard/POSSalesSummary"; // New import
+import { SalesSummary } from "@/components/dashboard/SalesSummary";
+import { POSSalesSummary } from "@/components/dashboard/POSSalesSummary";
+import { SalesOverviewWidget } from "@/components/dashboard/SalesOverviewWidget"; // New import
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -31,6 +32,7 @@ const Index = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <SalesSummary />
           <POSSalesSummary />
+          <SalesOverviewWidget /> {/* Integrated new widget */}
         </div>
         <ServiceOrderSummary />
       </div>
