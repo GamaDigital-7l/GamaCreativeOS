@@ -11,8 +11,10 @@ import ServiceOrdersPage from "./pages/ServiceOrdersPage";
 import ServiceOrderDetailPage from "./pages/ServiceOrderDetailPage";
 import EditServiceOrderPage from "./pages/EditServiceOrderPage";
 import DashboardPage from "./pages/DashboardPage";
-import CustomersPage from "./pages/CustomersPage"; // Import the new CustomersPage
-import NewCustomerPage from "./pages/NewCustomerPage"; // Import the new NewCustomerPage
+import CustomersPage from "./pages/CustomersPage";
+import NewCustomerPage from "./pages/NewCustomerPage";
+import CustomerDetailPage from "./pages/CustomerDetailPage"; // Import the new CustomerDetailPage
+import EditCustomerPage from "./pages/EditCustomerPage"; // Import the new EditCustomerPage
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 
 const queryClient = new QueryClient();
@@ -31,8 +33,10 @@ const App = () => (
             <Route path="/service-orders" element={<ServiceOrdersPage />} />
             <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
             <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
-            <Route path="/customers" element={<CustomersPage />} /> {/* Add customers list route */}
-            <Route path="/new-customer" element={<NewCustomerPage />} /> {/* Add new customer route */}
+            <Route path="/customers" element={<CustomersPage />} />
+            <Route path="/new-customer" element={<NewCustomerPage />} />
+            <Route path="/customers/:id" element={<CustomerDetailPage />} /> {/* Add customer detail route */}
+            <Route path="/customers/:id/edit" element={<EditCustomerPage />} /> {/* Add customer edit route */}
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
