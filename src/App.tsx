@@ -10,7 +10,9 @@ import NewServiceOrderPage from "./pages/NewServiceOrder";
 import ServiceOrdersPage from "./pages/ServiceOrdersPage";
 import ServiceOrderDetailPage from "./pages/ServiceOrderDetailPage";
 import EditServiceOrderPage from "./pages/EditServiceOrderPage";
-import DashboardPage from "./pages/DashboardPage"; // Import the new DashboardPage
+import DashboardPage from "./pages/DashboardPage";
+import CustomersPage from "./pages/CustomersPage"; // Import the new CustomersPage
+import NewCustomerPage from "./pages/NewCustomerPage"; // Import the new NewCustomerPage
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 
 const queryClient = new QueryClient();
@@ -24,11 +26,13 @@ const App = () => (
         <SessionContextProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<DashboardPage />} /> {/* Add the dashboard route */}
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/new-service-order" element={<NewServiceOrderPage />} />
             <Route path="/service-orders" element={<ServiceOrdersPage />} />
             <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
             <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
+            <Route path="/customers" element={<CustomersPage />} /> {/* Add customers list route */}
+            <Route path="/new-customer" element={<NewCustomerPage />} /> {/* Add new customer route */}
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
