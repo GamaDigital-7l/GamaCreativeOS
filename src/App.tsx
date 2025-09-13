@@ -10,7 +10,6 @@ import NewServiceOrderPage from "./pages/NewServiceOrder";
 import ServiceOrdersPage from "./pages/ServiceOrdersPage";
 import ServiceOrderDetailPage from "./pages/ServiceOrderDetailPage";
 import EditServiceOrderPage from "./pages/EditServiceOrderPage";
-import DashboardPage from "./pages/DashboardPage";
 import CustomersPage from "./pages/CustomersPage";
 import NewCustomerPage from "./pages/NewCustomerPage";
 import CustomerDetailPage from "./pages/CustomerDetailPage";
@@ -29,6 +28,7 @@ import SettingsPage from "./pages/SettingsPage";
 import PrintServiceOrderPage from "./pages/PrintServiceOrderPage";
 import PhotoUploadPage from "./pages/PhotoUploadPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
+import { Layout } from "./components/layout/Layout";
 
 const queryClient = new QueryClient();
 
@@ -40,32 +40,35 @@ const App = () => (
       <BrowserRouter>
         <SessionContextProvider>
           <Routes>
+            {/* Rotas fora do layout principal (sem menu lateral) */}
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/new-service-order" element={<NewServiceOrderPage />} />
-            <Route path="/service-orders" element={<ServiceOrdersPage />} />
-            <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
-            <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
-            <Route path="/service-orders/:id/print" element={<PrintServiceOrderPage />} />
             <Route path="/upload-photos/:id" element={<PhotoUploadPage />} />
-            <Route path="/customers" element={<CustomersPage />} />
-            <Route path="/new-customer" element={<NewCustomerPage />} />
-            <Route path="/customers/:id" element={<CustomerDetailPage />} />
-            <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
-            <Route path="/devices" element={<DevicesPage />} />
-            <Route path="/new-device" element={<NewDevicePage />} />
-            <Route path="/devices/:id" element={<DeviceDetailPage />} />
-            <Route path="/devices/:id/edit" element={<EditDevicePage />} />
-            <Route path="/profile" element={<UserProfilePage />} />
-            <Route path="/profile/edit" element={<EditUserProfilePage />} />
-            <Route path="/inventory" element={<InventoryPage />} />
-            <Route path="/inventory/new" element={<NewInventoryItemPage />} />
-            <Route path="/inventory/:id" element={<InventoryItemDetailPage />} />
-            <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/" element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="/service-orders/:id/print" element={<PrintServiceOrderPage />} />
+
+            {/* Rotas dentro do layout principal (com menu lateral) */}
+            <Route element={<Layout />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/new-service-order" element={<NewServiceOrderPage />} />
+              <Route path="/service-orders" element={<ServiceOrdersPage />} />
+              <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
+              <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
+              <Route path="/customers" element={<CustomersPage />} />
+              <Route path="/new-customer" element={<NewCustomerPage />} />
+              <Route path="/customers/:id" element={<CustomerDetailPage />} />
+              <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
+              <Route path="/devices" element={<DevicesPage />} />
+              <Route path="/new-device" element={<NewDevicePage />} />
+              <Route path="/devices/:id" element={<DeviceDetailPage />} />
+              <Route path="/devices/:id/edit" element={<EditDevicePage />} />
+              <Route path="/profile" element={<UserProfilePage />} />
+              <Route path="/profile/edit" element={<EditUserProfilePage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
+              <Route path="/inventory/new" element={<NewInventoryItemPage />} />
+              <Route path="/inventory/:id" element={<InventoryItemDetailPage />} />
+              <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
           </Routes>
         </SessionContextProvider>
       </BrowserRouter>
