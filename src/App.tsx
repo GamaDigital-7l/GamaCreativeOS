@@ -37,6 +37,7 @@ import EditSalePage from "./pages/EditSalePage";
 import PointOfSalePage from "./pages/PointOfSalePage";
 import QuoteApprovalPage from "./pages/QuoteApprovalPage";
 import FinancialsPage from "./pages/FinancialsPage";
+import GamificationPage from "./pages/GamificationPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
               <Route path="/suppliers" element={<SuppliersPage />} />
               <Route path="/suppliers/new" element={<NewSupplierPage />} />
+              <Route path="/gamification" element={<GamificationPage />} />
               <Route path="/profile" element={<UserProfilePage />} />
               <Route path="/profile/edit" element={<EditUserProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
