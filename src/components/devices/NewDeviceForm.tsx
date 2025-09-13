@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, PlusCircle, Smartphone } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 const checklistOptions = [
@@ -127,7 +127,7 @@ export function NewDeviceForm({ customerId, onSuccess }: NewDeviceFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
-        <h2 className="text-2xl font-bold mb-4">Dados do Dispositivo</h2>
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> Dados do Dispositivo</h2>
         {!customerId && (
           <FormField
             control={form.control}
@@ -149,9 +149,9 @@ export function NewDeviceForm({ customerId, onSuccess }: NewDeviceFormProps) {
         <FormField control={form.control} name="serial_number" render={({ field }) => (<FormItem><FormLabel>Número de Série/IMEI</FormLabel><FormControl><Input placeholder="Opcional" {...field} /></FormControl><FormMessage /></FormItem>)} />
         <FormField control={form.control} name="defect_description" render={({ field }) => (<FormItem><FormLabel>Defeito Relatado</FormLabel><FormControl><Textarea placeholder="Descreva o problema..." className="resize-y min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
         <FormField control={form.control} name="password_info" render={({ field }) => (<FormItem><FormLabel>Senha/Padrão (Opcional)</FormLabel><FormControl><Textarea placeholder="Se fornecida pelo cliente." className="resize-y min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
-        <h2 className="text-2xl font-bold mt-8 mb-4">Checklist do Aparelho</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4 flex items-center gap-2"><ListChecks className="h-6 w-6 text-primary" /> Checklist do Aparelho</h2>
         <FormField control={form.control} name="checklist" render={() => (<FormItem><div className="mb-4"><FormLabel className="text-base">Estado do Aparelho</FormLabel></div><div className="grid grid-cols-2 md:grid-cols-3 gap-4">{checklistOptions.map((item) => (<FormField key={item} control={form.control} name="checklist" render={({ field }) => (<FormItem key={item} className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value?.includes(item)} onCheckedChange={(checked) => { return checked ? field.onChange([...(field.value || []), item]) : field.onChange(field.value?.filter((value) => value !== item)); }} /></FormControl><FormLabel className="font-normal">{item}</FormLabel></FormItem>)} />))}</div><FormMessage /></FormItem>)} />
-        <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : "Criar Dispositivo"}</Button>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><PlusCircle className="h-4 w-4 mr-2" /> Criar Dispositivo</>}</Button>
       </form>
     </Form>
   );

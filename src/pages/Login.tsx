@@ -5,10 +5,10 @@ import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const Login = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-6">
-          Bem-vindo!
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 p-4">
+      <div className="w-full max-w-md bg-card text-card-foreground p-8 rounded-lg shadow-2xl border border-border">
+        <h1 className="text-4xl font-extrabold text-center text-primary mb-8 drop-shadow-md">
+          Service OS Pro
         </h1>
         <Auth
           supabaseClient={supabase}
@@ -20,11 +20,15 @@ const Login = () => {
                 colors: {
                   brand: 'hsl(var(--primary))',
                   brandAccent: 'hsl(var(--primary-foreground))',
+                  inputBackground: 'hsl(var(--input))',
+                  inputBorder: 'hsl(var(--border))',
+                  inputLabel: 'hsl(var(--muted-foreground))',
+                  inputText: 'hsl(var(--foreground))',
                 },
               },
             },
           }}
-          theme="light" // Use light theme by default, can be dynamic later
+          theme="dark" // Usar o tema escuro para combinar com o app
           redirectTo={window.location.origin} // Redirect to home after login
         />
       </div>

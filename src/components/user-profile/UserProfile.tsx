@@ -5,7 +5,7 @@ import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Loader2, ArrowLeft } from 'lucide-react';
+import { User, Loader2, ArrowLeft, Mail, Edit } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom'; // Import Link
 
 interface UserProfileData {
@@ -80,21 +80,23 @@ export function UserProfile() {
         <CardTitle className="text-3xl text-center flex-grow">Meu Perfil</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center space-y-6 p-6">
-        <Avatar className="h-24 w-24">
+        <Avatar className="h-24 w-24 border-2 border-primary shadow-md">
           <AvatarImage src={profile?.avatar_url} alt="Avatar do Usuário" />
-          <AvatarFallback>
-            <User className="h-12 w-12 text-muted-foreground" />
+          <AvatarFallback className="bg-muted text-muted-foreground">
+            <User className="h-12 w-12" />
           </AvatarFallback>
         </Avatar>
         <div className="text-center space-y-2">
           <h3 className="text-2xl font-bold">
             {profile?.first_name || 'Nome'} {profile?.last_name || 'Sobrenome'}
           </h3>
-          <p className="text-muted-foreground">{profile?.email}</p>
+          <p className="text-muted-foreground flex items-center gap-2 justify-center">
+            <Mail className="h-4 w-4" /> {profile?.email}
+          </p>
         </div>
         <Button asChild className="w-full">
           <Link to="/profile/edit">
-            Editar Perfil
+            <Edit className="h-4 w-4 mr-2" /> Editar Perfil
           </Link>
         </Button>
       </CardContent>

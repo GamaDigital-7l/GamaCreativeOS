@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save, Package } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do item é obrigatório." }),
@@ -113,6 +113,7 @@ export function EditInventoryItemForm() {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2 text-gray-600 dark:text-gray-400">Carregando dados do item...</p>
       </div>
     );
   }
@@ -120,6 +121,7 @@ export function EditInventoryItemForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Detalhes do Item</h2>
         <FormField name="name" control={form.control} render={({ field }) => (
           <FormItem>
             <FormLabel>Nome do Item</FormLabel>
@@ -170,7 +172,7 @@ export function EditInventoryItemForm() {
           </FormItem>
         )} />
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Atualizando...</> : "Atualizar Item"}
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Atualizando...</> : <><Save className="h-4 w-4 mr-2" /> Atualizar Item</>}
         </Button>
       </form>
     </Form>

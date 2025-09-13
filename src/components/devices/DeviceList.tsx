@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, Plus, Loader2, Trash2 } from 'lucide-react';
+import { Eye, Search, X, Plus, Loader2, Trash2, Smartphone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -158,9 +158,9 @@ export function DeviceList() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-2xl">Dispositivos</CardTitle>
-        <Button asChild>
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <CardTitle className="text-2xl flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> Dispositivos</CardTitle>
+        <Button asChild className="w-full md:w-auto">
           <Link to="/new-device">
             <Plus className="h-4 w-4 mr-2" /> Novo Dispositivo
           </Link>

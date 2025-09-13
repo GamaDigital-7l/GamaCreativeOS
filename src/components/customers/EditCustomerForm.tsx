@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do cliente é obrigatório." }),
@@ -192,7 +192,7 @@ export function EditCustomerForm() {
               Atualizando...
             </>
           ) : (
-            "Atualizar Cliente"
+            <><Save className="h-4 w-4 mr-2" /> Atualizar Cliente</>
           )}
         </Button>
       </form>

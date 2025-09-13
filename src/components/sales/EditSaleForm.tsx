@@ -15,7 +15,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Loader2, CalendarIcon } from "lucide-react";
+import { Loader2, CalendarIcon, Save, Smartphone, ShoppingCart, Package } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -56,8 +56,8 @@ export function EditSaleForm() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const customersPromise = supabase.from('customers').select('id, name');
-        const suppliersPromise = supabase.from('suppliers').select('id, name');
+        const customersPromise = supabase.from('customers').select('id, name').eq('user_id', user.id);
+        const suppliersPromise = supabase.from('suppliers').select('id, name').eq('user_id', user.id);
         const salePromise = supabase.from('sales').select('*').eq('id', id).single();
 
         const [{ data: customersData }, { data: suppliersData }, { data: saleData, error: saleError }] = await Promise.all([customersPromise, suppliersPromise, salePromise]);
@@ -110,12 +110,12 @@ export function EditSaleForm() {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Tabs defaultValue="device" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="device">Aparelho</TabsTrigger>
-            <TabsTrigger value="purchase">Compra</TabsTrigger>
-            <TabsTrigger value="sale">Venda</TabsTrigger>
+            <TabsTrigger value="device" className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Aparelho</TabsTrigger>
+            <TabsTrigger value="purchase" className="flex items-center gap-2"><Package className="h-4 w-4" /> Compra</TabsTrigger>
+            <TabsTrigger value="sale" className="flex items-center gap-2"><ShoppingCart className="h-4 w-4" /> Venda</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="device">
+          <TabsContent value="device" className="mt-4">
             <Card>
               <CardHeader><CardTitle>Dados do Aparelho</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -127,18 +127,18 @@ export function EditSaleForm() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="purchase">
+          <TabsContent value="purchase" className="mt-4">
             <Card>
               <CardHeader><CardTitle>Dados da Compra</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <FormField name="supplier_id" control={form.control} render={({ field }) => (<FormItem><FormLabel>Fornecedor</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger></FormControl><SelectContent>{suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
                 <FormField name="acquisition_cost" control={form.control} render={({ field }) => (<FormItem><FormLabel>Custo de Aquisição (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField name="purchase_date" control={form.control} render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Data da Compra</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn(!field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}</Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)} />
+                <FormField name="purchase_date" control={form.control} render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Data da Compra</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}</Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)} />
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="sale">
+          <TabsContent value="sale" className="mt-4">
             <Card>
               <CardHeader><CardTitle>Dados da Venda</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -152,7 +152,7 @@ export function EditSaleForm() {
         </Tabs>
         <div className="flex justify-end mt-6">
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Atualizando...</> : "Salvar Alterações"}
+            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Atualizando...</> : <><Save className="h-4 w-4 mr-2" /> Salvar Alterações</>}
           </Button>
         </div>
       </form>

@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, Plus, Loader2, Trash2 } from 'lucide-react';
+import { Eye, Search, X, Plus, Loader2, Trash2, Package } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -101,9 +101,9 @@ export function InventoryList() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-2xl">Itens no Estoque</CardTitle>
-        <Button asChild>
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <CardTitle className="text-2xl flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Itens no Estoque</CardTitle>
+        <Button asChild className="w-full md:w-auto">
           <Link to="/inventory/new">
             <Plus className="h-4 w-4 mr-2" /> Novo Item
           </Link>

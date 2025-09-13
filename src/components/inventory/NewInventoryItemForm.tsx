@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, PlusCircle, Package } from "lucide-react";
 import React, { useState } from "react";
 
 const formSchema = z.object({
@@ -88,6 +88,7 @@ export function NewInventoryItemForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Detalhes do Item</h2>
         <FormField name="name" control={form.control} render={({ field }) => (
           <FormItem>
             <FormLabel>Nome do Item</FormLabel>
@@ -138,7 +139,7 @@ export function NewInventoryItemForm() {
           </FormItem>
         )} />
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : "Criar Item"}
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><PlusCircle className="h-4 w-4 mr-2" /> Criar Item</>}
         </Button>
       </form>
     </Form>

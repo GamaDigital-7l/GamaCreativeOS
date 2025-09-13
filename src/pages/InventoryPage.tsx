@@ -9,7 +9,7 @@ const InventoryPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-background to-primary/10 p-4 sm:p-6">
       <Card className="w-full max-w-6xl mb-6">
         <CardHeader className="flex flex-row items-center space-x-2">
           <Button variant="ghost" size="icon" onClick={() => navigate('/')}>

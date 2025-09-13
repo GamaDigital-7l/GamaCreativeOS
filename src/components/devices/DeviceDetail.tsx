@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Smartphone, User, Tag, Lock, ListChecks } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -144,7 +144,7 @@ export function DeviceDetail() {
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-4">
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="icon" onClick={() => navigate('/devices')}>
             <ArrowLeft className="h-5 w-5" />
@@ -154,7 +154,7 @@ export function DeviceDetail() {
             <CardDescription>Criado em: {format(new Date(device.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</CardDescription>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap gap-2 justify-end">
           <Button variant="outline" size="sm" asChild>
             <Link to={`/devices/${device.id}/edit`}>
               <Edit className="h-4 w-4 mr-2" /> Editar
@@ -194,16 +194,43 @@ export function DeviceDetail() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4 p-6">
-        <p><strong>Cliente:</strong> {device.customers?.name || 'N/A'}</p>
-        <p><strong>Marca:</strong> {device.brand}</p>
-        <p><strong>Modelo:</strong> {device.model}</p>
-        {device.serial_number && <p><strong>Número de Série/IMEI:</strong> {device.serial_number}</p>}
-        {device.defect_description && <p><strong>Defeito Relatado:</strong> {device.defect_description}</p>}
-        {device.password_info && <p><strong>Informações de Senha:</strong> {device.password_info}</p>}
+        <div className="flex items-center gap-2">
+          <User className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Cliente:</strong> {device.customers?.name || 'N/A'}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Smartphone className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Marca:</strong> {device.brand}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Tag className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Modelo:</strong> {device.model}</p>
+        </div>
+        {device.serial_number && (
+          <div className="flex items-center gap-2">
+            <Tag className="h-5 w-5 text-muted-foreground" />
+            <p><strong>Número de Série/IMEI:</strong> {device.serial_number}</p>
+          </div>
+        )}
+        {device.defect_description && (
+          <div className="flex items-start gap-2">
+            <Wrench className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
+            <p><strong>Defeito Relatado:</strong> {device.defect_description}</p>
+          </div>
+        )}
+        {device.password_info && (
+          <div className="flex items-start gap-2">
+            <Lock className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
+            <p><strong>Informações de Senha:</strong> {device.password_info}</p>
+          </div>
+        )}
         {device.checklist && device.checklist.length > 0 && (
           <div>
-            <p className="font-semibold mt-2">Checklist de Entrada:</p>
-            <ul className="list-disc list-inside ml-4 grid grid-cols-2 md:grid-cols-3 gap-x-4">
+            <div className="flex items-center gap-2 mb-2">
+              <ListChecks className="h-5 w-5 text-muted-foreground" />
+              <p className="font-semibold">Checklist de Entrada:</p>
+            </div>
+            <ul className="list-disc list-inside ml-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4">
               {device.checklist.map((item, index) => (
                 <li key={index}>{item}</li>
               ))}

@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 import { useState } from "react";
 
 const formSchema = z.object({
@@ -147,7 +147,7 @@ export function NewCustomerForm({ onSuccess }: NewCustomerFormProps) {
               Criando...
             </>
           ) : (
-            "Criar Cliente"
+            <><UserPlus className="h-4 w-4 mr-2" /> Criar Cliente</>
           )}
         </Button>
       </form>

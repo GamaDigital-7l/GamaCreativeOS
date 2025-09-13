@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save, Smartphone, ListChecks } from "lucide-react";
 
 const checklistOptions = [
   "Tela intacta",
@@ -205,7 +205,7 @@ export function EditDeviceForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
-        <h2 className="text-2xl font-bold mb-4">Dados do Dispositivo</h2>
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> Dados do Dispositivo</h2>
         <FormField
           control={form.control}
           name="customer_id"
@@ -304,7 +304,7 @@ export function EditDeviceForm() {
           )}
         />
 
-        <h2 className="text-2xl font-bold mt-8 mb-4">Checklist do Aparelho</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4 flex items-center gap-2"><ListChecks className="h-6 w-6 text-primary" /> Checklist do Aparelho</h2>
         <FormField
           control={form.control}
           name="checklist"
@@ -360,7 +360,7 @@ export function EditDeviceForm() {
               Atualizando...
             </>
           ) : (
-            "Atualizar Dispositivo"
+            <><Save className="h-4 w-4 mr-2" /> Atualizar Dispositivo</>
           )}
         </Button>
       </form>

@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Loader2, Package, Tag, Hash, DollarSign, Factory } from 'lucide-react';
 
 interface ItemDetails {
   id: string;
@@ -58,6 +58,7 @@ export function InventoryItemDetail() {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2 text-gray-600 dark:text-gray-400">Carregando detalhes do item...</p>
       </div>
     );
   }
@@ -68,7 +69,7 @@ export function InventoryItemDetail() {
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-4">
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="icon" onClick={() => navigate('/inventory')}>
             <ArrowLeft className="h-5 w-5" />
@@ -85,11 +86,26 @@ export function InventoryItemDetail() {
         </Button>
       </CardHeader>
       <CardContent className="space-y-4 p-6">
-        <p><strong>Descrição:</strong> {item.description || 'N/A'}</p>
-        <p><strong>Quantidade em Estoque:</strong> {item.quantity}</p>
-        <p><strong>Custo (R$):</strong> {item.cost_price.toFixed(2)}</p>
-        <p><strong>Preço de Venda (R$):</strong> {item.selling_price.toFixed(2)}</p>
-        <p><strong>Fornecedor:</strong> {item.supplier || 'N/A'}</p>
+        <div className="flex items-start gap-2">
+          <Package className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
+          <p><strong>Descrição:</strong> {item.description || 'N/A'}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Hash className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Quantidade em Estoque:</strong> {item.quantity}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Custo (R$):</strong> {item.cost_price.toFixed(2)}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Preço de Venda (R$):</strong> {item.selling_price.toFixed(2)}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Factory className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Fornecedor:</strong> {item.supplier || 'N/A'}</p>
+        </div>
       </CardContent>
     </Card>
   );

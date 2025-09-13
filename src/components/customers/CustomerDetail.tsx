@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Phone, Mail, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -135,7 +135,7 @@ export function CustomerDetail() {
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-4">
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="icon" onClick={() => navigate('/customers')}>
             <ArrowLeft className="h-5 w-5" />
@@ -145,7 +145,7 @@ export function CustomerDetail() {
             <CardDescription>Criado em: {format(new Date(customer.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</CardDescription>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap gap-2 justify-end">
           <Button variant="outline" size="sm" asChild>
             <Link to={`/customers/${customer.id}/edit`}>
               <Edit className="h-4 w-4 mr-2" /> Editar
@@ -185,9 +185,18 @@ export function CustomerDetail() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4 p-6">
-        <p><strong>Telefone:</strong> {customer.phone || 'N/A'}</p>
-        <p><strong>Email:</strong> {customer.email || 'N/A'}</p>
-        <p><strong>Endereço:</strong> {customer.address || 'N/A'}</p>
+        <div className="flex items-center gap-2">
+          <Phone className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Telefone:</strong> {customer.phone || 'N/A'}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Mail className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Email:</strong> {customer.email || 'N/A'}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Endereço:</strong> {customer.address || 'N/A'}</p>
+        </div>
       </CardContent>
     </Card>
   );

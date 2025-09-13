@@ -4,7 +4,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Eye } from 'lucide-react';
+import { Plus, Search, Eye, ShoppingCart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -24,18 +24,27 @@ export function SalesList() {
   const { user } = useSession();
   const [sales, setSales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (user) fetchSales();
-  }, [user]);
+  }, [user, searchTerm]);
 
   const fetchSales = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
+    let query = supabase
       .from('sales')
       .select(`*, customers (name)`)
+      .eq('user_id', user?.id)
       .order('created_at', { ascending: false });
       
+    if (searchTerm) {
+      query = query.or(
+        `device_brand.ilike.%${searchTerm}%,device_model.ilike.%${searchTerm}%,imei_serial.ilike.%${searchTerm}%,customers.name.ilike.%${searchTerm}%`
+      );
+    }
+
+    const { data, error } = await query;
     if (error) showError("Erro ao buscar vendas.");
     else setSales(data as any || []);
     setIsLoading(false);
@@ -43,18 +52,24 @@ export function SalesList() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input type="search" placeholder="Buscar..." className="pl-8" />
+          <Input
+            type="search"
+            placeholder="Buscar por aparelho, IMEI ou cliente..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-        <Button asChild>
+        <Button asChild className="w-full md:w-auto">
           <Link to="/sales/new">
             <Plus className="mr-2 h-4 w-4" /> Nova Venda
           </Link>
         </Button>
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

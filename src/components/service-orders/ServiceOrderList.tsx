@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, PlusCircle } from 'lucide-react';
+import { Eye, Search, X, PlusCircle, Wrench } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -72,6 +72,7 @@ export function ServiceOrderList() {
           customers (name, phone),
           devices (brand, model)
         `)
+        .eq('user_id', user?.id) // Filter by current user's ID
         .order('created_at', { ascending: false });
 
       if (statusFilter !== 'all') {
@@ -117,9 +118,9 @@ export function ServiceOrderList() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-2xl">Ordens de Serviço</CardTitle>
-        <Button asChild>
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <CardTitle className="text-2xl flex items-center gap-2"><Wrench className="h-6 w-6 text-primary" /> Ordens de Serviço</CardTitle>
+        <Button asChild className="w-full md:w-auto">
           <Link to="/new-service-order">
             <PlusCircle className="h-4 w-4 mr-2" /> Nova Ordem de Serviço
           </Link>

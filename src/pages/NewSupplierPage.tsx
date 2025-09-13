@@ -9,8 +9,8 @@ const NewSupplierPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="p-4">
-      <Card className="w-full max-w-3xl mx-auto">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 p-4 sm:p-6">
+      <Card className="w-full max-w-3xl">
         <CardHeader className="flex flex-row items-center space-x-2">
           <Button variant="ghost" size="icon" onClick={() => navigate('/suppliers')}>
             <ArrowLeft className="h-5 w-5" />

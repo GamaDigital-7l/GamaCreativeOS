@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowDownCircle, ArrowUpCircle, DollarSign, Plus } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, DollarSign, Plus, Wallet } from 'lucide-react';
 
 interface Transaction {
   id: string;
@@ -41,6 +41,7 @@ export function FinancialLedger() {
       .select('*')
       .gte('transaction_date', startDate)
       .lte('transaction_date', endDate)
+      .eq('user_id', user?.id) // Filter by user_id
       .order('transaction_date', { ascending: false });
 
     if (error) showError("Erro ao buscar lançamentos.");
@@ -60,11 +61,11 @@ export function FinancialLedger() {
 
   return (
     <div>
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Entradas (Mês)</CardTitle>
-            <ArrowUpCircle className="h-4 w-4 text-green-500" />
+            <ArrowUpCircle className="h-5 w-5 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">R$ {summary.income.toFixed(2)}</div>
@@ -73,7 +74,7 @@ export function FinancialLedger() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Saídas (Mês)</CardTitle>
-            <ArrowDownCircle className="h-4 w-4 text-red-500" />
+            <ArrowDownCircle className="h-5 w-5 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-500">R$ {summary.expense.toFixed(2)}</div>
@@ -82,7 +83,7 @@ export function FinancialLedger() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Saldo (Mês)</CardTitle>
-            <DollarSign className={`h-4 w-4 ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`} />
+            <Wallet className={`h-5 w-5 ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`} />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`}>R$ {balance.toFixed(2)}</div>
@@ -104,7 +105,7 @@ export function FinancialLedger() {
         </Dialog>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

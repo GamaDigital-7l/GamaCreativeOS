@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Check, ChevronsUpDown, PlusCircle, Trash2 } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle, Trash2, DollarSign, Wrench, Package, CalendarDays, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentDialog } from "./PaymentDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -220,24 +220,111 @@ export function EditServiceOrderForm() {
       <PaymentDialog isOpen={isPaymentDialogOpen} onClose={() => setIsPaymentDialogOpen(false)} onSubmit={handleFinalizePayment} totalAmount={watchedTotalAmount || 0} />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-4">
-          {/* Fields for issue description, service details, etc. */}
-          <h2 className="text-2xl font-bold mt-8 mb-4">Peças e Materiais Utilizados</h2>
-          {/* Inventory fields */}
-          <h2 className="text-2xl font-bold mt-8 mb-4">Detalhes e Custos do Serviço</h2>
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Wrench className="h-6 w-6 text-primary" /> Detalhes do Serviço</h2>
+          <FormField control={form.control} name="issueDescription" render={({ field }) => (<FormItem><FormLabel>Defeito Relatado</FormLabel><FormControl><Textarea placeholder="Descreva o problema..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
+          <FormField control={form.control} name="serviceDetails" render={({ field }) => (<FormItem><FormLabel>Detalhes do Serviço</FormLabel><FormControl><Textarea placeholder="Descreva o serviço a ser realizado..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
+
+          <h2 className="text-2xl font-bold mt-8 mb-4 flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Peças e Materiais Utilizados</h2>
+          <div className="space-y-4">
+            {fields.map((item, index) => (
+              <div key={item.id} className="flex flex-col sm:flex-row items-center gap-2 p-2 border rounded-md">
+                <FormField
+                  control={form.control}
+                  name={`inventoryItems.${index}.inventory_item_id`}
+                  render={({ field }) => (
+                    <FormItem className="flex-grow w-full sm:w-auto">
+                      <FormLabel className="sr-only">Item</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
+                            >
+                              {field.value
+                                ? inventoryOptions.find((option) => option.id === field.value)?.name
+                                : "Selecione um item"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                          <Command>
+                            <CommandInput placeholder="Buscar item..." />
+                            <CommandList>
+                              <CommandEmpty>Nenhum item encontrado.</CommandEmpty>
+                              <CommandGroup>
+                                {inventoryOptions.map((option) => (
+                                  <CommandItem
+                                    value={option.name}
+                                    key={option.id}
+                                    onSelect={() => {
+                                      field.onChange(option.id);
+                                      form.setValue(`inventoryItems.${index}.name`, option.name);
+                                      form.setValue(`inventoryItems.${index}.cost_at_time`, option.cost_price);
+                                      form.setValue(`inventoryItems.${index}.price_at_time`, option.selling_price);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        option.id === field.value ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {option.name} (Qtd: {option.quantity})
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`inventoryItems.${index}.quantity_used`}
+                  render={({ field }) => (
+                    <FormItem className="w-24">
+                      <FormLabel className="sr-only">Quantidade</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="font-semibold w-24 text-right">
+                  R$ {(watchedItems?.[index]?.price_at_time * watchedItems?.[index]?.quantity_used || 0).toFixed(2)}
+                </div>
+                <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button type="button" variant="outline" onClick={() => handleAddInventoryItem(inventoryOptions[0]?.id || '')} className="w-full">
+              <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
+            </Button>
+          </div>
+
+          <h2 className="text-2xl font-bold mt-8 mb-4 flex items-center gap-2"><DollarSign className="h-6 w-6 text-primary" /> Detalhes e Custos do Serviço</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField control={form.control} name="serviceCost" render={({ field }) => (<FormItem><FormLabel>Custo da Mão de Obra (R$)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="serviceCost" render={({ field }) => (<FormItem><FormLabel>Custo da Mão de Obra (R$)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="partsCost" render={({ field }) => (<FormItem><FormLabel>Custo das Peças (R$)</FormLabel><FormControl><Input type="number" readOnly disabled {...field} /></FormControl><FormMessage /></FormItem>)} />
           </div>
           <div className="text-right font-bold text-xl">Total: R$ {watchedTotalAmount?.toFixed(2)}</div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField control={form.control} name="warranty_days" render={({ field }) => (<FormItem><FormLabel>Garantia (dias)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="warranty_days" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><CalendarDays className="h-4 w-4" /> Garantia (dias)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="status" render={({ field }) => (<FormItem><FormLabel>Status da OS</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{serviceOrderStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
           </div>
           <FormField control={form.control} name="guaranteeTerms" render={({ field }) => (<FormItem><FormLabel>Termos de Garantia</FormLabel><FormControl><Textarea className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
 
-          <div className="flex justify-between items-center pt-4 border-t">
-            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Salvar Alterações"}</Button>
+          <div className="flex flex-col sm:flex-row justify-between items-center pt-4 border-t gap-4">
+            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Alterações</>}</Button>
             
             <TooltipProvider>
               <Tooltip>
@@ -249,7 +336,7 @@ export function EditServiceOrderForm() {
                       className="bg-green-600 hover:bg-green-700"
                       disabled={watchedStatus !== 'ready'}
                     >
-                      Finalizar e Registrar Pagamento
+                      <DollarSign className="h-4 w-4 mr-2" /> Finalizar e Registrar Pagamento
                     </Button>
                   </div>
                 </TooltipTrigger>

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, X, Plus, Minus, ShoppingCart, Loader2 } from 'lucide-react';
+import { Search, X, Plus, Minus, ShoppingCart, Loader2, DollarSign, User } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label'; // Import Label
@@ -175,11 +175,11 @@ export function PointOfSale() {
   };
 
   return (
-    <div className="grid md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="md:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle>Ponto de Venda (PDV)</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Search className="h-5 w-5 text-primary" /> Buscar Itens</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative">
@@ -191,15 +191,28 @@ export function PointOfSale() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               {filteredInventory.length > 0 && (
-                <div className="absolute z-10 w-full bg-background border rounded-md mt-1 max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full bg-background border rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                   {filteredInventory.map(item => (
-                    <div key={item.id} onClick={() => addToCart(item)} className="p-2 hover:bg-accent cursor-pointer">
-                      {item.name} <span className="text-sm text-muted-foreground">(Qtd: {item.quantity}) - R$ {item.selling_price.toFixed(2)}</span>
+                    <div key={item.id} onClick={() => addToCart(item)} className="p-3 hover:bg-accent cursor-pointer flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">Em estoque: {item.quantity}</p>
+                      </div>
+                      <span className="font-semibold text-primary">R$ {item.selling_price.toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-24 mt-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="mt-4 text-muted-foreground text-sm">
+                {inventory.length === 0 && <p className="text-center">Nenhum item disponível no estoque.</p>}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -207,47 +220,47 @@ export function PointOfSale() {
       <div>
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center"><ShoppingCart className="mr-2 h-5 w-5" /> Carrinho</CardTitle>
+            <CardTitle className="flex items-center"><ShoppingCart className="mr-2 h-5 w-5 text-primary" /> Carrinho</CardTitle>
           </CardHeader>
           <CardContent>
             {cart.length === 0 ? (
               <p className="text-center text-muted-foreground">Nenhum item no carrinho.</p>
             ) : (
               <>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {cart.map(item => (
-                    <div key={item.id} className="flex items-center justify-between">
+                    <div key={item.id} className="flex items-center justify-between border-b pb-2 last:border-b-0 last:pb-0">
                       <div>
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-muted-foreground">R$ {item.selling_price.toFixed(2)}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button size="icon" variant="outline" onClick={() => updateCartQuantity(item.id, -1)}><Minus className="h-4 w-4" /></Button>
-                        <span>{item.cartQuantity}</span>
-                        <Button size="icon" variant="outline" onClick={() => updateCartQuantity(item.id, 1)}><Plus className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeFromCart(item.id)}><X className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="outline" onClick={() => updateCartQuantity(item.id, -1)} disabled={item.cartQuantity <= 1}><Minus className="h-4 w-4" /></Button>
+                        <span className="font-semibold w-6 text-center">{item.cartQuantity}</span>
+                        <Button size="icon" variant="outline" onClick={() => updateCartQuantity(item.id, 1)} disabled={item.cartQuantity >= item.quantity}><Plus className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" className="text-red-500 hover:bg-red-500/20" onClick={() => removeFromCart(item.id)}><X className="h-4 w-4" /></Button>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 pt-4 border-t">
-                  <div className="flex justify-between font-bold text-lg">
+                <div className="mt-6 pt-4 border-t border-border">
+                  <div className="flex justify-between font-bold text-xl mb-4">
                     <span>Total:</span>
                     <span>R$ {total.toFixed(2)}</span>
                   </div>
                   <Dialog open={isFinalizeDialogOpen} onOpenChange={setIsFinalizeDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button className="w-full mt-4" disabled={cart.length === 0}>Finalizar Venda</Button>
+                      <Button className="w-full" disabled={cart.length === 0}>Finalizar Venda</Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Confirmar Pagamento</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2"><DollarSign className="h-5 w-5 text-primary" /> Confirmar Pagamento</DialogTitle>
                       </DialogHeader>
                       <div className="py-4 space-y-4">
-                        <div className="text-2xl font-bold text-center">Total: R$ {total.toFixed(2)}</div>
+                        <div className="text-3xl font-bold text-center text-primary">Total: R$ {total.toFixed(2)}</div>
                         
                         <div>
-                          <Label htmlFor="customer-select">Cliente</Label>
+                          <Label htmlFor="customer-select" className="flex items-center gap-2 mb-2"><User className="h-4 w-4" /> Cliente</Label>
                           <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                             <SelectTrigger id="customer-select">
                               <SelectValue placeholder="Selecione um cliente" />
@@ -267,7 +280,7 @@ export function PointOfSale() {
                         </div>
 
                         <div>
-                          <Label htmlFor="payment-method-select">Forma de Pagamento</Label>
+                          <Label htmlFor="payment-method-select" className="flex items-center gap-2 mb-2"><CreditCard className="h-4 w-4" /> Forma de Pagamento</Label>
                           <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                             <SelectTrigger id="payment-method-select"><SelectValue placeholder="Forma de Pagamento" /></SelectTrigger>
                             <SelectContent>
@@ -280,7 +293,7 @@ export function PointOfSale() {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsFinalizeDialogOpen(false)}>Cancelar</Button>
+                        <Button variant="outline" onClick={() => setIsFinalizeDialogOpen(false)} disabled={isSubmitting}>Cancelar</Button>
                         <Button onClick={handleFinalizeSale} disabled={isSubmitting || !selectedCustomerId}>
                           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           Confirmar

@@ -11,7 +11,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import { Loader2, Check, ChevronsUpDown, PlusCircle } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, Camera } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -66,7 +66,7 @@ export function ServiceOrderForm() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('customers').select('id, name').order('name').then(({ data }) => setCustomers(data || []));
+    supabase.from('customers').select('id, name').eq('user_id', user.id).order('name').then(({ data }) => setCustomers(data || []));
   }, [user]);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export function ServiceOrderForm() {
           model: values.newDeviceModel,
           serial_number: values.newDeviceSerial,
           password_info: values.newDevicePassword,
-          checklist: values.newDeviceChecklist,
+          checklist: values.newDeviceChecklist ? Object.entries(values.newDeviceChecklist).filter(([, status]) => status !== 'ok').map(([key, status]) => `${key}: ${status}`) : [], // Convert checklist object to array of strings
           defect_description: values.issueDescription, // Using main description here
         }).select('id').single();
 
@@ -141,7 +141,7 @@ export function ServiceOrderForm() {
           <div className="p-4 border rounded-lg">
             <FormField control={form.control} name="customerId" render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel className="font-semibold text-lg">1. Cliente</FormLabel>
+                <FormLabel className="font-semibold text-lg flex items-center gap-2"><User className="h-5 w-5 text-primary" /> 1. Cliente</FormLabel>
                 <EntitySelector entities={customers} placeholder="Buscar cliente..." notFoundText="Nenhum cliente encontrado." onSelect={(id) => field.onChange(id)} value={field.value} />
                 <FormMessage />
                 <Button type="button" variant="link" size="sm" className="p-0 h-auto mt-2 self-start" onClick={() => setIsNewCustomerOpen(true)}><PlusCircle className="mr-2 h-4 w-4"/>Cadastrar novo cliente</Button>
@@ -153,11 +153,11 @@ export function ServiceOrderForm() {
             <div className="p-4 border rounded-lg space-y-4">
               <FormField control={form.control} name="deviceSelection" render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-lg">2. Aparelho</FormLabel>
+                  <FormLabel className="font-semibold text-lg flex items-center gap-2"><Smartphone className="h-5 w-5 text-primary" /> 2. Aparelho</FormLabel>
                   <FormControl>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4 pt-2">
-                      <FormItem><FormControl><RadioGroupItem value="existing" /></FormControl><FormLabel className="font-normal ml-2">Selecionar existente</FormLabel></FormItem>
-                      <FormItem><FormControl><RadioGroupItem value="new" /></FormControl><FormLabel className="font-normal ml-2">Cadastrar novo</FormLabel></FormItem>
+                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex flex-col sm:flex-row gap-4 pt-2">
+                      <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="existing" /></FormControl><FormLabel className="font-normal ml-2">Selecionar existente</FormLabel></FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="new" /></FormControl><FormLabel className="font-normal ml-2">Cadastrar novo</FormLabel></FormItem>
                     </RadioGroup>
                   </FormControl>
                 </FormItem>
@@ -170,7 +170,7 @@ export function ServiceOrderForm() {
               )}
 
               {deviceSelection === 'new' && (
-                <div className="grid md:grid-cols-2 gap-6 pt-4 border-t">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
                   <div className="space-y-4">
                     <FormField control={form.control} name="newDeviceBrand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="newDeviceModel" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -178,7 +178,7 @@ export function ServiceOrderForm() {
                     <FormField control={form.control} name="newDevicePassword" render={({ field }) => (<FormItem><FormLabel>Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                   </div>
                   <div>
-                    <FormLabel>Checklist Visual</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><Camera className="h-4 w-4" /> Checklist Visual</FormLabel>
                     <Controller control={form.control} name="newDeviceChecklist" render={({ field }) => (<VisualChecklist value={field.value || {}} onChange={field.onChange} />)} />
                   </div>
                 </div>
@@ -189,14 +189,14 @@ export function ServiceOrderForm() {
           <div className="p-4 border rounded-lg">
             <FormField control={form.control} name="issueDescription" render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-semibold text-lg">3. Defeito / Problema Relatado</FormLabel>
+                <FormLabel className="font-semibold text-lg flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" /> 3. Defeito / Problema Relatado</FormLabel>
                 <FormControl><Textarea placeholder="Descreva em detalhes o problema relatado pelo cliente..." className="min-h-[100px]" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando OS...</> : "Criar Ordem de Serviço"}</Button>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando OS...</> : <><PlusCircle className="mr-2 h-4 w-4" /> Criar Ordem de Serviço</>}</Button>
         </form>
       </Form>
     </>

@@ -10,7 +10,7 @@ const EditServiceOrderPage = () => {
   const { id } = useParams<{ id: string }>();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 p-4 sm:p-6">
       <Card className="w-full max-w-3xl">
         <CardHeader className="flex flex-row items-center space-x-2">
           <Button variant="ghost" size="icon" onClick={() => navigate(`/service-orders/${id}`)}>
