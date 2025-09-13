@@ -32,6 +32,8 @@ import SuppliersPage from "./pages/SuppliersPage";
 import NewSupplierPage from "./pages/NewSupplierPage";
 import SalesPage from "./pages/SalesPage";
 import NewSalePage from "./pages/NewSalePage";
+import SaleDetailPage from "./pages/SaleDetailPage";
+import EditSalePage from "./pages/EditSalePage";
 import PointOfSalePage from "./pages/PointOfSalePage";
 import QuoteApprovalPage from "./pages/QuoteApprovalPage";
 import FinancialsPage from "./pages/FinancialsPage";
@@ -64,6 +66,8 @@ const App = () => (
               <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
               <Route path="/sales" element={<SalesPage />} />
               <Route path="/sales/new" element={<NewSalePage />} />
+              <Route path="/sales/:id" element={<SaleDetailPage />} />
+              <Route path="/sales/:id/edit" element={<EditSalePage />} />
               <Route path="/pos" element={<PointOfSalePage />} />
               <Route path="/financials" element={<FinancialsPage />} />
               <Route path="/customers" element={<CustomersPage />} />

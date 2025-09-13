@@ -4,7 +4,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -63,11 +63,12 @@ export function SalesList() {
               <TableHead>Aparelho</TableHead>
               <TableHead>IMEI/Serial</TableHead>
               <TableHead>Valor</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center">Carregando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center">Carregando...</TableCell></TableRow>
             ) : sales.length > 0 ? (
               sales.map((sale) => (
                 <TableRow key={sale.id}>
@@ -76,10 +77,17 @@ export function SalesList() {
                   <TableCell>{sale.device_brand} {sale.device_model}</TableCell>
                   <TableCell>{sale.imei_serial}</TableCell>
                   <TableCell>R$ {sale.sale_price.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to={`/sales/${sale.id}`}>
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
-              <TableRow><TableCell colSpan={5} className="text-center">Nenhuma venda encontrada.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center">Nenhuma venda encontrada.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
