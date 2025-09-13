@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Loader2, Save, DollarSign, Tag, FileText } from "lucide-react"; // Adicionado FileText icon
+import { CalendarIcon, Loader2, Save, DollarSign, Tag, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { useState } from "react";
@@ -27,7 +27,7 @@ const formSchema = z.object({
   category: z.string().optional(),
 });
 
-export function NewTransactionForm({ onSuccess }: { onSuccess: () => void }) {
+export function NewTransactionForm({ onSuccess, currentCashRegisterId }: { onSuccess: () => void; currentCashRegisterId?: string }) {
   const { user } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -40,12 +40,18 @@ export function NewTransactionForm({ onSuccess }: { onSuccess: () => void }) {
       showError("Você precisa estar logado para adicionar um lançamento.");
       return;
     }
+    if (!currentCashRegisterId) {
+      showError("Nenhum caixa aberto. Por favor, abra o caixa primeiro.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from('financial_transactions').insert({
         ...values,
         user_id: user.id,
         transaction_date: format(values.transaction_date, 'yyyy-MM-dd'),
+        cash_register_id: currentCashRegisterId, // Associate with current cash register
       });
       if (error) throw error;
       showSuccess("Lançamento salvo!");

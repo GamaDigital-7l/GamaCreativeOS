@@ -15,10 +15,11 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Loader2, CalendarIcon, Save, Smartphone, ShoppingCart, Package, User, Tag, Hash, DollarSign, Factory, CreditCard, FileText } from "lucide-react"; // Adicionado vários ícones
+import { Loader2, CalendarIcon, Save, Smartphone, ShoppingCart, Package, User, Tag, Hash, DollarSign, Factory, CreditCard, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { CustomerSearchSelect } from "@/components/shared/CustomerSearchSelect"; // New import
 
 const formSchema = z.object({
   // Device
@@ -39,14 +40,12 @@ const formSchema = z.object({
   payment_method: z.string().optional(),
 });
 
-interface Customer { id: string; name: string; }
 interface Supplier { id: string; name: string; }
 
 export function NewSaleForm() {
   const { user } = useSession();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -60,8 +59,7 @@ export function NewSaleForm() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('customers').select('id, name').eq('user_id', user.id).then(({ data }) => setCustomers(data || []));
-    supabase.from('suppliers').select('id, name').eq('user.id', user.id).then(({ data }) => setSuppliers(data || [])); // Corrigido user.id
+    supabase.from('suppliers').select('id, name').eq('user_id', user.id).then(({ data }) => setSuppliers(data || []));
   }, [user]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -120,7 +118,19 @@ export function NewSaleForm() {
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><ShoppingCart className="h-5 w-5 text-primary" /> Dados da Venda</CardTitle><CardDescription>Para quem e por quanto o aparelho foi vendido.</CardDescription></CardHeader>
               <CardContent className="space-y-4">
-                <FormField name="customer_id" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Cliente</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger></FormControl><SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                <FormField name="customer_id" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Cliente</FormLabel>
+                    <FormControl>
+                      <CustomerSearchSelect
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                        placeholder="Buscar ou selecionar cliente (opcional)"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
                 <FormField name="sale_price" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Preço de Venda (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField name="payment_method" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><CreditCard className="h-4 w-4" /> Forma de Pagamento</FormLabel><FormControl><Input placeholder="Ex: PIX, Cartão 3x" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField name="notes" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Observações</FormLabel><FormControl><Textarea placeholder="Detalhes adicionais sobre a venda..." {...field} /></FormControl><FormMessage /></FormItem>)} />

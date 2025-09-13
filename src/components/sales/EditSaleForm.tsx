@@ -15,14 +15,15 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Loader2, CalendarIcon, Save, Smartphone, ShoppingCart, Package, User, Tag, Hash, DollarSign, Factory, CreditCard, FileText } from "lucide-react"; // Adicionado vários ícones
+import { Loader2, CalendarIcon, Save, Smartphone, ShoppingCart, Package, User, Tag, Hash, DollarSign, Factory, CreditCard, FileText } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { CustomerSearchSelect } from "@/components/shared/CustomerSearchSelect"; // New import
 
 const formSchema = z.object({
   device_brand: z.string().min(2, "Marca é obrigatória."),
-  device_model: z.string().min(2, "Modelo é obrigatório."),
+  device_model: z.string().min(2, "Modelo é obrigatória."),
   imei_serial: z.string().min(10, "IMEI/Serial é obrigatório."),
   condition: z.string().optional(),
   notes: z.string().optional(),
@@ -34,7 +35,6 @@ const formSchema = z.object({
   payment_method: z.string().optional(),
 });
 
-interface Customer { id: string; name: string; }
 interface Supplier { id: string; name: string; }
 
 export function EditSaleForm() {
@@ -43,7 +43,6 @@ export function EditSaleForm() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -56,15 +55,13 @@ export function EditSaleForm() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const customersPromise = supabase.from('customers').select('id, name').eq('user_id', user.id);
         const suppliersPromise = supabase.from('suppliers').select('id, name').eq('user_id', user.id);
         const salePromise = supabase.from('sales').select('*').eq('id', id).single();
 
-        const [{ data: customersData }, { data: suppliersData }, { data: saleData, error: saleError }] = await Promise.all([customersPromise, suppliersPromise, salePromise]);
+        const [{ data: suppliersData }, { data: saleData, error: saleError }] = await Promise.all([suppliersPromise, salePromise]);
         
         if (saleError) throw saleError;
 
-        setCustomers(customersData || []);
         setSuppliers(suppliersData || []);
         
         form.reset({
@@ -142,7 +139,19 @@ export function EditSaleForm() {
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><ShoppingCart className="h-5 w-5 text-primary" /> Dados da Venda</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <FormField name="customer_id" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Cliente</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger></FormControl><SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                <FormField name="customer_id" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Cliente</FormLabel>
+                    <FormControl>
+                      <CustomerSearchSelect
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                        placeholder="Buscar ou selecionar cliente (opcional)"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
                 <FormField name="sale_price" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Preço de Venda (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField name="payment_method" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><CreditCard className="h-4 w-4" /> Forma de Pagamento</FormLabel><FormControl><Input placeholder="Ex: PIX, Cartão 3x" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField name="notes" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Observações</FormLabel><FormControl><Textarea placeholder="Detalhes adicionais sobre a venda..." {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -152,7 +161,7 @@ export function EditSaleForm() {
         </Tabs>
         <div className="flex justify-end mt-6">
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Atualizando...</> : <><Save className="h-4 w-4 mr-2" /> Salvar Alterações</>}
+            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="h-4 w-4 mr-2" /> Salvar Venda</>}
           </Button>
         </div>
       </form>
