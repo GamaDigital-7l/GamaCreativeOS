@@ -60,6 +60,7 @@ export function EditServiceOrderForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inventoryOptions, setInventoryOptions] = useState<InventoryItemOption[]>([]);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [serviceOrderData, setServiceOrderData] = useState<any>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -96,8 +97,10 @@ export function EditServiceOrderForm() {
         const { data: inventoryData } = await supabase.from('inventory_items').select('id, name, quantity, cost_price, selling_price').eq('user_id', user.id);
         setInventoryOptions(inventoryData || []);
 
-        const { data, error } = await supabase.from('service_orders').select(`*, service_order_inventory_items (*, inventory_items(name))`).eq('id', id).single();
+        const { data, error } = await supabase.from('service_orders').select(`*, customers(name), service_order_inventory_items (*, inventory_items(name))`).eq('id', id).single();
         if (error) throw error;
+        
+        setServiceOrderData(data);
 
         form.reset({
           issueDescription: data.issue_description || "", serviceDetails: data.service_details || "",
@@ -133,7 +136,7 @@ export function EditServiceOrderForm() {
     }
   };
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>, shouldNavigate = true) {
     if (!user || !id) return;
     setIsSubmitting(true);
     try {
@@ -154,7 +157,9 @@ export function EditServiceOrderForm() {
       }).eq('id', id);
 
       showSuccess("Ordem de Serviço atualizada!");
-      navigate(`/service-orders/${id}`);
+      if (shouldNavigate) {
+        navigate(`/service-orders/${id}`);
+      }
     } catch (error: any) {
       showError(`Erro ao atualizar: ${error.message}`);
     } finally {
@@ -163,19 +168,49 @@ export function EditServiceOrderForm() {
   }
 
   const handleFinalizePayment = async (paymentMethod: string) => {
-    if (!user || !id) return;
+    if (!user || !id || !serviceOrderData) return;
+    
+    // First, trigger form validation and save the data without navigating away
+    await form.handleSubmit((values) => onSubmit(values, false))();
+    
+    // If form is invalid, onSubmit won't proceed. If it's valid, we can continue.
+    if (!form.formState.isValid) {
+        showError("Por favor, corrija os erros no formulário antes de finalizar.");
+        return;
+    }
+
     try {
-      await form.handleSubmit(onSubmit)();
-      const { error } = await supabase.from('service_orders').update({
+      // Update the service order status to completed and record payment
+      const { error: osError } = await supabase.from('service_orders').update({
         status: 'completed', payment_method: paymentMethod, payment_status: 'paid',
         finalized_at: new Date().toISOString(),
       }).eq('id', id);
-      if (error) throw error;
-      showSuccess("Pagamento registrado e OS concluída!");
+      if (osError) throw osError;
+
+      // Create the corresponding financial transaction
+      const description = `Recebimento OS #${id.substring(0, 8)} - Cliente: ${serviceOrderData.customers.name}`;
+      const { error: transactionError } = await supabase
+        .from('financial_transactions')
+        .insert({
+          user_id: user.id,
+          transaction_date: new Date().toISOString(),
+          description: description,
+          amount: form.getValues('totalAmount'),
+          type: 'income',
+          category: 'Recebimento de Serviço',
+          related_service_order_id: id,
+        });
+
+      if (transactionError) {
+        showError(`OS finalizada, mas falha ao registrar no financeiro: ${transactionError.message}`);
+      } else {
+        showSuccess("Pagamento registrado e OS concluída!");
+      }
+      
       setIsPaymentDialogOpen(false);
       navigate(`/service-orders/${id}`);
     } catch (error: any) {
-      showError(`Erro ao finalizar: ${error.message}`);
+      showError(`Erro ao finalizar pagamento: ${error.message}`);
     }
   };
 
