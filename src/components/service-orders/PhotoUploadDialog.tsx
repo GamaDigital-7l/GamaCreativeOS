@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { QRCode } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 import { Copy } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 
@@ -38,7 +38,7 @@ export function PhotoUploadDialog({ isOpen, onClose, serviceOrderId }: PhotoUplo
         </DialogHeader>
         <div className="flex flex-col items-center justify-center space-y-4 py-4">
           <div className="p-4 bg-white rounded-lg">
-            <QRCode value={uploadUrl} size={192} />
+            <QRCodeSVG value={uploadUrl} size={192} />
           </div>
           <div className="flex w-full items-center space-x-2">
             <div className="grid flex-1 gap-2">

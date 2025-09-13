@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { showError } from '@/utils/toast';
 import { Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { QRCode } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 
 interface LabelData {
   id: string;
@@ -68,7 +68,7 @@ export function PrintableServiceOrderLabel() {
               <p className="text-xs leading-tight"><strong>Aparelho:</strong> {data.devices.brand} {data.devices.model}</p>
             </div>
             <div className="flex-shrink-0">
-              <QRCode value={detailUrl} size={64} />
+              <QRCodeSVG value={detailUrl} size={64} />
             </div>
           </div>
           <div className="mt-2 pt-1 border-t border-black">
