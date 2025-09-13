@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, X, Plus, Minus, ShoppingCart, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label'; // Import Label
 
 interface InventoryItem {
   id: string;
@@ -21,6 +22,11 @@ interface CartItem extends InventoryItem {
   cartQuantity: number;
 }
 
+interface CustomerOption {
+  id: string;
+  name: string;
+}
+
 export function PointOfSale() {
   const { user } = useSession();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -29,9 +35,15 @@ export function PointOfSale() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('pix');
+  const [customers, setCustomers] = useState<CustomerOption[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
+  const [isFinalizeDialogOpen, setIsFinalizeDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (user) fetchInventory();
+    if (user) {
+      fetchInventory();
+      fetchCustomers();
+    }
   }, [user]);
 
   const fetchInventory = async () => {
@@ -39,10 +51,21 @@ export function PointOfSale() {
     const { data, error } = await supabase
       .from('inventory_items')
       .select('id, name, quantity, selling_price')
-      .gt('quantity', 0); // Only fetch items in stock
+      .gt('quantity', 0)
+      .eq('user_id', user?.id); // Filter by user_id
     if (error) showError("Erro ao carregar estoque.");
     else setInventory(data || []);
     setIsLoading(false);
+  };
+
+  const fetchCustomers = async () => {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id, name')
+      .eq('user_id', user?.id) // Filter by user_id
+      .order('name', { ascending: true });
+    if (error) showError("Erro ao carregar clientes.");
+    else setCustomers(data || []);
   };
 
   const filteredInventory = useMemo(() => {
@@ -80,6 +103,11 @@ export function PointOfSale() {
 
   const handleFinalizeSale = async () => {
     if (cart.length === 0 || !user) return;
+    if (!selectedCustomerId) {
+      showError("Por favor, selecione um cliente para finalizar a venda.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // 1. Create the sale record
@@ -87,6 +115,7 @@ export function PointOfSale() {
         .from('pos_sales')
         .insert({
           user_id: user.id,
+          customer_id: selectedCustomerId, // Include customer_id
           total_amount: total,
           payment_method: paymentMethod,
         })
@@ -110,11 +139,33 @@ export function PointOfSale() {
           .from('inventory_items')
           .update({ quantity: item.quantity - item.cartQuantity })
           .eq('id', item.id)
+          .eq('user_id', user.id) // Ensure user can only update their own inventory
       );
       await Promise.all(stockUpdates);
 
-      showSuccess("Venda finalizada com sucesso!");
+      // 4. Create financial transaction record
+      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+      const transactionDescription = `Venda PDV #${saleData.id.substring(0, 8)} - Cliente: ${selectedCustomer?.name || 'N/A'}`;
+      const { error: transactionError } = await supabase
+        .from('financial_transactions')
+        .insert({
+          user_id: user.id,
+          transaction_date: new Date().toISOString(),
+          description: transactionDescription,
+          amount: total,
+          type: 'income',
+          category: 'Venda PDV',
+          related_pos_sale_id: saleData.id,
+        });
+      if (transactionError) {
+        showError(`Venda finalizada, mas falha ao registrar no financeiro: ${transactionError.message}`);
+      } else {
+        showSuccess("Venda finalizada e registrada no financeiro com sucesso!");
+      }
+      
       setCart([]);
+      setSelectedCustomerId(undefined); // Clear selected customer
+      setIsFinalizeDialogOpen(false);
       fetchInventory(); // Refresh inventory
     } catch (error: any) {
       showError(`Erro ao finalizar venda: ${error.message}`);
@@ -184,7 +235,7 @@ export function PointOfSale() {
                     <span>Total:</span>
                     <span>R$ {total.toFixed(2)}</span>
                   </div>
-                  <Dialog>
+                  <Dialog open={isFinalizeDialogOpen} onOpenChange={setIsFinalizeDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="w-full mt-4" disabled={cart.length === 0}>Finalizar Venda</Button>
                     </DialogTrigger>
@@ -194,19 +245,43 @@ export function PointOfSale() {
                       </DialogHeader>
                       <div className="py-4 space-y-4">
                         <div className="text-2xl font-bold text-center">Total: R$ {total.toFixed(2)}</div>
-                        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                          <SelectTrigger><SelectValue placeholder="Forma de Pagamento" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pix">PIX</SelectItem>
-                            <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                            <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                            <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        
+                        <div>
+                          <Label htmlFor="customer-select">Cliente</Label>
+                          <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                            <SelectTrigger id="customer-select">
+                              <SelectValue placeholder="Selecione um cliente" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {customers.length === 0 ? (
+                                <SelectItem value="no-customers" disabled>Nenhum cliente cadastrado</SelectItem>
+                              ) : (
+                                customers.map(customer => (
+                                  <SelectItem key={customer.id} value={customer.id}>
+                                    {customer.name}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="payment-method-select">Forma de Pagamento</Label>
+                          <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                            <SelectTrigger id="payment-method-select"><SelectValue placeholder="Forma de Pagamento" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pix">PIX</SelectItem>
+                              <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                              <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                              <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <DialogFooter>
-                        <Button variant="outline">Cancelar</Button>
-                        <Button onClick={handleFinalizeSale} disabled={isSubmitting}>
+                        <Button variant="outline" onClick={() => setIsFinalizeDialogOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleFinalizeSale} disabled={isSubmitting || !selectedCustomerId}>
                           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           Confirmar
                         </Button>

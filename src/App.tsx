@@ -27,6 +27,7 @@ import EditInventoryItemPage from "./pages/EditInventoryItemPage";
 import SettingsPage from "./pages/SettingsPage";
 import PrintServiceOrderPage from "./pages/PrintServiceOrderPage";
 import PrintServiceOrderLabelPage from "./pages/PrintServiceOrderLabelPage";
+import PrintableServiceOrderWarrantyPage from "./pages/PrintableServiceOrderWarrantyPage"; // New import
 import PhotoUploadPage from "./pages/PhotoUploadPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import NewSupplierPage from "./pages/NewSupplierPage";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/upload-photos/:id" element={<PhotoUploadPage />} />
             <Route path="/service-orders/:id/print" element={<PrintServiceOrderPage />} />
             <Route path="/service-orders/:id/print-label" element={<PrintServiceOrderLabelPage />} />
+            <Route path="/service-orders/:id/print-warranty" element={<PrintableServiceOrderWarrantyPage />} /> {/* New Route */}
             <Route path="/quote/:id" element={<QuoteApprovalPage />} />
             <Route path="/sales/:id/print" element={<PrintableSaleReceiptPage />} />
 

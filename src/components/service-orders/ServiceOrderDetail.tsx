@@ -6,7 +6,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -79,7 +79,7 @@ export function ServiceOrderDetail() {
     if (!serviceOrder?.approval_status) return null;
     switch (serviceOrder.approval_status) {
       case 'approved':
-        return <Badge variant="success" className="gap-1"><CheckCircle className="h-3 w-3" /> Aprovado em {format(new Date(serviceOrder.approved_at!), 'dd/MM/yy')}</Badge>;
+        return <Badge variant="success" className="gap-1"><CheckCircle className="h-3 w-3" /> Aprovado em {serviceOrder.approved_at ? format(new Date(serviceOrder.approved_at), 'dd/MM/yy') : 'N/A'}</Badge>;
       case 'rejected':
         return <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" /> Recusado</Badge>;
       default:
@@ -150,6 +150,13 @@ export function ServiceOrderDetail() {
             <div className="flex items-center gap-2 flex-wrap justify-end">
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print`} target="_blank"><Printer className="h-4 w-4 mr-2" /> Imprimir OS</Link></Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print-label`} target="_blank"><Ticket className="h-4 w-4 mr-2" /> Imprimir Etiqueta</Link></Button>
+              {serviceOrder.status === 'completed' && ( // Conditionally render print warranty button
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={`/service-orders/${serviceOrder.id}/print-warranty`} target="_blank">
+                    <FileText className="h-4 w-4 mr-2" /> Imprimir Garantia
+                  </Link>
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => setIsShareDialogOpen(true)}><Share2 className="h-4 w-4 mr-2" /> Compartilhar Orçamento</Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/edit`}><Edit className="h-4 w-4 mr-2" /> Editar</Link></Button>
               {canFinalize && (
@@ -177,11 +184,111 @@ export function ServiceOrderDetail() {
               <h3 className="text-lg font-semibold mb-2">Assinatura do Cliente</h3>
               <div className="border rounded-md p-2 bg-white">
                 <img src={serviceOrder.customer_signature} alt="Assinatura do cliente" className="mx-auto" />
+                {serviceOrder.approved_at && (
+                  <p className="text-sm text-center text-muted-foreground mt-2">
+                    Aprovado em: {format(new Date(serviceOrder.approved_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  </p>
+                )}
               </div>
             </div>
           )}
 
-          {/* Rest of the component remains the same... */}
+          {/* Customer Details */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Dados do Cliente</h3>
+            <p><strong>Nome:</strong> {serviceOrder.customers.name}</p>
+            <p><strong>Telefone:</strong> {serviceOrder.customers.phone || 'N/A'}</p>
+            <p><strong>Email:</strong> {serviceOrder.customers.email || 'N/A'}</p>
+            <p><strong>Endereço:</strong> {serviceOrder.customers.address || 'N/A'}</p>
+          </div>
+
+          {/* Device Details */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Dados do Aparelho</h3>
+            <p><strong>Marca:</strong> {serviceOrder.devices.brand}</p>
+            <p><strong>Modelo:</strong> {serviceOrder.devices.model}</p>
+            <p><strong>Número de Série/IMEI:</strong> {serviceOrder.devices.serial_number || 'N/A'}</p>
+            <p><strong>Defeito Relatado:</strong> {serviceOrder.devices.defect_description || 'N/A'}</p>
+            <p><strong>Informações de Senha:</strong> {serviceOrder.devices.password_info || 'N/A'}</p>
+            {serviceOrder.devices.checklist && serviceOrder.devices.checklist.length > 0 && (
+              <div>
+                <p className="font-semibold mt-2">Checklist de Entrada:</p>
+                <ul className="list-disc list-inside ml-4 grid grid-cols-2 md:grid-cols-3 gap-x-4">
+                  {serviceOrder.devices.checklist.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* Service Details */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Detalhes do Serviço</h3>
+            <p><strong>Descrição do Serviço:</strong> {serviceOrder.service_details || 'N/A'}</p>
+            {serviceOrder.service_order_inventory_items && serviceOrder.service_order_inventory_items.length > 0 && (
+              <div className="mt-4">
+                <h4 className="font-semibold mb-2">Peças Utilizadas:</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead className="text-right">Quantidade</TableHead>
+                      <TableHead className="text-right">Preço Unitário</TableHead>
+                      <TableHead className="text-right">Subtotal</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {serviceOrder.service_order_inventory_items.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.inventory_items?.name || 'Item Removido'}</TableCell>
+                        <TableCell className="text-right">{item.quantity_used}</TableCell>
+                        <TableCell className="text-right">R$ {item.price_at_time.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">R$ {(item.quantity_used * item.price_at_time).toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+
+          {/* Costs Summary */}
+          <div className="border-t pt-4 space-y-2">
+            <h3 className="text-lg font-semibold mb-2">Resumo de Custos</h3>
+            <div className="flex justify-between">
+              <span>Custo das Peças:</span>
+              <span>R$ {(serviceOrder.parts_cost || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Custo do Serviço (Mão de Obra):</span>
+              <span>R$ {(serviceOrder.service_cost || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-xl border-t pt-2">
+              <span>Total:</span>
+              <span>R$ {(serviceOrder.total_amount || 0).toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Guarantee Terms */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-semibold mb-2">Termos de Garantia</h3>
+            <p className="text-sm text-gray-600">{serviceOrder.guarantee_terms || 'N/A'}</p>
+          </div>
+
+          {/* Photos */}
+          {serviceOrder.photos && serviceOrder.photos.length > 0 && (
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-semibold mb-2">Fotos do Aparelho</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {serviceOrder.photos.map((photoUrl, index) => (
+                  <a key={index} href={photoUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={photoUrl} alt={`Foto da OS ${serviceOrder.id} - ${index + 1}`} className="w-full h-32 object-cover rounded-md shadow-sm" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
           
         </CardContent>
       </Card>

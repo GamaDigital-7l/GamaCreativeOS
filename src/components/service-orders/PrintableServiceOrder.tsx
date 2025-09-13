@@ -125,6 +125,16 @@ export function PrintableServiceOrder() {
                     {renderPasswordPattern()}
                   </div>
                 )}
+                {device.checklist && device.checklist.length > 0 && (
+                  <div className="mt-4">
+                    <p className="font-semibold">Checklist de Entrada:</p>
+                    <ul className="list-disc list-inside ml-4 text-sm">
+                      {device.checklist.map((item: string, index: number) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -165,9 +175,18 @@ export function PrintableServiceOrder() {
             </section>
 
             <footer className="pt-8 text-center">
+              {serviceOrder.customer_signature && (
+                <div className="mb-4">
+                  <img src={serviceOrder.customer_signature} alt="Assinatura do cliente" className="mx-auto max-h-24" />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Assinatura do Cliente
+                    {serviceOrder.approved_at && ` em ${format(new Date(serviceOrder.approved_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`}
+                  </p>
+                </div>
+              )}
               <div className="w-2/3 mx-auto">
                 <div className="border-t pt-2">
-                  <p className="text-sm">Assinatura do Cliente</p>
+                  <p className="text-sm">Assinatura do Técnico</p>
                 </div>
               </div>
             </footer>

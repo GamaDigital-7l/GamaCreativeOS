@@ -94,7 +94,18 @@ export default function PhotoUploadPage() {
             <div className="space-y-6">
               <div>
                 <Label htmlFor="picture" className="text-lg">Selecione as fotos</Label>
-                <Input id="picture" type="file" multiple accept="image/*" capture="environment" onChange={handleFileChange} className="mt-2" />
+                <Input 
+                  id="picture" 
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  capture="environment" // This attribute opens the camera on mobile devices
+                  onChange={handleFileChange} 
+                  className="mt-2" 
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Em dispositivos móveis, isso pode abrir a câmera diretamente.
+                </p>
               </div>
 
               {previews.length > 0 && (
