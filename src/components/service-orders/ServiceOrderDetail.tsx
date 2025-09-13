@@ -106,6 +106,7 @@ export function ServiceOrderDetail() {
               <CardDescription>ID: {serviceOrder.id.substring(0, 8)}...</CardDescription>
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-end">
+              <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print`} target="_blank"><Printer className="h-4 w-4 mr-2" /> Imprimir OS</Link></Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print-label`} target="_blank"><Ticket className="h-4 w-4 mr-2" /> Imprimir Etiqueta</Link></Button>
               <Button variant="outline" size="sm" onClick={() => setIsShareDialogOpen(true)}><Share2 className="h-4 w-4 mr-2" /> Compartilhar Orçamento</Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/edit`}><Edit className="h-4 w-4 mr-2" /> Editar</Link></Button>
