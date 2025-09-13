@@ -15,10 +15,11 @@ import CustomersPage from "./pages/CustomersPage";
 import NewCustomerPage from "./pages/NewCustomerPage";
 import CustomerDetailPage from "./pages/CustomerDetailPage";
 import EditCustomerPage from "./pages/EditCustomerPage";
-import DevicesPage from "./pages/DevicesPage"; // Import the new DevicesPage
-import NewDevicePage from "./pages/NewDevicePage"; // Import the new NewDevicePage
-import DeviceDetailPage from "./pages/DeviceDetailPage"; // Import the new DeviceDetailPage
-import EditDevicePage from "./pages/EditDevicePage"; // Import the new EditDevicePage
+import DevicesPage from "./pages/DevicesPage";
+import NewDevicePage from "./pages/NewDevicePage";
+import DeviceDetailPage from "./pages/DeviceDetailPage";
+import EditDevicePage from "./pages/EditDevicePage";
+import UserProfilePage from "./pages/UserProfilePage"; // Import the new UserProfilePage
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 
 const queryClient = new QueryClient();
@@ -41,10 +42,11 @@ const App = () => (
             <Route path="/new-customer" element={<NewCustomerPage />} />
             <Route path="/customers/:id" element={<CustomerDetailPage />} />
             <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
-            <Route path="/devices" element={<DevicesPage />} /> {/* Add devices list route */}
-            <Route path="/new-device" element={<NewDevicePage />} /> {/* Add new device route */}
-            <Route path="/devices/:id" element={<DeviceDetailPage />} /> {/* Add device detail route */}
-            <Route path="/devices/:id/edit" element={<EditDevicePage />} /> {/* Add device edit route */}
+            <Route path="/devices" element={<DevicesPage />} />
+            <Route path="/new-device" element={<NewDevicePage />} />
+            <Route path="/devices/:id" element={<DeviceDetailPage />} />
+            <Route path="/devices/:id/edit" element={<EditDevicePage />} />
+            <Route path="/profile" element={<UserProfilePage />} /> {/* Add user profile route */}
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
