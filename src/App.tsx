@@ -31,8 +31,8 @@ import PrintableServiceOrderWarrantyPage from "./pages/PrintableServiceOrderWarr
 import PhotoUploadPage from "./pages/PhotoUploadPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import NewSupplierPage from "./pages/NewSupplierPage";
-import SupplierDetailPage from "./pages/SupplierDetailPage"; // New import
-import EditSupplierPage from "./pages/EditSupplierPage"; // New import
+import SupplierDetailPage from "./pages/SupplierDetailPage";
+import EditSupplierPage from "./pages/EditSupplierPage";
 import SalesPage from "./pages/SalesPage";
 import NewSalePage from "./pages/NewSalePage";
 import SaleDetailPage from "./pages/SaleDetailPage";
@@ -41,6 +41,7 @@ import PointOfSalePage from "./pages/PointOfSalePage";
 import QuoteApprovalPage from "./pages/QuoteApprovalPage";
 import FinancialsPage from "./pages/FinancialsPage";
 import GamificationPage from "./pages/GamificationPage";
+import ManageGamificationPage from "./pages/ManageGamificationPage"; // New import
 import OnlineCatalogPage from "./pages/OnlineCatalogPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import PublicCatalogPage from "./pages/PublicCatalogPage";
@@ -99,11 +100,12 @@ const App = () => (
               <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
               <Route path="/suppliers" element={<SuppliersPage />} />
               <Route path="/suppliers/new" element={<NewSupplierPage />} />
-              <Route path="/suppliers/:id" element={<SupplierDetailPage />} /> {/* New route */}
-              <Route path="/suppliers/:id/edit" element={<EditSupplierPage />} /> {/* New route */}
+              <Route path="/suppliers/:id" element={<SupplierDetailPage />} />
+              <Route path="/suppliers/:id/edit" element={<EditSupplierPage />} />
               <Route path="/catalog" element={<OnlineCatalogPage />} />
               <Route path="/catalog/:itemIds" element={<OnlineCatalogPage />} />
               <Route path="/gamification" element={<GamificationPage />} />
+              <Route path="/gamification/manage" element={<ManageGamificationPage />} /> {/* New route */}
               <Route path="/profile" element={<UserProfilePage />} />
               <Route path="/profile/edit" element={<EditUserProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />

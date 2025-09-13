@@ -14,11 +14,12 @@ const navItems = [
   { href: "/devices", label: "Dispositivos", icon: Smartphone },
   { href: "/inventory", label: "Estoque", icon: Package },
   { href: "/suppliers", label: "Fornecedores", icon: Building },
-  { href: "/catalog", label: "Catálogo Online", icon: Store }, // Novo item de navegação
+  { href: "/catalog", label: "Catálogo Online", icon: Store },
   { href: "/gamification", label: "Gamificação", icon: Trophy },
 ];
 
 const bottomNavItems = [
+  { href: "/gamification/manage", label: "Gerenciar Gamificação", icon: Trophy }, // New item
   { href: "/settings", label: "Configurações", icon: Settings },
   { href: "/profile", label: "Meu Perfil", icon: UserCircle },
 ];
