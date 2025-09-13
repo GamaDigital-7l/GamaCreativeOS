@@ -32,6 +32,7 @@ import NewSupplierPage from "./pages/NewSupplierPage";
 import SalesPage from "./pages/SalesPage";
 import NewSalePage from "./pages/NewSalePage";
 import PointOfSalePage from "./pages/PointOfSalePage";
+import QuoteApprovalPage from "./pages/QuoteApprovalPage"; // Import new page
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 
@@ -45,10 +46,11 @@ const App = () => (
       <BrowserRouter>
         <SessionContextProvider>
           <Routes>
-            {/* Rotas fora do layout principal (sem menu lateral) */}
+            {/* Rotas públicas (sem menu lateral/login) */}
             <Route path="/login" element={<Login />} />
             <Route path="/upload-photos/:id" element={<PhotoUploadPage />} />
             <Route path="/service-orders/:id/print" element={<PrintServiceOrderPage />} />
+            <Route path="/quote/:id" element={<QuoteApprovalPage />} />
 
             {/* Rotas dentro do layout principal (com menu lateral) */}
             <Route element={<Layout />}>
