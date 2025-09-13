@@ -17,6 +17,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do cliente é obrigatório." }),
@@ -25,10 +26,14 @@ const formSchema = z.object({
   email: z.string().email({ message: "Email inválido." }).optional().or(z.literal('')),
 });
 
-export function NewCustomerForm() {
+interface NewCustomerFormProps {
+  onSuccess?: (customer: { id: string; name: string }) => void;
+}
+
+export function NewCustomerForm({ onSuccess }: NewCustomerFormProps) {
   const { user } = useSession();
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = z.useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,7 +54,7 @@ export function NewCustomerForm() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('customers')
         .insert({
           user_id: user.id,
@@ -57,13 +62,20 @@ export function NewCustomerForm() {
           phone: values.phone,
           address: values.address,
           email: values.email,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
       showSuccess("Cliente criado com sucesso!");
       form.reset();
-      navigate('/customers'); // Redirect to customer list page
+      
+      if (onSuccess) {
+        onSuccess({ id: data.id, name: data.name });
+      } else {
+        navigate('/customers');
+      }
     } catch (error: any) {
       console.error("Erro ao criar cliente:", error);
       showError(`Erro ao criar cliente: ${error.message || "Tente novamente."}`);
