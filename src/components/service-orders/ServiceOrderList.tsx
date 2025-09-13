@@ -16,7 +16,9 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { Eye, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ServiceOrder {
   id: string;
@@ -33,10 +35,21 @@ interface ServiceOrder {
   };
 }
 
+const serviceOrderStatuses = [
+  { value: 'all', label: 'Todos os Status' },
+  { value: 'pending', label: 'Pendente' },
+  { value: 'in_progress', label: 'Em Progresso' },
+  { value: 'ready', label: 'Pronto' },
+  { value: 'completed', label: 'Concluído' },
+  { value: 'cancelled', label: 'Cancelado' },
+];
+
 export function ServiceOrderList() {
   const { user, isLoading: isSessionLoading } = useSession();
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     if (!isSessionLoading && user) {
@@ -44,12 +57,12 @@ export function ServiceOrderList() {
     } else if (!isSessionLoading && !user) {
       setIsLoading(false);
     }
-  }, [user, isSessionLoading]);
+  }, [user, isSessionLoading, searchTerm, statusFilter]); // Re-fetch when filters change
 
   const fetchServiceOrders = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('service_orders')
         .select(`
           id,
@@ -61,6 +74,19 @@ export function ServiceOrderList() {
         `)
         .order('created_at', { ascending: false });
 
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      if (searchTerm) {
+        // Perform a case-insensitive search across customer name, device brand, and device model
+        query = query.or(
+          `customers.name.ilike.%${searchTerm}%,devices.brand.ilike.%${searchTerm}%,devices.model.ilike.%${searchTerm}%`
+        );
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
 
       setServiceOrders(data as ServiceOrder[]);
@@ -71,18 +97,6 @@ export function ServiceOrderList() {
       setIsLoading(false);
     }
   };
-
-  if (isLoading) {
-    return <p className="text-center text-gray-600 dark:text-gray-400">Carregando Ordens de Serviço...</p>;
-  }
-
-  if (!user) {
-    return <p className="text-center text-red-500">Você precisa estar logado para ver as Ordens de Serviço.</p>;
-  }
-
-  if (serviceOrders.length === 0) {
-    return <p className="text-center text-gray-600 dark:text-gray-400">Nenhuma Ordem de Serviço encontrada.</p>;
-  }
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -107,49 +121,86 @@ export function ServiceOrderList() {
         <CardTitle className="text-2xl">Ordens de Serviço</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Aparelho</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Descrição do Problema</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {serviceOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
-                  <TableCell>{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
-                  <TableCell>{order.customers?.name || 'N/A'}</TableCell>
-                  <TableCell>{order.devices?.brand} {order.devices?.model}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(order.status)}>
-                      {order.status === 'pending' && 'Pendente'}
-                      {order.status === 'in_progress' && 'Em Progresso'}
-                      {order.status === 'ready' && 'Pronto'}
-                      {order.status === 'completed' && 'Concluído'}
-                      {order.status === 'cancelled' && 'Cancelado'}
-                      {!['pending', 'in_progress', 'ready', 'completed', 'cancelled'].includes(order.status) && order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{order.issue_description}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/service-orders/${order.id}`}>
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por cliente, marca ou modelo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 pr-8"
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground"
+                onClick={() => setSearchTerm('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Filtrar por Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {serviceOrderStatuses.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
               ))}
-            </TableBody>
-          </Table>
+            </SelectContent>
+          </Select>
         </div>
+
+        {isLoading ? (
+          <p className="text-center text-gray-600 dark:text-gray-400">Carregando Ordens de Serviço...</p>
+        ) : !user ? (
+          <p className="text-center text-red-500">Você precisa estar logado para ver as Ordens de Serviço.</p>
+        ) : serviceOrders.length === 0 ? (
+          <p className="text-center text-gray-600 dark:text-gray-400">Nenhuma Ordem de Serviço encontrada com os filtros aplicados.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Aparelho</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Descrição do Problema</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {serviceOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
+                    <TableCell>{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
+                    <TableCell>{order.customers?.name || 'N/A'}</TableCell>
+                    <TableCell>{order.devices?.brand} {order.devices?.model}</TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(order.status)}>
+                        {serviceOrderStatuses.find(s => s.value === order.status)?.label || order.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate">{order.issue_description}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/service-orders/${order.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
