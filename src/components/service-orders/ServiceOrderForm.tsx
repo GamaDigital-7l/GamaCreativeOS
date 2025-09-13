@@ -18,6 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PhotoUploadDialog } from "./PhotoUploadDialog";
 
 const formSchema = z.object({
   customerId: z.string({ required_error: "Selecione um cliente." }),
@@ -37,6 +38,7 @@ export function ServiceOrderForm() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Entity | null>(null);
   const [warrantyInfo, setWarrantyInfo] = useState<WarrantyInfo | null>(null);
+  const [newServiceOrderId, setNewServiceOrderId] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -96,7 +98,7 @@ export function ServiceOrderForm() {
 
       if (error) throw error;
       showSuccess("Ordem de Serviço criada com sucesso!");
-      navigate(`/service-orders/${data.id}/edit`);
+      setNewServiceOrderId(data.id); // Open the dialog
     } catch (error: any) {
       showError(`Erro ao criar OS: ${error.message}`);
     } finally {
@@ -104,67 +106,83 @@ export function ServiceOrderForm() {
     }
   }
 
+  const handleDialogClose = () => {
+    if (newServiceOrderId) {
+      navigate(`/service-orders/${newServiceOrderId}/edit`);
+    }
+    setNewServiceOrderId(null);
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="customerId" render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>1. Selecione o Cliente</FormLabel>
-              <EntitySelector
-                entities={customers}
-                placeholder="Buscar cliente..."
-                notFoundText="Nenhum cliente encontrado."
-                onSelect={handleCustomerSelect}
-                value={field.value}
-              />
+    <>
+      {newServiceOrderId && (
+        <PhotoUploadDialog
+          isOpen={!!newServiceOrderId}
+          onClose={handleDialogClose}
+          serviceOrderId={newServiceOrderId}
+        />
+      )}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField control={form.control} name="customerId" render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>1. Selecione o Cliente</FormLabel>
+                <EntitySelector
+                  entities={customers}
+                  placeholder="Buscar cliente..."
+                  notFoundText="Nenhum cliente encontrado."
+                  onSelect={handleCustomerSelect}
+                  value={field.value}
+                />
+                <FormMessage />
+                <Button variant="link" asChild className="p-0 h-auto mt-2 self-start"><Link to="/new-customer"><PlusCircle className="mr-2 h-4 w-4"/>Cadastrar novo cliente</Link></Button>
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="deviceId" render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>2. Selecione o Aparelho</FormLabel>
+                <EntitySelector
+                  entities={devices.map(d => ({ id: d.id, name: `${d.brand} ${d.model}` }))}
+                  placeholder="Buscar aparelho..."
+                  notFoundText="Nenhum aparelho encontrado."
+                  onSelect={handleDeviceSelect}
+                  value={field.value}
+                  disabled={!selectedCustomer}
+                />
+                <FormMessage />
+                 <Button variant="link" asChild className="p-0 h-auto mt-2 self-start"><Link to="/new-device"><PlusCircle className="mr-2 h-4 w-4"/>Cadastrar novo aparelho</Link></Button>
+              </FormItem>
+            )} />
+          </div>
+
+          {warrantyInfo && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Aparelho em Garantia!</AlertTitle>
+              <AlertDescription>
+                Este aparelho está na garantia de um serviço anterior (OS <Link to={`/service-orders/${warrantyInfo.id}`} className="underline font-bold">{warrantyInfo.id.substring(0,8)}</Link>)
+                até {format(warrantyInfo.endDate, 'dd/MM/yyyy', { locale: ptBR })}.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <FormField control={form.control} name="issueDescription" render={({ field }) => (
+            <FormItem>
+              <FormLabel>3. Defeito / Problema Relatado</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Descreva o problema relatado pelo cliente..." {...field} />
+              </FormControl>
               <FormMessage />
-              <Button variant="link" asChild className="p-0 h-auto mt-2 self-start"><Link to="/new-customer"><PlusCircle className="mr-2 h-4 w-4"/>Cadastrar novo cliente</Link></Button>
             </FormItem>
           )} />
-          <FormField control={form.control} name="deviceId" render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>2. Selecione o Aparelho</FormLabel>
-              <EntitySelector
-                entities={devices.map(d => ({ id: d.id, name: `${d.brand} ${d.model}` }))}
-                placeholder="Buscar aparelho..."
-                notFoundText="Nenhum aparelho encontrado."
-                onSelect={handleDeviceSelect}
-                value={field.value}
-                disabled={!selectedCustomer}
-              />
-              <FormMessage />
-               <Button variant="link" asChild className="p-0 h-auto mt-2 self-start"><Link to="/new-device"><PlusCircle className="mr-2 h-4 w-4"/>Cadastrar novo aparelho</Link></Button>
-            </FormItem>
-          )} />
-        </div>
 
-        {warrantyInfo && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Aparelho em Garantia!</AlertTitle>
-            <AlertDescription>
-              Este aparelho está na garantia de um serviço anterior (OS <Link to={`/service-orders/${warrantyInfo.id}`} className="underline font-bold">{warrantyInfo.id.substring(0,8)}</Link>)
-              até {format(warrantyInfo.endDate, 'dd/MM/yyyy', { locale: ptBR })}.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <FormField control={form.control} name="issueDescription" render={({ field }) => (
-          <FormItem>
-            <FormLabel>3. Defeito / Problema Relatado</FormLabel>
-            <FormControl>
-              <Textarea placeholder="Descreva o problema relatado pelo cliente..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando OS...</> : "Criar Ordem de Serviço"}
-        </Button>
-      </form>
-    </Form>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando OS...</> : "Criar Ordem de Serviço"}
+          </Button>
+        </form>
+      </Form>
+    </>
   );
 }
 

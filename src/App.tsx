@@ -26,7 +26,7 @@ import InventoryItemDetailPage from "./pages/InventoryItemDetailPage";
 import EditInventoryItemPage from "./pages/EditInventoryItemPage";
 import SettingsPage from "./pages/SettingsPage";
 import PrintServiceOrderPage from "./pages/PrintServiceOrderPage";
-import PrintServiceOrderLabelPage from "./pages/PrintServiceOrderLabelPage"; // Import new page
+import PrintServiceOrderLabelPage from "./pages/PrintServiceOrderLabelPage";
 import PhotoUploadPage from "./pages/PhotoUploadPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import NewSupplierPage from "./pages/NewSupplierPage";
