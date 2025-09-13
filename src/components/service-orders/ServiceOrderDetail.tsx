@@ -6,7 +6,7 @@ import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -105,7 +105,8 @@ export function ServiceOrderDetail() {
               </div>
               <CardDescription>ID: {serviceOrder.id.substring(0, 8)}...</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print-label`} target="_blank"><Ticket className="h-4 w-4 mr-2" /> Imprimir Etiqueta</Link></Button>
               <Button variant="outline" size="sm" onClick={() => setIsShareDialogOpen(true)}><Share2 className="h-4 w-4 mr-2" /> Compartilhar Orçamento</Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/edit`}><Edit className="h-4 w-4 mr-2" /> Editar</Link></Button>
             </div>

@@ -26,13 +26,14 @@ import InventoryItemDetailPage from "./pages/InventoryItemDetailPage";
 import EditInventoryItemPage from "./pages/EditInventoryItemPage";
 import SettingsPage from "./pages/SettingsPage";
 import PrintServiceOrderPage from "./pages/PrintServiceOrderPage";
+import PrintServiceOrderLabelPage from "./pages/PrintServiceOrderLabelPage"; // Import new page
 import PhotoUploadPage from "./pages/PhotoUploadPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import NewSupplierPage from "./pages/NewSupplierPage";
 import SalesPage from "./pages/SalesPage";
 import NewSalePage from "./pages/NewSalePage";
 import PointOfSalePage from "./pages/PointOfSalePage";
-import QuoteApprovalPage from "./pages/QuoteApprovalPage"; // Import new page
+import QuoteApprovalPage from "./pages/QuoteApprovalPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/upload-photos/:id" element={<PhotoUploadPage />} />
             <Route path="/service-orders/:id/print" element={<PrintServiceOrderPage />} />
+            <Route path="/service-orders/:id/print-label" element={<PrintServiceOrderLabelPage />} />
             <Route path="/quote/:id" element={<QuoteApprovalPage />} />
 
             {/* Rotas dentro do layout principal (com menu lateral) */}
