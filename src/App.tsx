@@ -25,6 +25,8 @@ import InventoryPage from "./pages/InventoryPage";
 import NewInventoryItemPage from "./pages/NewInventoryItemPage";
 import InventoryItemDetailPage from "./pages/InventoryItemDetailPage";
 import EditInventoryItemPage from "./pages/EditInventoryItemPage";
+import SettingsPage from "./pages/SettingsPage";
+import PrintServiceOrderPage from "./pages/PrintServiceOrderPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 
 const queryClient = new QueryClient();
@@ -43,6 +45,7 @@ const App = () => (
             <Route path="/service-orders" element={<ServiceOrdersPage />} />
             <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
             <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
+            <Route path="/service-orders/:id/print" element={<PrintServiceOrderPage />} />
             <Route path="/customers" element={<CustomersPage />} />
             <Route path="/new-customer" element={<NewCustomerPage />} />
             <Route path="/customers/:id" element={<CustomerDetailPage />} />
@@ -57,6 +60,7 @@ const App = () => (
             <Route path="/inventory/new" element={<NewInventoryItemPage />} />
             <Route path="/inventory/:id" element={<InventoryItemDetailPage />} />
             <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
