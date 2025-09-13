@@ -31,6 +31,8 @@ import PrintableServiceOrderWarrantyPage from "./pages/PrintableServiceOrderWarr
 import PhotoUploadPage from "./pages/PhotoUploadPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import NewSupplierPage from "./pages/NewSupplierPage";
+import SupplierDetailPage from "./pages/SupplierDetailPage"; // New import
+import EditSupplierPage from "./pages/EditSupplierPage"; // New import
 import SalesPage from "./pages/SalesPage";
 import NewSalePage from "./pages/NewSalePage";
 import SaleDetailPage from "./pages/SaleDetailPage";
@@ -41,7 +43,7 @@ import FinancialsPage from "./pages/FinancialsPage";
 import GamificationPage from "./pages/GamificationPage";
 import OnlineCatalogPage from "./pages/OnlineCatalogPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
-import PublicCatalogPage from "./pages/PublicCatalogPage"; // New import
+import PublicCatalogPage from "./pages/PublicCatalogPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
@@ -97,8 +99,10 @@ const App = () => (
               <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
               <Route path="/suppliers" element={<SuppliersPage />} />
               <Route path="/suppliers/new" element={<NewSupplierPage />} />
-              <Route path="/catalog" element={<OnlineCatalogPage />} /> {/* Catálogo interno para gerenciamento */}
-              <Route path="/catalog/:itemIds" element={<OnlineCatalogPage />} /> {/* Catálogo interno para gerenciamento */}
+              <Route path="/suppliers/:id" element={<SupplierDetailPage />} /> {/* New route */}
+              <Route path="/suppliers/:id/edit" element={<EditSupplierPage />} /> {/* New route */}
+              <Route path="/catalog" element={<OnlineCatalogPage />} />
+              <Route path="/catalog/:itemIds" element={<OnlineCatalogPage />} />
               <Route path="/gamification" element={<GamificationPage />} />
               <Route path="/profile" element={<UserProfilePage />} />
               <Route path="/profile/edit" element={<EditUserProfilePage />} />
