@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { showError } from '@/utils/toast';
 import { Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import QRCode from "qrcode.react";
+import { QRCode } from "qrcode.react";
 
 interface LabelData {
   id: string;
