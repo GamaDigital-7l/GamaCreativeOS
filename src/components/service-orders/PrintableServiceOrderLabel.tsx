@@ -50,13 +50,19 @@ export function PrintableServiceOrderLabel() {
   const detailUrl = `${window.location.origin}/service-orders/${data.id}`;
 
   const renderPasswordPattern = () => (
-    <svg width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+    <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+      {/* Row 1 */}
       <circle cx="10" cy="10" r="3" fill="black" />
       <circle cx="30" cy="10" r="3" fill="black" />
       <circle cx="50" cy="10" r="3" fill="black" />
+      {/* Row 2 */}
       <circle cx="10" cy="30" r="3" fill="black" />
       <circle cx="30" cy="30" r="3" fill="black" />
       <circle cx="50" cy="30" r="3" fill="black" />
+      {/* Row 3 */}
+      <circle cx="10" cy="50" r="3" fill="black" />
+      <circle cx="30" cy="50" r="3" fill="black" />
+      <circle cx="50" cy="50" r="3" fill="black" />
     </svg>
   );
 

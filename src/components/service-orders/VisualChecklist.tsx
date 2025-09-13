@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Smartphone, RotateCcw } from 'lucide-react';
+import * as LucideIcons from 'lucide-react'; // Importa todos os ícones Lucide
 
 type PointStatus = 'ok' | 'damaged' | 'scratched' | 'not_working';
 type ChecklistState = Record<string, PointStatus>;
@@ -13,22 +13,38 @@ interface VisualChecklistProps {
   onChange: (value: ChecklistState) => void;
 }
 
+// Mapeamento de IDs para ícones e rótulos
+const pointDefinitions = {
+  front_screen: { icon: LucideIcons.Monitor, label: 'Tela Frontal' },
+  front_camera: { icon: LucideIcons.Camera, label: 'Câmera Frontal' },
+  earpiece: { icon: LucideIcons.Ear, label: 'Auricular' },
+  volume_buttons_left: { icon: LucideIcons.Volume2, label: 'Vol. (Esq)' },
+  power_button_right: { icon: LucideIcons.Power, label: 'Power (Dir)' },
+  charging_port: { icon: LucideIcons.BatteryCharging, label: 'Carga' },
+  speaker_bottom: { icon: LucideIcons.Speaker, label: 'Alto-falante' },
+  microphone_bottom: { icon: LucideIcons.Mic, label: 'Microfone' },
+  back_panel: { icon: LucideIcons.Square, label: 'Tampa Tras.' },
+  back_camera: { icon: LucideIcons.Camera, label: 'Câmera Tras.' },
+  flash: { icon: LucideIcons.Zap, label: 'Flash' },
+  logo_back: { icon: LucideIcons.Apple, label: 'Logo' }, // Exemplo, pode ser um ícone genérico
+};
+
 const frontPoints = [
-  { id: 'front_screen', cx: '50%', cy: '45%', r: '12', label: 'Tela Frontal' },
-  { id: 'front_camera', cx: '50%', cy: '8%', r: '5', label: 'Câmera Frontal' },
-  { id: 'earpiece', cx: '50%', cy: '15%', r: '4', label: 'Auricular' },
-  { id: 'volume_buttons_left', cx: '8%', cy: '30%', r: '6', label: 'Botões Volume (Esq)' },
-  { id: 'power_button_right', cx: '92%', cy: '30%', r: '6', label: 'Botão Power (Dir)' },
-  { id: 'charging_port', cx: '50%', cy: '94%', r: '6', label: 'Conector de Carga' },
-  { id: 'speaker_bottom', cx: '35%', cy: '94%', r: '4', label: 'Alto-falante (Inf)' },
-  { id: 'microphone_bottom', cx: '65%', cy: '94%', r: '4', label: 'Microfone (Inf)' },
+  { id: 'front_screen', cx: '50%', cy: '45%', width: '60', height: '30' },
+  { id: 'front_camera', cx: '50%', cy: '8%', width: '30', height: '20' },
+  { id: 'earpiece', cx: '50%', cy: '15%', width: '40', height: '15' },
+  { id: 'volume_buttons_left', cx: '8%', cy: '30%', width: '30', height: '20' },
+  { id: 'power_button_right', cx: '92%', cy: '30%', width: '30', height: '20' },
+  { id: 'charging_port', cx: '50%', cy: '94%', width: '30', height: '20' },
+  { id: 'speaker_bottom', cx: '35%', cy: '94%', width: '30', height: '20' },
+  { id: 'microphone_bottom', cx: '65%', cy: '94%', width: '30', height: '20' },
 ];
 
 const backPoints = [
-  { id: 'back_panel', cx: '50%', cy: '50%', r: '15', label: 'Tampa Traseira' },
-  { id: 'back_camera', cx: '25%', cy: '12%', r: '8', label: 'Câmera Traseira' },
-  { id: 'flash', cx: '35%', cy: '12%', r: '4', label: 'Flash' },
-  { id: 'logo_back', cx: '50%', cy: '70%', r: '8', label: 'Logo Traseira' },
+  { id: 'back_panel', cx: '50%', cy: '50%', width: '60', height: '30' },
+  { id: 'back_camera', cx: '25%', cy: '12%', width: '30', height: '20' },
+  { id: 'flash', cx: '35%', cy: '12%', width: '20', height: '20' },
+  { id: 'logo_back', cx: '50%', cy: '70%', width: '30', height: '20' },
 ];
 
 const statusOptions: { value: PointStatus; label: string }[] = [
@@ -40,11 +56,11 @@ const statusOptions: { value: PointStatus; label: string }[] = [
 
 const getStatusColor = (status?: PointStatus) => {
   switch (status) {
-    case 'ok': return 'fill-green-500';
-    case 'scratched': return 'fill-yellow-500';
-    case 'damaged': return 'fill-orange-500';
-    case 'not_working': return 'fill-red-500';
-    default: return 'fill-gray-400';
+    case 'ok': return 'bg-green-500';
+    case 'scratched': return 'bg-yellow-500';
+    case 'damaged': return 'bg-orange-500';
+    case 'not_working': return 'bg-red-500';
+    default: return 'bg-gray-400';
   }
 };
 
@@ -69,39 +85,46 @@ export function VisualChecklist({ value, onChange }: VisualChecklistProps) {
 
         {isFront && (
           <>
-            {/* Earpiece */}
+            {/* Earpiece visual */}
             <rect x="55" y="20" width="40" height="4" rx="2" fill="#d1d5db" />
           </>
         )}
 
-        {currentPoints.map((point) => (
-          <Popover key={point.id}>
-            <PopoverTrigger asChild>
-              <circle
-                cx={point.cx}
-                cy={point.cy}
-                r={point.r}
-                className={`${getStatusColor(value[point.id])} cursor-pointer opacity-70 hover:opacity-100 transition-opacity`}
-              />
-            </PopoverTrigger>
-            <PopoverContent className="w-auto">
-              <div className="space-y-2">
-                <p className="font-semibold">{point.label}</p>
-                <RadioGroup
-                  value={value[point.id]}
-                  onValueChange={(newStatus: PointStatus) => handleStatusChange(point.id, newStatus)}
-                >
-                  {statusOptions.map((opt) => (
-                    <div key={opt.value} className="flex items-center space-x-2">
-                      <RadioGroupItem value={opt.value} id={`${point.id}-${opt.value}`} />
-                      <Label htmlFor={`${point.id}-${opt.value}`}>{opt.label}</Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-            </PopoverContent>
-          </Popover>
-        ))}
+        {currentPoints.map((point) => {
+          const PointIcon = pointDefinitions[point.id]?.icon;
+          const pointLabel = pointDefinitions[point.id]?.label;
+          const x = parseFloat(point.cx) - parseFloat(point.width) / 2;
+          const y = parseFloat(point.cy) - parseFloat(point.height) / 2;
+
+          return (
+            <foreignObject x={x} y={y} width={point.width} height={point.height} key={point.id}>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <div className={`flex flex-col items-center justify-center w-full h-full rounded-md text-xs ${getStatusColor(value[point.id])} cursor-pointer opacity-70 hover:opacity-100 transition-opacity p-1 text-white`}>
+                    {PointIcon && <PointIcon className="h-4 w-4" />}
+                    <span className="leading-none text-center">{pointLabel}</span>
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto">
+                  <div className="space-y-2">
+                    <p className="font-semibold">{pointDefinitions[point.id]?.label}</p>
+                    <RadioGroup
+                      value={value[point.id]}
+                      onValueChange={(newStatus: PointStatus) => handleStatusChange(point.id, newStatus)}
+                    >
+                      {statusOptions.map((opt) => (
+                        <div key={opt.value} className="flex items-center space-x-2">
+                          <RadioGroupItem value={opt.value} id={`${point.id}-${opt.value}`} />
+                          <Label htmlFor={`${point.id}-${opt.value}`}>{opt.label}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </foreignObject>
+          );
+        })}
       </svg>
     );
   };

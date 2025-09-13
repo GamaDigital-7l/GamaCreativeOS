@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { QuoteShareDialog } from './QuoteShareDialog';
+import { PaymentDialog } from './PaymentDialog'; // Import PaymentDialog
 
 interface ServiceOrderDetails {
   id: string;
@@ -49,6 +50,7 @@ export function ServiceOrderDetail() {
   const [serviceOrder, setServiceOrder] = useState<ServiceOrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false); // State for payment dialog
 
   useEffect(() => {
     if (user && id) {
@@ -85,6 +87,42 @@ export function ServiceOrderDetail() {
     }
   };
 
+  const handleFinalizePayment = async (paymentMethod: string) => {
+    if (!user || !id || !serviceOrder) return;
+
+    try {
+      const { error: osError } = await supabase.from('service_orders').update({
+        status: 'completed', payment_method: paymentMethod, payment_status: 'paid',
+        finalized_at: new Date().toISOString(),
+      }).eq('id', id);
+      if (osError) throw osError;
+
+      const description = `Recebimento OS #${id.substring(0, 8)} - Cliente: ${serviceOrder.customers.name}`;
+      const { error: transactionError } = await supabase
+        .from('financial_transactions')
+        .insert({
+          user_id: user.id,
+          transaction_date: new Date().toISOString(),
+          description: description,
+          amount: serviceOrder.total_amount || 0,
+          type: 'income',
+          category: 'Recebimento de Serviço',
+          related_service_order_id: id,
+        });
+
+      if (transactionError) {
+        showError(`OS finalizada, mas falha ao registrar no financeiro: ${transactionError.message}`);
+      } else {
+        showSuccess("Pagamento registrado e OS concluída!");
+      }
+      
+      setIsPaymentDialogOpen(false);
+      fetchServiceOrderDetails(id); // Refresh data
+    } catch (error: any) {
+      showError(`Erro ao finalizar pagamento: ${error.message}`);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -92,9 +130,13 @@ export function ServiceOrderDetail() {
     return <p className="text-center text-red-500">Ordem de Serviço não encontrada.</p>;
   }
 
+  const canFinalize = serviceOrder.status !== 'completed' && serviceOrder.status !== 'cancelled' && (serviceOrder.status === 'ready' || serviceOrder.approval_status === 'approved');
+
   return (
     <>
       <QuoteShareDialog isOpen={isShareDialogOpen} onClose={() => setIsShareDialogOpen(false)} serviceOrderId={serviceOrder.id} />
+      <PaymentDialog isOpen={isPaymentDialogOpen} onClose={() => setIsPaymentDialogOpen(false)} onSubmit={handleFinalizePayment} totalAmount={serviceOrder.total_amount || 0} />
+
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <div className="flex justify-between items-start">
@@ -110,6 +152,11 @@ export function ServiceOrderDetail() {
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print-label`} target="_blank"><Ticket className="h-4 w-4 mr-2" /> Imprimir Etiqueta</Link></Button>
               <Button variant="outline" size="sm" onClick={() => setIsShareDialogOpen(true)}><Share2 className="h-4 w-4 mr-2" /> Compartilhar Orçamento</Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/edit`}><Edit className="h-4 w-4 mr-2" /> Editar</Link></Button>
+              {canFinalize && (
+                <Button variant="default" size="sm" onClick={() => setIsPaymentDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
+                  <DollarSign className="h-4 w-4 mr-2" /> Finalizar OS
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
