@@ -11,7 +11,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, ListChecks, Tag, Hash, Lock } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, ListChecks, Tag, Hash, Lock, UserPlus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -65,6 +65,7 @@ export function ServiceOrderForm() {
   const customerId = form.watch("customerId");
 
   useEffect(() => {
+    console.log("ServiceOrderForm mounted or updated. User:", user); // Debug log
     if (!user) return;
     supabase.from('customers').select('id, name').eq('user_id', user.id).order('name').then(({ data }) => setCustomers(data || []));
   }, [user]);

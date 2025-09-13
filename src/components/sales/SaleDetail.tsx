@@ -5,11 +5,19 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Smartphone, User, Package, DollarSign, CalendarDays, CreditCard, Factory, FileText } from 'lucide-react'; // Adicionado Factory, FileText icons
-import { format, addDays, differenceInDays } from 'date-fns'; // Adicionado addDays, differenceInDays
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Smartphone, User, Package, DollarSign, CalendarDays, CreditCard, Factory, FileText, RefreshCcw } from 'lucide-react'; // Added RefreshCcw icon
+import { format, addDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Badge } from '@/components/ui/badge'; // Import Badge
+import { Badge } from '@/components/ui/badge';
+
+interface TradeInDetails {
+  brand: string;
+  model: string;
+  imei_serial: string;
+  value: number;
+  condition?: string;
+}
 
 interface SaleDetails {
   id: string;
@@ -25,8 +33,9 @@ interface SaleDetails {
   customer_id?: string;
   sale_price: number;
   payment_method?: string;
-  warranty_days?: number; // Novo campo
-  warranty_policy?: string; // Novo campo
+  warranty_days?: number;
+  warranty_policy?: string;
+  trade_in_details?: TradeInDetails; // New field
   customers: { name: string } | null;
   suppliers: { name: string } | null;
 }
@@ -85,7 +94,7 @@ export function SaleDetail() {
     return <p className="text-center text-red-500">Venda não encontrada.</p>;
   }
 
-  const profit = sale.sale_price - (sale.acquisition_cost || 0);
+  const profit = sale.sale_price - (sale.acquisition_cost || 0) + (sale.trade_in_details?.value || 0); // Include trade-in value in profit calculation
 
   const getWarrantyInfo = () => {
     if (!sale.warranty_days || sale.warranty_days === 0) {
@@ -156,6 +165,9 @@ export function SaleDetail() {
           <div className="space-y-4 p-4 border rounded-lg bg-muted/40">
             <h3 className="font-semibold text-lg border-b pb-2 flex items-center gap-2"><DollarSign className="h-5 w-5 text-primary" /> Financeiro</h3>
             <p className="flex items-center gap-2"><strong>Custo:</strong> R$ {(sale.acquisition_cost || 0).toFixed(2)}</p>
+            {sale.trade_in_details && (
+              <p className="flex items-center gap-2 text-orange-500"><strong>Entrada:</strong> R$ {sale.trade_in_details.value.toFixed(2)}</p>
+            )}
             <p className="flex items-center gap-2"><strong>Venda:</strong> R$ {sale.sale_price.toFixed(2)}</p>
             <p className={`font-bold text-lg pt-2 border-t ${profit >= 0 ? 'text-green-600' : 'text-red-600'} flex items-center gap-2`}>
               Lucro: R$ {profit.toFixed(2)}
@@ -174,6 +186,15 @@ export function SaleDetail() {
             <p className="flex items-center gap-2"><strong>Pagamento:</strong> {sale.payment_method || 'N/A'}</p>
           </div>
         </div>
+        {sale.trade_in_details && (
+          <div className="space-y-4 p-4 border rounded-lg">
+            <h3 className="font-semibold text-lg border-b pb-2 flex items-center gap-2"><RefreshCcw className="h-5 w-5 text-primary" /> Detalhes do Aparelho de Entrada</h3>
+            <p className="flex items-center gap-2"><strong>Marca/Modelo:</strong> {sale.trade_in_details.brand} {sale.trade_in_details.model}</p>
+            <p className="flex items-center gap-2"><strong>IMEI/Serial:</strong> {sale.trade_in_details.imei_serial}</p>
+            <p className="flex items-center gap-2"><strong>Valor:</strong> R$ {sale.trade_in_details.value.toFixed(2)}</p>
+            <p className="flex items-center gap-2"><strong>Condição:</strong> {sale.trade_in_details.condition || 'N/A'}</p>
+          </div>
+        )}
         <div className="space-y-4 p-4 border rounded-lg">
           <h3 className="font-semibold text-lg border-b pb-2 flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary" /> Informações de Garantia</h3>
           <p className="flex items-center gap-2"><strong>Status:</strong> {warrantyInfo.status}</p>

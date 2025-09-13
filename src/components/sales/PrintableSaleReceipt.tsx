@@ -4,8 +4,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { showError } from '@/utils/toast';
 import { Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { format, addDays } from 'date-fns'; // Adicionado addDays
+import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+interface TradeInDetails {
+  brand: string;
+  model: string;
+  imei_serial: string;
+  value: number;
+  condition?: string;
+}
 
 interface SaleData {
   id: string;
@@ -15,8 +23,9 @@ interface SaleData {
   imei_serial: string;
   sale_price: number;
   payment_method?: string;
-  warranty_days?: number; // Novo campo
-  warranty_policy?: string; // Novo campo
+  warranty_days?: number;
+  warranty_policy?: string;
+  trade_in_details?: TradeInDetails; // New field
   customers: { name: string; phone?: string; } | null;
 }
 
@@ -58,6 +67,8 @@ export function PrintableSaleReceipt() {
   const warrantyEndDate = data.warranty_days && data.warranty_days > 0
     ? format(addDays(new Date(data.created_at), data.warranty_days), 'dd/MM/yyyy', { locale: ptBR })
     : 'N/A';
+
+  const totalAmountDue = data.sale_price - (data.trade_in_details?.value || 0);
 
   return (
     <div className="font-sans text-gray-800">
@@ -103,6 +114,16 @@ export function PrintableSaleReceipt() {
                   </td>
                   <td className="text-right py-1 align-top">R$ {data.sale_price.toFixed(2)}</td>
                 </tr>
+                {data.trade_in_details && (
+                  <tr>
+                    <td className="py-1 text-red-600">
+                      Aparelho de Entrada: {data.trade_in_details.brand} {data.trade_in_details.model}
+                      <br />
+                      <span className="text-xs text-gray-600">IMEI/Série: {data.trade_in_details.imei_serial}</span>
+                    </td>
+                    <td className="text-right py-1 align-top text-red-600">- R$ {data.trade_in_details.value.toFixed(2)}</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </section>
@@ -110,7 +131,7 @@ export function PrintableSaleReceipt() {
           <section className="flex justify-end pt-2 border-t border-black">
             <div className="w-1/2 space-y-2 text-right">
               <p><strong>Forma de Pagamento:</strong> {data.payment_method || 'N/A'}</p>
-              <p className="font-bold text-xl"><strong>Total:</strong> R$ {data.sale_price.toFixed(2)}</p>
+              <p className="font-bold text-xl"><strong>Total a Pagar:</strong> R$ {totalAmountDue.toFixed(2)}</p>
             </div>
           </section>
 

@@ -2,11 +2,17 @@ import { ServiceOrderForm } from "@/components/service-orders/ServiceOrderForm";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, PlusCircle, Wrench } from "lucide-react"; // Adicionado PlusCircle, Wrench icons
+import { ArrowLeft, PlusCircle, Wrench } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import React, { useEffect } from "react"; // Import useEffect
 
 const NewServiceOrderPage = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log("NewServiceOrderPage rendered."); // Debug log
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 p-4 sm:p-6">
       <Card className="w-full max-w-3xl">
