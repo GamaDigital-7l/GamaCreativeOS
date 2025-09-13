@@ -2,7 +2,8 @@ import { ServiceOrderSummary } from "@/components/dashboard/ServiceOrderSummary"
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { SalesSummary } from "@/components/dashboard/SalesSummary";
 import { POSSalesSummary } from "@/components/dashboard/POSSalesSummary";
-import { SalesOverviewWidget } from "@/components/dashboard/SalesOverviewWidget"; // New import
+import { SalesOverviewWidget } from "@/components/dashboard/SalesOverviewWidget";
+import { WarrantyOverviewWidget } from "@/components/dashboard/WarrantyOverviewWidget"; // New import
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -32,7 +33,29 @@ const Index = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <SalesSummary />
           <POSSalesSummary />
-          <SalesOverviewWidget /> {/* Integrated new widget */}
+          <SalesOverviewWidget />
+        </div>
+        <h2 className="text-2xl font-semibold tracking-tight mb-4">Garantias e Serviços</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <WarrantyOverviewWidget /> {/* Integrated new widget */}
+          {/* Placeholder for Service Analytics Widget */}
+          <div className="col-span-1 sm:col-span-2 lg:col-span-1">
+            <Card className="h-full">
+              <CardHeader><CardTitle>Serviços Mais Comuns</CardTitle></CardHeader>
+              <CardContent className="flex justify-center items-center h-48 text-muted-foreground">
+                Em breve...
+              </CardContent>
+            </Card>
+          </div>
+          {/* Placeholder for Average Ticket Widget */}
+          <div className="col-span-1 sm:col-span-2 lg:col-span-1">
+            <Card className="h-full">
+              <CardHeader><CardTitle>Ticket Médio de Clientes</CardTitle></CardHeader>
+              <CardContent className="flex justify-center items-center h-48 text-muted-foreground">
+                Em breve...
+              </CardContent>
+            </Card>
+          </div>
         </div>
         <ServiceOrderSummary />
       </div>
