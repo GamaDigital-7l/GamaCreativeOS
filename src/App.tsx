@@ -27,6 +27,7 @@ import InventoryItemDetailPage from "./pages/InventoryItemDetailPage";
 import EditInventoryItemPage from "./pages/EditInventoryItemPage";
 import SettingsPage from "./pages/SettingsPage";
 import PrintServiceOrderPage from "./pages/PrintServiceOrderPage";
+import PhotoUploadPage from "./pages/PhotoUploadPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
             <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
             <Route path="/service-orders/:id/print" element={<PrintServiceOrderPage />} />
+            <Route path="/upload-photos/:id" element={<PhotoUploadPage />} />
             <Route path="/customers" element={<CustomersPage />} />
             <Route path="/new-customer" element={<NewCustomerPage />} />
             <Route path="/customers/:id" element={<CustomerDetailPage />} />
