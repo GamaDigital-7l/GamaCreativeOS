@@ -13,31 +13,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Save, Smartphone, ListChecks, User, Tag, Lock, Wrench, Hash } from "lucide-react"; // Adicionado User, Tag, Lock, Wrench, Hash icons
-
-const checklistOptions = [
-  "Tela intacta",
-  "Tela trincada",
-  "Carcaça intacta",
-  "Carcaça com arranhões",
-  "Carcaça amassada",
-  "Bateria ok",
-  "Bateria estufada",
-  "Câmera ok",
-  "Câmera com defeito",
-  "Botões ok",
-  "Botões com defeito",
-  "Conector de carga ok",
-  "Conector de carga com defeito",
-  "Ligando",
-  "Não ligando",
-];
+import { Loader2, Save, Smartphone, ListChecks, User, Tag, Lock, Wrench, Hash } from "lucide-react";
+import { VisualChecklist } from "../service-orders/VisualChecklist"; // Import VisualChecklist
 
 const formSchema = z.object({
   customer_id: z.string().uuid({ message: "Selecione um cliente válido." }),
@@ -46,7 +28,7 @@ const formSchema = z.object({
   serial_number: z.string().optional(),
   defect_description: z.string().min(10, { message: "Descrição do defeito é obrigatória e deve ter pelo menos 10 caracteres." }),
   password_info: z.string().optional(),
-  checklist: z.array(z.string()).optional(),
+  checklist: z.record(z.string()).optional(), // Changed to z.record(z.string())
 });
 
 interface CustomerOption {
@@ -72,7 +54,7 @@ export function EditDeviceForm() {
       serial_number: "",
       defect_description: "",
       password_info: "",
-      checklist: [],
+      checklist: {}, // Default to empty object
     },
   });
 
@@ -139,7 +121,7 @@ export function EditDeviceForm() {
           serial_number: data.serial_number || "",
           defect_description: data.defect_description || "",
           password_info: data.password_info || "",
-          checklist: data.checklist || [],
+          checklist: data.checklist || {}, // Ensure it's an object
         });
       } catch (error: any) {
         console.error("Erro ao carregar dispositivo para edição:", error);
@@ -176,7 +158,7 @@ export function EditDeviceForm() {
           serial_number: values.serial_number,
           defect_description: values.defect_description,
           password_info: values.password_info,
-          checklist: values.checklist,
+          checklist: values.checklist || {}, // Store as JSONB object directly
         })
         .eq('id', id)
         .eq('user_id', user.id); // Ensure only user's own devices can be updated
@@ -308,46 +290,12 @@ export function EditDeviceForm() {
         <FormField
           control={form.control}
           name="checklist"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <div className="mb-4">
                 <FormLabel className="text-base">Estado do Aparelho (Marque o que se aplica)</FormLabel>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {checklistOptions.map((item) => (
-                  <FormField
-                    key={item}
-                    control={form.control}
-                    name="checklist"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={item}
-                          className="flex flex-row items-start space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(item)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...(field.value || []), item])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== item
-                                      )
-                                    );
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            {item}
-                          </FormLabel>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                ))}
-              </div>
+              <VisualChecklist value={field.value || {}} onChange={field.onChange} />
               <FormMessage />
             </FormItem>
           )}

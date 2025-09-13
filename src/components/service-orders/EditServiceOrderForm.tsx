@@ -141,6 +141,40 @@ export function EditServiceOrderForm() {
     if (!user || !id) return;
     setIsSubmitting(true);
     try {
+      // Fetch current items to determine stock changes
+      const { data: existingItemsData, error: existingItemsError } = await supabase
+        .from('service_order_inventory_items')
+        .select('inventory_item_id, quantity_used')
+        .eq('service_order_id', id);
+
+      if (existingItemsError) throw existingItemsError;
+
+      const existingItemsMap = new Map(existingItemsData.map(item => [item.inventory_item_id, item.quantity_used]));
+      const newItemsMap = new Map((values.inventoryItems || []).map(item => [item.inventory_item_id, item.quantity_used]));
+
+      // Revert stock for removed/reduced items
+      const stockRevertPromises = Array.from(existingItemsMap.entries()).map(([itemId, oldQuantity]) => {
+        const newQuantity = newItemsMap.get(itemId) || 0;
+        if (oldQuantity > newQuantity) {
+          const diff = oldQuantity - newQuantity;
+          return supabase.rpc('increment_quantity', { item_id: itemId, amount: diff });
+        }
+        return null;
+      }).filter(Boolean);
+      await Promise.all(stockRevertPromises);
+
+      // Deduct stock for new/increased items
+      const stockDeductPromises = (values.inventoryItems || []).map(item => {
+        const oldQuantity = existingItemsMap.get(item.inventory_item_id) || 0;
+        if (item.quantity_used > oldQuantity) {
+          const diff = item.quantity_used - oldQuantity;
+          return supabase.rpc('decrement_quantity', { item_id: item.inventory_item_id, amount: diff });
+        }
+        return null;
+      }).filter(Boolean);
+      await Promise.all(stockDeductPromises);
+
+      // Delete all existing service order items and re-insert
       await supabase.from('service_order_inventory_items').delete().eq('service_order_id', id);
       if (values.inventoryItems && values.inventoryItems.length > 0) {
         const itemsToInsert = values.inventoryItems.map(item => ({

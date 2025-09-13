@@ -12,7 +12,15 @@ import { ptBR } from 'date-fns/locale';
 interface PrintableData {
   serviceOrder: any;
   customer: any;
-  device: any;
+  device: {
+    id: string;
+    brand: string;
+    model: string;
+    serial_number?: string;
+    defect_description?: string;
+    password_info?: string;
+    checklist?: Record<string, string>; // Changed to Record<string, string>
+  };
   items: any[];
   settings: any;
 }
@@ -125,12 +133,12 @@ export function PrintableServiceOrder() {
                     {renderPasswordPattern()}
                   </div>
                 )}
-                {device.checklist && device.checklist.length > 0 && (
+                {device.checklist && Object.keys(device.checklist).length > 0 && (
                   <div className="mt-4">
                     <p className="font-semibold">Checklist de Entrada:</p>
                     <ul className="list-disc list-inside ml-4 text-sm">
-                      {device.checklist.map((item: string, index: number) => (
-                        <li key={index}>{item}</li>
+                      {Object.entries(device.checklist).map(([key, status], index) => (
+                        <li key={index}>{key.replace(/_/g, ' ')}: {status}</li>
                       ))}
                     </ul>
                   </div>

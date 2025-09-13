@@ -11,7 +11,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, Camera, Tag, Hash, Lock, ListChecks } from "lucide-react"; // Adicionado Tag, Hash, Lock, ListChecks icons
+import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, ListChecks, Tag, Hash, Lock } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -99,7 +99,7 @@ export function ServiceOrderForm() {
           model: values.newDeviceModel,
           serial_number: values.newDeviceSerial,
           password_info: values.newDevicePassword,
-          checklist: values.newDeviceChecklist ? Object.entries(values.newDeviceChecklist).filter(([, status]) => status !== 'ok').map(([key, status]) => `${key}: ${status}`) : [], // Convert checklist object to array of strings
+          checklist: values.newDeviceChecklist || {}, // Store as JSONB object directly
           defect_description: values.issueDescription, // Using main description here
         }).select('id').single();
 
@@ -178,7 +178,7 @@ export function ServiceOrderForm() {
                     <FormField control={form.control} name="newDevicePassword" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Lock className="h-4 w-4" /> Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                   </div>
                   <div>
-                    <FormLabel className="flex items-center gap-2"><Camera className="h-4 w-4" /> Checklist Visual</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><ListChecks className="h-4 w-4" /> Checklist Visual</FormLabel>
                     <Controller control={form.control} name="newDeviceChecklist" render={({ field }) => (<VisualChecklist value={field.value || {}} onChange={field.onChange} />)} />
                   </div>
                 </div>

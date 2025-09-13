@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { QuoteShareDialog } from './QuoteShareDialog';
-import { PaymentDialog } from './PaymentDialog'; // Import PaymentDialog
+import { PaymentDialog } from './PaymentDialog';
 
 interface ServiceOrderDetails {
   id: string;
@@ -33,7 +33,7 @@ interface ServiceOrderDetails {
   guarantee_terms?: string;
   photos?: string[];
   customers: { id: string; name: string; phone?: string; address?: string; email?: string; };
-  devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: string[]; };
+  devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; }; // Changed to Record<string, string>
   service_order_inventory_items: {
     quantity_used: number;
     price_at_time: number;
@@ -50,7 +50,7 @@ export function ServiceOrderDetail() {
   const [serviceOrder, setServiceOrder] = useState<ServiceOrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false); // State for payment dialog
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user && id) {
@@ -150,7 +150,7 @@ export function ServiceOrderDetail() {
             <div className="flex items-center gap-2 flex-wrap justify-end">
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print`} target="_blank"><Printer className="h-4 w-4 mr-2" /> Imprimir OS</Link></Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print-label`} target="_blank"><Ticket className="h-4 w-4 mr-2" /> Imprimir Etiqueta</Link></Button>
-              {serviceOrder.status === 'completed' && ( // Conditionally render print warranty button
+              {serviceOrder.status === 'completed' && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/service-orders/${serviceOrder.id}/print-warranty`} target="_blank">
                     <FileText className="h-4 w-4 mr-2" /> Imprimir Garantia
@@ -210,12 +210,12 @@ export function ServiceOrderDetail() {
             <p><strong>Número de Série/IMEI:</strong> {serviceOrder.devices.serial_number || 'N/A'}</p>
             <p><strong>Defeito Relatado:</strong> {serviceOrder.devices.defect_description || 'N/A'}</p>
             <p><strong>Informações de Senha:</strong> {serviceOrder.devices.password_info || 'N/A'}</p>
-            {serviceOrder.devices.checklist && serviceOrder.devices.checklist.length > 0 && (
+            {serviceOrder.devices.checklist && Object.keys(serviceOrder.devices.checklist).length > 0 && (
               <div>
                 <p className="font-semibold mt-2">Checklist de Entrada:</p>
                 <ul className="list-disc list-inside ml-4 grid grid-cols-2 md:grid-cols-3 gap-x-4">
-                  {serviceOrder.devices.checklist.map((item, index) => (
-                    <li key={index}>{item}</li>
+                  {Object.entries(serviceOrder.devices.checklist).map(([key, status], index) => (
+                    <li key={index}>{key.replace(/_/g, ' ')}: {status}</li>
                   ))}
                 </ul>
               </div>

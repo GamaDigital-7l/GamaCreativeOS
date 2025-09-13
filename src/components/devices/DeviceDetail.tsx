@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Smartphone, User, Tag, Lock, ListChecks, Wrench } from 'lucide-react'; // Adicionado Wrench icon
+import { ArrowLeft, Edit, Trash2, Loader2, Smartphone, User, Tag, Lock, ListChecks, Wrench } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -28,7 +28,7 @@ interface DeviceDetails {
   serial_number?: string;
   defect_description?: string;
   password_info?: string;
-  checklist?: string[];
+  checklist?: Record<string, string>; // Changed to Record<string, string>
   customers: {
     id: string;
     name: string;
@@ -224,15 +224,15 @@ export function DeviceDetail() {
             <p><strong>Informações de Senha:</strong> {device.password_info}</p>
           </div>
         )}
-        {device.checklist && device.checklist.length > 0 && (
+        {device.checklist && Object.keys(device.checklist).length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2">
               <ListChecks className="h-5 w-5 text-muted-foreground" />
               <p className="font-semibold">Checklist de Entrada:</p>
             </div>
             <ul className="list-disc list-inside ml-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4">
-              {device.checklist.map((item, index) => (
-                <li key={index}>{item}</li>
+              {Object.entries(device.checklist).map(([key, status], index) => (
+                <li key={index}>{key.replace(/_/g, ' ')}: {status}</li>
               ))}
             </ul>
           </div>
