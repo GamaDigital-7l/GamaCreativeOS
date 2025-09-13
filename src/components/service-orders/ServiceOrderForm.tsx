@@ -1,37 +1,51 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import { Loader2, AlertTriangle, Check, ChevronsUpDown, PlusCircle } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { format, addDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { PhotoUploadDialog } from "./PhotoUploadDialog";
 import { NewCustomerForm } from "../customers/NewCustomerForm";
-import { NewDeviceForm } from "../devices/NewDeviceForm";
+import { VisualChecklist } from "./VisualChecklist";
 
 const formSchema = z.object({
   customerId: z.string({ required_error: "Selecione um cliente." }),
-  deviceId: z.string({ required_error: "Selecione um aparelho." }),
+  deviceSelection: z.enum(["existing", "new"], { required_error: "Selecione uma opção." }),
+  deviceId: z.string().optional(),
+  newDeviceBrand: z.string().optional(),
+  newDeviceModel: z.string().optional(),
+  newDeviceSerial: z.string().optional(),
+  newDevicePassword: z.string().optional(),
+  newDeviceChecklist: z.record(z.string()).optional(),
   issueDescription: z.string().min(10, { message: "A descrição do problema é obrigatória." }),
+}).superRefine((data, ctx) => {
+  if (data.deviceSelection === 'existing' && !data.deviceId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selecione um aparelho existente.", path: ["deviceId"] });
+  }
+  if (data.deviceSelection === 'new') {
+    if (!data.newDeviceBrand || data.newDeviceBrand.length < 2) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Marca é obrigatória.", path: ["newDeviceBrand"] });
+    }
+    if (!data.newDeviceModel || data.newDeviceModel.length < 2) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Modelo é obrigatório.", path: ["newDeviceModel"] });
+    }
+  }
 });
 
 interface Entity { id: string; name: string; }
 interface Device extends Entity { brand: string; model: string; }
-interface WarrantyInfo { id: string; endDate: Date; }
 
 export function ServiceOrderForm() {
   const { user } = useSession();
@@ -39,74 +53,72 @@ export function ServiceOrderForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState<Entity[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Entity | null>(null);
-  const [warrantyInfo, setWarrantyInfo] = useState<WarrantyInfo | null>(null);
   const [newServiceOrderId, setNewServiceOrderId] = useState<string | null>(null);
   const [isNewCustomerOpen, setIsNewCustomerOpen] = useState(false);
-  const [isNewDeviceOpen, setIsNewDeviceOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: { deviceSelection: "existing", newDeviceChecklist: {} },
   });
+
+  const deviceSelection = form.watch("deviceSelection");
+  const customerId = form.watch("customerId");
 
   useEffect(() => {
     if (!user) return;
     supabase.from('customers').select('id, name').order('name').then(({ data }) => setCustomers(data || []));
   }, [user]);
 
-  const handleCustomerSelect = async (customerId: string) => {
-    form.setValue("customerId", customerId);
-    form.setValue("deviceId", "");
-    setWarrantyInfo(null);
-    const customer = customers.find(c => c.id === customerId);
-    setSelectedCustomer(customer || null);
-    const { data } = await supabase.from('devices').select('id, brand, model').eq('customer_id', customerId);
-    setDevices(data as Device[] || []);
-  };
-
-  const handleDeviceSelect = async (deviceId: string) => {
-    form.setValue("deviceId", deviceId);
-    const { data } = await supabase.from('service_orders').select('id, finalized_at, warranty_days').eq('device_id', deviceId).eq('status', 'completed').not('finalized_at', 'is', null).not('warranty_days', 'is', null).order('finalized_at', { ascending: false }).limit(1);
-    if (data && data.length > 0) {
-      const lastOs = data[0];
-      const warrantyEndDate = addDays(new Date(lastOs.finalized_at), lastOs.warranty_days);
-      if (warrantyEndDate > new Date()) {
-        setWarrantyInfo({ id: lastOs.id, endDate: warrantyEndDate });
-      } else {
-        setWarrantyInfo(null);
-      }
+  useEffect(() => {
+    if (customerId) {
+      supabase.from('devices').select('id, brand, model').eq('customer_id', customerId)
+        .then(({ data }) => setDevices(data as Device[] || []));
     } else {
-      setWarrantyInfo(null);
+      setDevices([]);
     }
-  };
+    form.setValue("deviceId", undefined);
+  }, [customerId, form]);
 
   const handleNewCustomerSuccess = (newCustomer: { id: string; name: string }) => {
     setCustomers(prev => [...prev, newCustomer].sort((a, b) => a.name.localeCompare(b.name)));
-    handleCustomerSelect(newCustomer.id);
+    form.setValue("customerId", newCustomer.id);
     setIsNewCustomerOpen(false);
-  };
-
-  const handleNewDeviceSuccess = (newDevice: { id: string; brand: string; model: string }) => {
-    const deviceWithName = { ...newDevice, name: `${newDevice.brand} ${newDevice.model}` };
-    setDevices(prev => [...prev, deviceWithName]);
-    handleDeviceSelect(newDevice.id);
-    setIsNewDeviceOpen(false);
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) return;
     setIsSubmitting(true);
+    let finalDeviceId = values.deviceId;
+
     try {
-      const { data, error } = await supabase.from('service_orders').insert({
+      if (values.deviceSelection === 'new') {
+        const { data: newDevice, error: deviceError } = await supabase.from('devices').insert({
+          customer_id: values.customerId,
+          user_id: user.id,
+          brand: values.newDeviceBrand,
+          model: values.newDeviceModel,
+          serial_number: values.newDeviceSerial,
+          password_info: values.newDevicePassword,
+          checklist: values.newDeviceChecklist,
+          defect_description: values.issueDescription, // Using main description here
+        }).select('id').single();
+
+        if (deviceError) throw deviceError;
+        finalDeviceId = newDevice.id;
+      }
+
+      const { data: osData, error: osError } = await supabase.from('service_orders').insert({
         customer_id: values.customerId,
-        device_id: values.deviceId,
+        device_id: finalDeviceId,
         user_id: user.id,
         issue_description: values.issueDescription,
         status: 'pending',
-      }).select().single();
-      if (error) throw error;
+      }).select('id').single();
+
+      if (osError) throw osError;
+
       showSuccess("Ordem de Serviço criada com sucesso!");
-      setNewServiceOrderId(data.id);
+      setNewServiceOrderId(osData.id);
     } catch (error: any) {
       showError(`Erro ao criar OS: ${error.message}`);
     } finally {
@@ -123,36 +135,62 @@ export function ServiceOrderForm() {
     <>
       {newServiceOrderId && <PhotoUploadDialog isOpen={!!newServiceOrderId} onClose={handleDialogClose} serviceOrderId={newServiceOrderId} />}
       <Dialog open={isNewCustomerOpen} onOpenChange={setIsNewCustomerOpen}><DialogContent><DialogHeader><DialogTitle>Novo Cliente</DialogTitle></DialogHeader><NewCustomerForm onSuccess={handleNewCustomerSuccess} /></DialogContent></Dialog>
-      <Dialog open={isNewDeviceOpen} onOpenChange={setIsNewDeviceOpen}><DialogContent><DialogHeader><DialogTitle>Novo Dispositivo</DialogTitle></DialogHeader>{selectedCustomer && <NewDeviceForm customerId={selectedCustomer.id} onSuccess={handleNewDeviceSuccess} />}</DialogContent></Dialog>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-4">
-          <div className="space-y-4 p-4 border rounded-lg">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
+          <div className="p-4 border rounded-lg">
             <FormField control={form.control} name="customerId" render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel className="font-semibold">1. Cliente</FormLabel>
-                <EntitySelector entities={customers} placeholder="Buscar cliente..." notFoundText="Nenhum cliente encontrado." onSelect={handleCustomerSelect} value={field.value} />
+                <FormLabel className="font-semibold text-lg">1. Cliente</FormLabel>
+                <EntitySelector entities={customers} placeholder="Buscar cliente..." notFoundText="Nenhum cliente encontrado." onSelect={(id) => field.onChange(id)} value={field.value} />
                 <FormMessage />
                 <Button type="button" variant="link" size="sm" className="p-0 h-auto mt-2 self-start" onClick={() => setIsNewCustomerOpen(true)}><PlusCircle className="mr-2 h-4 w-4"/>Cadastrar novo cliente</Button>
               </FormItem>
             )} />
-            <FormField control={form.control} name="deviceId" render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="font-semibold">2. Aparelho</FormLabel>
-                <EntitySelector entities={devices.map(d => ({ id: d.id, name: `${d.brand} ${d.model}` }))} placeholder="Buscar aparelho..." notFoundText="Nenhum aparelho encontrado." onSelect={handleDeviceSelect} value={field.value} disabled={!selectedCustomer} />
-                <FormMessage />
-                <Button type="button" variant="link" size="sm" className="p-0 h-auto mt-2 self-start" disabled={!selectedCustomer} onClick={() => setIsNewDeviceOpen(true)}><PlusCircle className="mr-2 h-4 w-4"/>Cadastrar novo aparelho</Button>
-              </FormItem>
-            )} />
           </div>
 
-          {warrantyInfo && <Alert variant="destructive"><AlertTriangle className="h-4 w-4" /><AlertTitle>Aparelho em Garantia!</AlertTitle><AlertDescription>Este aparelho está na garantia de um serviço anterior (OS <a href={`/service-orders/${warrantyInfo.id}`} target="_blank" rel="noopener noreferrer" className="underline font-bold">{warrantyInfo.id.substring(0,8)}</a>) até {format(warrantyInfo.endDate, 'dd/MM/yyyy', { locale: ptBR })}.</AlertDescription></Alert>}
+          {customerId && (
+            <div className="p-4 border rounded-lg space-y-4">
+              <FormField control={form.control} name="deviceSelection" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold text-lg">2. Aparelho</FormLabel>
+                  <FormControl>
+                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4 pt-2">
+                      <FormItem><FormControl><RadioGroupItem value="existing" /></FormControl><FormLabel className="font-normal ml-2">Selecionar existente</FormLabel></FormItem>
+                      <FormItem><FormControl><RadioGroupItem value="new" /></FormControl><FormLabel className="font-normal ml-2">Cadastrar novo</FormLabel></FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                </FormItem>
+              )} />
 
-          <div className="space-y-4 p-4 border rounded-lg">
+              {deviceSelection === 'existing' && (
+                <FormField control={form.control} name="deviceId" render={({ field }) => (
+                  <FormItem className="flex flex-col"><EntitySelector entities={devices.map(d => ({ id: d.id, name: `${d.brand} ${d.model}` }))} placeholder="Buscar aparelho..." notFoundText="Nenhum aparelho cadastrado." onSelect={(id) => field.onChange(id)} value={field.value || ''} /><FormMessage /></FormItem>
+                )} />
+              )}
+
+              {deviceSelection === 'new' && (
+                <div className="grid md:grid-cols-2 gap-6 pt-4 border-t">
+                  <div className="space-y-4">
+                    <FormField control={form.control} name="newDeviceBrand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="newDeviceModel" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="newDeviceSerial" render={({ field }) => (<FormItem><FormLabel>Série/IMEI (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="newDevicePassword" render={({ field }) => (<FormItem><FormLabel>Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  </div>
+                  <div>
+                    <FormLabel>Checklist Visual</FormLabel>
+                    <Controller control={form.control} name="newDeviceChecklist" render={({ field }) => (<VisualChecklist value={field.value || {}} onChange={field.onChange} />)} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="p-4 border rounded-lg">
             <FormField control={form.control} name="issueDescription" render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-semibold">3. Defeito / Problema Relatado</FormLabel>
-                <FormControl><Textarea placeholder="Descreva o problema relatado pelo cliente..." {...field} /></FormControl>
+                <FormLabel className="font-semibold text-lg">3. Defeito / Problema Relatado</FormLabel>
+                <FormControl><Textarea placeholder="Descreva em detalhes o problema relatado pelo cliente..." className="min-h-[100px]" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -165,13 +203,13 @@ export function ServiceOrderForm() {
   );
 }
 
-function EntitySelector({ entities, placeholder, notFoundText, onSelect, value, disabled }: { entities: Entity[], placeholder: string, notFoundText: string, onSelect: (id: string) => void, value: string, disabled?: boolean }) {
+function EntitySelector({ entities, placeholder, notFoundText, onSelect, value }: { entities: Entity[], placeholder: string, notFoundText: string, onSelect: (id: string) => void, value?: string }) {
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <FormControl>
-          <Button variant="outline" role="combobox" disabled={disabled} className={cn("w-full justify-between", !value && "text-muted-foreground")}>
+          <Button variant="outline" role="combobox" className={cn("w-full justify-between", !value && "text-muted-foreground")}>
             {value ? entities.find(e => e.id === value)?.name : placeholder}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
