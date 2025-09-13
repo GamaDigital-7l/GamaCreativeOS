@@ -31,6 +31,7 @@ import SuppliersPage from "./pages/SuppliersPage";
 import NewSupplierPage from "./pages/NewSupplierPage";
 import SalesPage from "./pages/SalesPage";
 import NewSalePage from "./pages/NewSalePage";
+import PointOfSalePage from "./pages/PointOfSalePage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
               <Route path="/sales" element={<SalesPage />} />
               <Route path="/sales/new" element={<NewSalePage />} />
+              <Route path="/pos" element={<PointOfSalePage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/new-customer" element={<NewCustomerPage />} />
               <Route path="/customers/:id" element={<CustomerDetailPage />} />
