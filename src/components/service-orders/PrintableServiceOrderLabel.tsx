@@ -9,7 +9,7 @@ import { QRCodeSVG } from "qrcode.react";
 interface LabelData {
   id: string;
   customers: { name: string };
-  devices: { brand: string; model: string; defect_description?: string };
+  devices: { brand: string; model: string; defect_description?: string; password_info?: string };
 }
 
 export function PrintableServiceOrderLabel() {
@@ -24,7 +24,7 @@ export function PrintableServiceOrderLabel() {
       try {
         const { data: osData, error } = await supabase
           .from('service_orders')
-          .select(`id, customers(name), devices(brand, model, defect_description)`)
+          .select(`id, customers(name), devices(brand, model, defect_description, password_info)`)
           .eq('id', id)
           .single();
         if (error) throw error;
@@ -48,6 +48,17 @@ export function PrintableServiceOrderLabel() {
   }
 
   const detailUrl = `${window.location.origin}/service-orders/${data.id}`;
+
+  const renderPasswordPattern = () => (
+    <svg width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="10" r="3" fill="black" />
+      <circle cx="30" cy="10" r="3" fill="black" />
+      <circle cx="50" cy="10" r="3" fill="black" />
+      <circle cx="10" cy="30" r="3" fill="black" />
+      <circle cx="30" cy="30" r="3" fill="black" />
+      <circle cx="50" cy="30" r="3" fill="black" />
+    </svg>
+  );
 
   return (
     <div className="font-sans text-black">
@@ -74,6 +85,16 @@ export function PrintableServiceOrderLabel() {
           <div className="mt-2 pt-1 border-t border-black">
             <p className="text-xs font-bold">Defeito Relatado:</p>
             <p className="text-xs leading-tight">{data.devices.defect_description || 'Não informado'}</p>
+          </div>
+          <div className="mt-2 pt-1 border-t border-black">
+            <p className="text-xs font-bold">Senha/Padrão:</p>
+            {data.devices.password_info ? (
+              <p className="text-xs leading-tight">{data.devices.password_info}</p>
+            ) : (
+              <div className="flex justify-center mt-1">
+                {renderPasswordPattern()}
+              </div>
+            )}
           </div>
           <div className="mt-2 pt-1 border-t border-black">
             <p className="text-xs font-bold">Orçamento:</p>

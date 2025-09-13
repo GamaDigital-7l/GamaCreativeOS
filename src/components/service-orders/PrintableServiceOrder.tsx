@@ -69,6 +69,17 @@ export function PrintableServiceOrder() {
 
   const { serviceOrder, customer, device, items, settings } = data;
 
+  const renderPasswordPattern = () => (
+    <svg width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="10" r="3" fill="black" />
+      <circle cx="30" cy="10" r="3" fill="black" />
+      <circle cx="50" cy="10" r="3" fill="black" />
+      <circle cx="10" cy="30" r="3" fill="black" />
+      <circle cx="30" cy="30" r="3" fill="black" />
+      <circle cx="50" cy="30" r="3" fill="black" />
+    </svg>
+  );
+
   // For now, we only have one template. The structure is here to add more later.
   const renderTemplate = () => {
     switch (settings.service_order_template) {
@@ -100,6 +111,14 @@ export function PrintableServiceOrder() {
                 <p><strong>Marca/Modelo:</strong> {device.brand} {device.model}</p>
                 <p><strong>Série/IMEI:</strong> {device.serial_number || 'N/A'}</p>
                 <p><strong>Defeito Relatado:</strong> {device.defect_description}</p>
+                <p className="mt-2"><strong>Senha/Padrão:</strong></p>
+                {device.password_info ? (
+                  <p>{device.password_info}</p>
+                ) : (
+                  <div className="flex justify-start mt-1">
+                    {renderPasswordPattern()}
+                  </div>
+                )}
               </div>
             </section>
 

@@ -94,7 +94,7 @@ export default function PhotoUploadPage() {
             <div className="space-y-6">
               <div>
                 <Label htmlFor="picture" className="text-lg">Selecione as fotos</Label>
-                <Input id="picture" type="file" multiple accept="image/*" onChange={handleFileChange} className="mt-2" />
+                <Input id="picture" type="file" multiple accept="image/*" capture="environment" onChange={handleFileChange} className="mt-2" />
               </div>
 
               {previews.length > 0 && (
