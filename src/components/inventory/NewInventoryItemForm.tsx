@@ -17,7 +17,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do item é obrigatório." }),

@@ -23,6 +23,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Loader2, Check, ChevronsUpDown, PlusCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentDialog } from "./PaymentDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const serviceOrderStatuses = ["pending", "in_progress", "ready", "completed", "cancelled"];
 
@@ -170,24 +171,20 @@ export function EditServiceOrderForm() {
   const handleFinalizePayment = async (paymentMethod: string) => {
     if (!user || !id || !serviceOrderData) return;
     
-    // First, trigger form validation and save the data without navigating away
     await form.handleSubmit((values) => onSubmit(values, false))();
     
-    // If form is invalid, onSubmit won't proceed. If it's valid, we can continue.
     if (!form.formState.isValid) {
         showError("Por favor, corrija os erros no formulário antes de finalizar.");
         return;
     }
 
     try {
-      // Update the service order status to completed and record payment
       const { error: osError } = await supabase.from('service_orders').update({
         status: 'completed', payment_method: paymentMethod, payment_status: 'paid',
         finalized_at: new Date().toISOString(),
       }).eq('id', id);
       if (osError) throw osError;
 
-      // Create the corresponding financial transaction
       const description = `Recebimento OS #${id.substring(0, 8)} - Cliente: ${serviceOrderData.customers.name}`;
       const { error: transactionError } = await supabase
         .from('financial_transactions')
@@ -241,7 +238,29 @@ export function EditServiceOrderForm() {
 
           <div className="flex justify-between items-center pt-4 border-t">
             <Button type="submit" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Salvar Alterações"}</Button>
-            {watchedStatus === 'ready' && (<Button type="button" onClick={() => setIsPaymentDialogOpen(true)} className="bg-green-600 hover:bg-green-700">Finalizar e Registrar Pagamento</Button>)}
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-block">
+                    <Button 
+                      type="button" 
+                      onClick={() => setIsPaymentDialogOpen(true)} 
+                      className="bg-green-600 hover:bg-green-700"
+                      disabled={watchedStatus !== 'ready'}
+                    >
+                      Finalizar e Registrar Pagamento
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                {watchedStatus !== 'ready' && (
+                  <TooltipContent>
+                    <p>Mude o status para "Pronto" para habilitar a finalização.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+
           </div>
         </form>
       </Form>

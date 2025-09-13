@@ -130,8 +130,6 @@ export function PrintableServiceOrder() {
 
             <section className="flex justify-end">
               <div className="w-1/2 space-y-1 text-right">
-                <p><strong>Custo Peças:</strong> R$ {(serviceOrder.parts_cost || 0).toFixed(2)}</p>
-                <p><strong>Custo Serviço:</strong> R$ {(serviceOrder.service_cost || 0).toFixed(2)}</p>
                 <p className="font-bold text-lg border-t pt-1 mt-1"><strong>Total:</strong> R$ {(serviceOrder.total_amount || 0).toFixed(2)}</p>
               </div>
             </section>
