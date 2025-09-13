@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { showError } from '@/utils/toast';
 import { Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns'; // Adicionado addDays
 import { ptBR } from 'date-fns/locale';
 
 interface SaleData {
@@ -15,8 +15,8 @@ interface SaleData {
   imei_serial: string;
   sale_price: number;
   payment_method?: string;
-  warranty_days?: number;
-  warranty_policy?: string;
+  warranty_days?: number; // Novo campo
+  warranty_policy?: string; // Novo campo
   customers: { name: string; phone?: string; } | null;
 }
 
@@ -54,6 +54,10 @@ export function PrintableSaleReceipt() {
   if (!data) {
     return <div className="p-8 text-center text-red-500">Dados da venda não encontrados.</div>;
   }
+
+  const warrantyEndDate = data.warranty_days && data.warranty_days > 0
+    ? format(addDays(new Date(data.created_at), data.warranty_days), 'dd/MM/yyyy', { locale: ptBR })
+    : 'N/A';
 
   return (
     <div className="font-sans text-gray-800">
@@ -113,7 +117,10 @@ export function PrintableSaleReceipt() {
           <section className="pt-4">
             <h3 className="text-lg font-semibold mb-2">Termos de Garantia</h3>
             <p className="text-xs text-gray-600">
-              Garantia de <strong>{data.warranty_days || 'N/A'} dias</strong>. {data.warranty_policy || 'Consulte a política de garantia da loja.'}
+              Garantia de <strong>{data.warranty_days || 'N/A'} dias</strong>. Válida até: <strong>{warrantyEndDate}</strong>
+            </p>
+            <p className="text-xs text-gray-600 mt-1">
+              {data.warranty_policy || 'Consulte a política de garantia da loja.'}
             </p>
           </section>
 

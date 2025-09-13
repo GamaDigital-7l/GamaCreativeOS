@@ -4,11 +4,12 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Eye, ShoppingCart, User, Smartphone, DollarSign } from 'lucide-react'; // Adicionado User, Smartphone, DollarSign icons
+import { Plus, Search, Eye, ShoppingCart, User, Smartphone, DollarSign, CalendarDays } from 'lucide-react'; // Adicionado CalendarDays icon
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, addDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge'; // Import Badge
 
 interface Sale {
   id: string;
@@ -17,6 +18,7 @@ interface Sale {
   device_model: string;
   imei_serial: string;
   sale_price: number;
+  warranty_days?: number; // Novo campo
   customers: { name: string } | null;
 }
 
@@ -50,6 +52,24 @@ export function SalesList() {
     setIsLoading(false);
   };
 
+  const getWarrantyStatus = (sale: Sale) => {
+    if (!sale.warranty_days || sale.warranty_days === 0) {
+      return <Badge variant="secondary">Sem Garantia</Badge>;
+    }
+
+    const saleDate = new Date(sale.created_at);
+    const warrantyEndDate = addDays(saleDate, sale.warranty_days);
+    const daysRemaining = differenceInDays(warrantyEndDate, new Date());
+
+    if (daysRemaining <= 0) {
+      return <Badge variant="destructive">Garantia Expirada</Badge>;
+    } else if (daysRemaining <= 30) {
+      return <Badge variant="warning" className="bg-yellow-600 text-white">Expira em {daysRemaining} dias</Badge>;
+    } else {
+      return <Badge variant="success">Ativa ({daysRemaining} dias)</Badge>;
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
@@ -78,12 +98,13 @@ export function SalesList() {
               <TableHead>Aparelho</TableHead>
               <TableHead>IMEI/Serial</TableHead>
               <TableHead>Valor</TableHead>
+              <TableHead>Garantia</TableHead> {/* Nova coluna */}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center">Carregando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center">Carregando...</TableCell></TableRow>
             ) : sales.length > 0 ? (
               sales.map((sale) => (
                 <TableRow key={sale.id}>
@@ -92,6 +113,7 @@ export function SalesList() {
                   <TableCell>{sale.device_brand} {sale.device_model}</TableCell>
                   <TableCell>{sale.imei_serial}</TableCell>
                   <TableCell>R$ {sale.sale_price.toFixed(2)}</TableCell>
+                  <TableCell>{getWarrantyStatus(sale)}</TableCell> {/* Exibindo status da garantia */}
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" asChild>
                       <Link to={`/sales/${sale.id}`}>
@@ -102,7 +124,7 @@ export function SalesList() {
                 </TableRow>
               ))
             ) : (
-              <TableRow><TableCell colSpan={6} className="text-center">Nenhuma venda encontrada.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center">Nenhuma venda encontrada.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

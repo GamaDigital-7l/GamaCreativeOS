@@ -21,6 +21,13 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { CustomerSearchSelect } from "@/components/shared/CustomerSearchSelect"; // New import
 
+const warrantyTemplates = {
+  "30": "Garantia de 30 dias para o aparelho, cobrindo defeitos de fabricação. Não cobre danos por mau uso, quedas ou contato com líquidos.",
+  "90": "Garantia de 90 dias para o aparelho, cobrindo defeitos de fabricação. Não cobre danos por mau uso, quedas ou contato com líquidos.",
+  "180": "Garantia de 180 dias para o aparelho, cobrindo defeitos de fabricação. Não cobre danos por mau uso, quedas ou contato com líquidos.",
+  "0": "Produto vendido sem garantia.",
+};
+
 const formSchema = z.object({
   // Device
   device_brand: z.string().min(2, "Marca é obrigatória."),
@@ -38,6 +45,8 @@ const formSchema = z.object({
   customer_id: z.string().uuid().optional().nullable(),
   sale_price: z.preprocess(val => Number(String(val).replace(",", ".")), z.number().positive("Preço de venda é obrigatório.")),
   payment_method: z.string().optional(),
+  warranty_days: z.preprocess(val => Number(val || 0), z.number().int().min(0).optional()), // Novo campo
+  warranty_policy: z.string().optional(), // Novo campo
 });
 
 interface Supplier { id: string; name: string; }
@@ -54,6 +63,8 @@ export function NewSaleForm() {
       device_brand: "", device_model: "", imei_serial: "",
       acquisition_cost: 0, sale_price: 0,
       supplier_id: null, customer_id: null, purchase_date: null,
+      warranty_days: 90, // Default warranty
+      warranty_policy: warrantyTemplates["90"], // Default policy
     },
   });
 
@@ -61,6 +72,12 @@ export function NewSaleForm() {
     if (!user) return;
     supabase.from('suppliers').select('id, name').eq('user_id', user.id).then(({ data }) => setSuppliers(data || []));
   }, [user]);
+
+  const handleWarrantyDaysChange = (days: string) => {
+    const numDays = parseInt(days);
+    form.setValue("warranty_days", numDays);
+    form.setValue("warranty_policy", warrantyTemplates[days as keyof typeof warrantyTemplates]);
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) return;
@@ -133,6 +150,33 @@ export function NewSaleForm() {
                 )} />
                 <FormField name="sale_price" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Preço de Venda (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField name="payment_method" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><CreditCard className="h-4 w-4" /> Forma de Pagamento</FormLabel><FormControl><Input placeholder="Ex: PIX, Cartão 3x" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                
+                <FormField name="warranty_days" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> Prazo de Garantia</FormLabel>
+                    <Select onValueChange={handleWarrantyDaysChange} value={String(field.value)}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o prazo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="30">30 Dias</SelectItem>
+                        <SelectItem value="90">90 Dias</SelectItem>
+                        <SelectItem value="180">180 Dias</SelectItem>
+                        <SelectItem value="0">Sem Garantia</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField name="warranty_policy" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Termos de Garantia</FormLabel>
+                    <FormControl><Textarea placeholder="Termos de garantia específicos..." className="min-h-[100px]" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
                 <FormField name="notes" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Observações</FormLabel><FormControl><Textarea placeholder="Detalhes adicionais sobre a venda..." {...field} /></FormControl><FormMessage /></FormItem>)} />
               </CardContent>
             </Card>

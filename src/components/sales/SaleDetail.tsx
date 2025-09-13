@@ -6,9 +6,10 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Trash2, Loader2, Printer, Smartphone, User, Package, DollarSign, CalendarDays, CreditCard, Factory, FileText } from 'lucide-react'; // Adicionado Factory, FileText icons
-import { format } from 'date-fns';
+import { format, addDays, differenceInDays } from 'date-fns'; // Adicionado addDays, differenceInDays
 import { ptBR } from 'date-fns/locale';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Badge } from '@/components/ui/badge'; // Import Badge
 
 interface SaleDetails {
   id: string;
@@ -24,6 +25,8 @@ interface SaleDetails {
   customer_id?: string;
   sale_price: number;
   payment_method?: string;
+  warranty_days?: number; // Novo campo
+  warranty_policy?: string; // Novo campo
   customers: { name: string } | null;
   suppliers: { name: string } | null;
 }
@@ -84,6 +87,33 @@ export function SaleDetail() {
 
   const profit = sale.sale_price - (sale.acquisition_cost || 0);
 
+  const getWarrantyInfo = () => {
+    if (!sale.warranty_days || sale.warranty_days === 0) {
+      return { status: <Badge variant="secondary">Sem Garantia</Badge>, endDate: 'N/A', daysRemaining: 'N/A' };
+    }
+
+    const saleDate = new Date(sale.created_at);
+    const warrantyEndDate = addDays(saleDate, sale.warranty_days);
+    const daysRemaining = differenceInDays(warrantyEndDate, new Date());
+
+    let statusBadge;
+    if (daysRemaining <= 0) {
+      statusBadge = <Badge variant="destructive">Garantia Expirada</Badge>;
+    } else if (daysRemaining <= 30) {
+      statusBadge = <Badge variant="warning" className="bg-yellow-600 text-white">Expira em {daysRemaining} dias</Badge>;
+    } else {
+      statusBadge = <Badge variant="success">Ativa</Badge>;
+    }
+
+    return {
+      status: statusBadge,
+      endDate: format(warrantyEndDate, 'dd/MM/yyyy', { locale: ptBR }),
+      daysRemaining: daysRemaining > 0 ? `${daysRemaining} dias` : 'Expirada',
+    };
+  };
+
+  const warrantyInfo = getWarrantyInfo();
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -143,6 +173,13 @@ export function SaleDetail() {
             <p className="flex items-center gap-2"><strong>Cliente:</strong> {sale.customers?.name || 'N/A'}</p>
             <p className="flex items-center gap-2"><strong>Pagamento:</strong> {sale.payment_method || 'N/A'}</p>
           </div>
+        </div>
+        <div className="space-y-4 p-4 border rounded-lg">
+          <h3 className="font-semibold text-lg border-b pb-2 flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary" /> Informações de Garantia</h3>
+          <p className="flex items-center gap-2"><strong>Status:</strong> {warrantyInfo.status}</p>
+          <p className="flex items-center gap-2"><strong>Prazo:</strong> {sale.warranty_days ? `${sale.warranty_days} dias` : 'N/A'}</p>
+          <p className="flex items-center gap-2"><strong>Válida até:</strong> {warrantyInfo.endDate}</p>
+          <p className="flex items-start gap-2"><strong>Política:</strong> {sale.warranty_policy || 'N/A'}</p>
         </div>
       </CardContent>
     </Card>
