@@ -32,7 +32,9 @@ const Index = () => {
             <Button asChild className="w-64">
               <Link to="/new-service-order">Criar Nova Ordem de Serviço</Link>
             </Button>
-            {/* Adicionar mais botões para outras funcionalidades aqui */}
+            <Button asChild className="w-64">
+              <Link to="/service-orders">Ver Ordens de Serviço</Link>
+            </Button>
             <Button variant="outline" onClick={handleLogout} className="w-64 flex items-center justify-center gap-2">
               <LogOut className="h-4 w-4" /> Sair
             </Button>
