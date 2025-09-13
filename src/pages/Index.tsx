@@ -1,4 +1,5 @@
 import { ServiceOrderSummary } from "@/components/dashboard/ServiceOrderSummary";
+import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,15 +11,16 @@ const Index = () => {
 
   return (
     <div className="flex flex-col min-h-screen p-4 sm:p-0">
-      <div className="flex-grow">
-        <Card className="w-full mb-6">
+      <div className="flex-grow space-y-6">
+        <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-3xl">Dashboard</CardTitle>
             <Button onClick={() => navigate('/new-service-order')}>
               <PlusCircle className="h-4 w-4 mr-2" /> Nova Ordem de Serviço
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <FinancialSummary />
             <ServiceOrderSummary />
           </CardContent>
         </Card>
