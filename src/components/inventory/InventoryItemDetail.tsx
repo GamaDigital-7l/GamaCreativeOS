@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Loader2, Package, Tag, Hash, DollarSign, Factory } from 'lucide-react';
+import { ArrowLeft, Edit, Loader2, Package, Tag, Hash, DollarSign, Factory, FileText } from 'lucide-react'; // Adicionado FileText icon
 
 interface ItemDetails {
   id: string;
@@ -75,7 +75,7 @@ export function InventoryItemDetail() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <CardTitle className="text-3xl">{item.name}</CardTitle>
+            <CardTitle className="text-3xl flex items-center gap-2"><Package className="h-7 w-7 text-primary" /> {item.name}</CardTitle>
             <CardDescription>SKU: {item.sku || 'N/A'}</CardDescription>
           </div>
         </div>
@@ -87,7 +87,7 @@ export function InventoryItemDetail() {
       </CardHeader>
       <CardContent className="space-y-4 p-6">
         <div className="flex items-start gap-2">
-          <Package className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
+          <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
           <p><strong>Descrição:</strong> {item.description || 'N/A'}</p>
         </div>
         <div className="flex items-center gap-2">

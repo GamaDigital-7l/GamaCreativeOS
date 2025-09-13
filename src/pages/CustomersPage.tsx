@@ -2,7 +2,7 @@ import { CustomerList } from "@/components/customers/CustomerList";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react"; // Adicionado Users icon
 import { useNavigate } from "react-router-dom";
 
 const CustomersPage = () => {
@@ -15,7 +15,9 @@ const CustomersPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Gerenciar Clientes</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Users className="h-7 w-7 text-primary" /> Gerenciar Clientes
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <CustomerList />

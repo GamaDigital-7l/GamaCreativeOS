@@ -2,7 +2,7 @@ import { FinancialLedger } from "@/components/financials/FinancialLedger";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, DollarSign } from "lucide-react"; // Adicionado DollarSign icon
 import { useNavigate } from "react-router-dom";
 
 const FinancialsPage = () => {
@@ -15,7 +15,9 @@ const FinancialsPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Controle Financeiro</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <DollarSign className="h-7 w-7 text-primary" /> Controle Financeiro
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <FinancialLedger />

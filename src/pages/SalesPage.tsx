@@ -2,7 +2,7 @@ import { SalesList } from "@/components/sales/SalesList";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShoppingCart } from "lucide-react"; // Adicionado ShoppingCart icon
 import { useNavigate } from "react-router-dom";
 
 const SalesPage = () => {
@@ -15,7 +15,9 @@ const SalesPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Vendas de Aparelhos</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <ShoppingCart className="h-7 w-7 text-primary" /> Vendas de Aparelhos
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <SalesList />

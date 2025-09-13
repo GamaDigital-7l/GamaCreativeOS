@@ -2,7 +2,7 @@ import { NewDeviceForm } from "@/components/devices/NewDeviceForm";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, PlusCircle, Smartphone } from "lucide-react"; // Adicionado PlusCircle, Smartphone icons
 import { useNavigate } from "react-router-dom";
 
 const NewDevicePage = () => {
@@ -15,7 +15,9 @@ const NewDevicePage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/devices')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Novo Dispositivo</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Smartphone className="h-7 w-7 text-primary" /> Novo Dispositivo
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <NewDeviceForm />

@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2, PlusCircle, Smartphone } from "lucide-react";
+import { Loader2, PlusCircle, Smartphone, ListChecks, User, Tag, Lock, Wrench, Hash } from "lucide-react"; // Adicionado User, Tag, Lock, Wrench, Hash icons
 import React, { useEffect, useState } from "react";
 
 const checklistOptions = [
@@ -134,7 +134,7 @@ export function NewDeviceForm({ customerId, onSuccess }: NewDeviceFormProps) {
             name="customer_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Cliente</FormLabel>
+                <FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Cliente</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Selecione um cliente" /></SelectTrigger></FormControl>
                   <SelectContent>{customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
@@ -144,11 +144,11 @@ export function NewDeviceForm({ customerId, onSuccess }: NewDeviceFormProps) {
             )}
           />
         )}
-        <FormField control={form.control} name="brand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input placeholder="Ex: Samsung, Apple" {...field} /></FormControl><FormMessage /></FormItem>)} />
-        <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Galaxy S21, iPhone 13" {...field} /></FormControl><FormMessage /></FormItem>)} />
-        <FormField control={form.control} name="serial_number" render={({ field }) => (<FormItem><FormLabel>Número de Série/IMEI</FormLabel><FormControl><Input placeholder="Opcional" {...field} /></FormControl><FormMessage /></FormItem>)} />
-        <FormField control={form.control} name="defect_description" render={({ field }) => (<FormItem><FormLabel>Defeito Relatado</FormLabel><FormControl><Textarea placeholder="Descreva o problema..." className="resize-y min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
-        <FormField control={form.control} name="password_info" render={({ field }) => (<FormItem><FormLabel>Senha/Padrão (Opcional)</FormLabel><FormControl><Textarea placeholder="Se fornecida pelo cliente." className="resize-y min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="brand" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Marca</FormLabel><FormControl><Input placeholder="Ex: Samsung, Apple" {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Modelo</FormLabel><FormControl><Input placeholder="Ex: Galaxy S21, iPhone 13" {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="serial_number" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> Número de Série/IMEI</FormLabel><FormControl><Input placeholder="Opcional" {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="defect_description" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Wrench className="h-4 w-4" /> Defeito Relatado</FormLabel><FormControl><Textarea placeholder="Descreva o problema..." className="resize-y min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="password_info" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Lock className="h-4 w-4" /> Senha/Padrão (Opcional)</FormLabel><FormControl><Textarea placeholder="Se fornecida pelo cliente." className="resize-y min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
         <h2 className="text-2xl font-bold mt-8 mb-4 flex items-center gap-2"><ListChecks className="h-6 w-6 text-primary" /> Checklist do Aparelho</h2>
         <FormField control={form.control} name="checklist" render={() => (<FormItem><div className="mb-4"><FormLabel className="text-base">Estado do Aparelho</FormLabel></div><div className="grid grid-cols-2 md:grid-cols-3 gap-4">{checklistOptions.map((item) => (<FormField key={item} control={form.control} name="checklist" render={({ field }) => (<FormItem key={item} className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value?.includes(item)} onCheckedChange={(checked) => { return checked ? field.onChange([...(field.value || []), item]) : field.onChange(field.value?.filter((value) => value !== item)); }} /></FormControl><FormLabel className="font-normal">{item}</FormLabel></FormItem>)} />))}</div><FormMessage /></FormItem>)} />
         <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><PlusCircle className="h-4 w-4 mr-2" /> Criar Dispositivo</>}</Button>

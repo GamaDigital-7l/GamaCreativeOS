@@ -2,7 +2,7 @@ import { ServiceOrderList } from "@/components/service-orders/ServiceOrderList";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Wrench } from "lucide-react"; // Adicionado Wrench icon
 import { useNavigate } from "react-router-dom";
 
 const ServiceOrdersPage = () => {
@@ -15,7 +15,9 @@ const ServiceOrdersPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Ordens de Serviço</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Wrench className="h-7 w-7 text-primary" /> Ordens de Serviço
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ServiceOrderList />

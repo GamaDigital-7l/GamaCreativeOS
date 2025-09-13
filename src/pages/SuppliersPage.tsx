@@ -2,7 +2,7 @@ import { SupplierList } from "@/components/suppliers/SupplierList";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Building } from "lucide-react"; // Adicionado Building icon
 import { useNavigate } from "react-router-dom";
 
 const SuppliersPage = () => {
@@ -15,7 +15,9 @@ const SuppliersPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Gerenciar Fornecedores</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Building className="h-7 w-7 text-primary" /> Gerenciar Fornecedores
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <SupplierList />

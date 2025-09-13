@@ -15,7 +15,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Loader2, CalendarIcon, Save, Smartphone, ShoppingCart, Package } from "lucide-react";
+import { Loader2, CalendarIcon, Save, Smartphone, ShoppingCart, Package, User, Tag, Hash, DollarSign, Factory, CreditCard, FileText } from "lucide-react"; // Adicionado vários ícones
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -117,35 +117,35 @@ export function EditSaleForm() {
           
           <TabsContent value="device" className="mt-4">
             <Card>
-              <CardHeader><CardTitle>Dados do Aparelho</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Smartphone className="h-5 w-5 text-primary" /> Dados do Aparelho</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <FormField name="device_brand" control={form.control} render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField name="device_model" control={form.control} render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField name="imei_serial" control={form.control} render={({ field }) => (<FormItem><FormLabel>IMEI / Nº de Série</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField name="condition" control={form.control} render={({ field }) => (<FormItem><FormLabel>Condição</FormLabel><FormControl><Input placeholder="Ex: Novo, Usado, Vitrine" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="device_brand" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="device_model" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="imei_serial" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> IMEI / Nº de Série</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="condition" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Condição</FormLabel><FormControl><Input placeholder="Ex: Novo, Usado, Vitrine" {...field} /></FormControl><FormMessage /></FormItem>)} />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="purchase" className="mt-4">
             <Card>
-              <CardHeader><CardTitle>Dados da Compra</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Dados da Compra</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <FormField name="supplier_id" control={form.control} render={({ field }) => (<FormItem><FormLabel>Fornecedor</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger></FormControl><SelectContent>{suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
-                <FormField name="acquisition_cost" control={form.control} render={({ field }) => (<FormItem><FormLabel>Custo de Aquisição (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField name="purchase_date" control={form.control} render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Data da Compra</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}</Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)} />
+                <FormField name="supplier_id" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Factory className="h-4 w-4" /> Fornecedor</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger></FormControl><SelectContent>{suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                <FormField name="acquisition_cost" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Custo de Aquisição (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="purchase_date" control={form.control} render={({ field }) => (<FormItem className="flex flex-col"><FormLabel className="flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> Data da Compra</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}</Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)} />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="sale" className="mt-4">
             <Card>
-              <CardHeader><CardTitle>Dados da Venda</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2"><ShoppingCart className="h-5 w-5 text-primary" /> Dados da Venda</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <FormField name="customer_id" control={form.control} render={({ field }) => (<FormItem><FormLabel>Cliente</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger></FormControl><SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
-                <FormField name="sale_price" control={form.control} render={({ field }) => (<FormItem><FormLabel>Preço de Venda (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField name="payment_method" control={form.control} render={({ field }) => (<FormItem><FormLabel>Forma de Pagamento</FormLabel><FormControl><Input placeholder="Ex: PIX, Cartão 3x" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField name="notes" control={form.control} render={({ field }) => (<FormItem><FormLabel>Observações</FormLabel><FormControl><Textarea placeholder="Detalhes adicionais sobre a venda..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="customer_id" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Cliente</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger></FormControl><SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                <FormField name="sale_price" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Preço de Venda (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="payment_method" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><CreditCard className="h-4 w-4" /> Forma de Pagamento</FormLabel><FormControl><Input placeholder="Ex: PIX, Cartão 3x" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="notes" control={form.control} render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Observações</FormLabel><FormControl><Textarea placeholder="Detalhes adicionais sobre a venda..." {...field} /></FormControl><FormMessage /></FormItem>)} />
               </CardContent>
             </Card>
           </TabsContent>

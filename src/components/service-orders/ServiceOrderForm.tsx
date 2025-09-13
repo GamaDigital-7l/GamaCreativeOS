@@ -11,7 +11,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, Camera } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, Camera, Tag, Hash, Lock, ListChecks } from "lucide-react"; // Adicionado Tag, Hash, Lock, ListChecks icons
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -134,7 +134,7 @@ export function ServiceOrderForm() {
   return (
     <>
       {newServiceOrderId && <PhotoUploadDialog isOpen={!!newServiceOrderId} onClose={handleDialogClose} serviceOrderId={newServiceOrderId} />}
-      <Dialog open={isNewCustomerOpen} onOpenChange={setIsNewCustomerOpen}><DialogContent><DialogHeader><DialogTitle>Novo Cliente</DialogTitle></DialogHeader><NewCustomerForm onSuccess={handleNewCustomerSuccess} /></DialogContent></Dialog>
+      <Dialog open={isNewCustomerOpen} onOpenChange={setIsNewCustomerOpen}><DialogContent><DialogHeader><DialogTitle className="flex items-center gap-2"><UserPlus className="h-6 w-6 text-primary" /> Novo Cliente</DialogTitle></DialogHeader><NewCustomerForm onSuccess={handleNewCustomerSuccess} /></DialogContent></Dialog>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
@@ -172,10 +172,10 @@ export function ServiceOrderForm() {
               {deviceSelection === 'new' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
                   <div className="space-y-4">
-                    <FormField control={form.control} name="newDeviceBrand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="newDeviceModel" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="newDeviceSerial" render={({ field }) => (<FormItem><FormLabel>Série/IMEI (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="newDevicePassword" render={({ field }) => (<FormItem><FormLabel>Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="newDeviceBrand" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="newDeviceModel" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="newDeviceSerial" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> Série/IMEI (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="newDevicePassword" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Lock className="h-4 w-4" /> Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                   </div>
                   <div>
                     <FormLabel className="flex items-center gap-2"><Camera className="h-4 w-4" /> Checklist Visual</FormLabel>

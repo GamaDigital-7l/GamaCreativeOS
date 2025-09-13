@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Smartphone, User, Tag, Lock, ListChecks } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Smartphone, User, Tag, Lock, ListChecks, Wrench } from 'lucide-react'; // Adicionado Wrench icon
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -150,7 +150,7 @@ export function DeviceDetail() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <CardTitle className="text-3xl">{device.brand} {device.model}</CardTitle>
+            <CardTitle className="text-3xl flex items-center gap-2"><Smartphone className="h-7 w-7 text-primary" /> {device.brand} {device.model}</CardTitle>
             <CardDescription>Criado em: {format(new Date(device.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</CardDescription>
           </div>
         </div>

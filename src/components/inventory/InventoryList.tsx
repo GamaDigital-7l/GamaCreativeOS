@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, Plus, Loader2, Trash2, Package } from 'lucide-react';
+import { Eye, Search, X, Plus, Loader2, Trash2, Package, Tag, Hash, DollarSign } from 'lucide-react'; // Adicionado Tag, Hash, DollarSign icons
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,

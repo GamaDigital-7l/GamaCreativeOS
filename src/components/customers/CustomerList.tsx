@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, Plus, Loader2, Trash2, User } from 'lucide-react';
+import { Eye, Search, X, Plus, Loader2, Trash2, User, Phone, Mail, MapPin } from 'lucide-react'; // Adicionado Phone, Mail, MapPin
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,

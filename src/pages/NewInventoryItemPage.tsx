@@ -2,7 +2,7 @@ import { NewInventoryItemForm } from "@/components/inventory/NewInventoryItemFor
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, PlusCircle, Package } from "lucide-react"; // Adicionado PlusCircle, Package icons
 import { useNavigate } from "react-router-dom";
 
 const NewInventoryItemPage = () => {
@@ -15,7 +15,9 @@ const NewInventoryItemPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/inventory')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Novo Item de Estoque</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Package className="h-7 w-7 text-primary" /> Novo Item de Estoque
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <NewInventoryItemForm />

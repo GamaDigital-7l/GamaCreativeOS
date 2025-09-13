@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Smartphone, User, Package, DollarSign, CalendarDays, CreditCard } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Smartphone, User, Package, DollarSign, CalendarDays, CreditCard, Factory, FileText } from 'lucide-react'; // Adicionado Factory, FileText icons
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -91,7 +91,7 @@ export function SaleDetail() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Button variant="ghost" size="icon" className="-ml-2" onClick={() => navigate('/sales')}><ArrowLeft className="h-5 w-5" /></Button>
-              <CardTitle className="text-2xl">{sale.device_brand} {sale.device_model}</CardTitle>
+              <CardTitle className="text-2xl flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> {sale.device_brand} {sale.device_model}</CardTitle>
             </div>
             <CardDescription>Venda registrada em: {format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</CardDescription>
           </div>

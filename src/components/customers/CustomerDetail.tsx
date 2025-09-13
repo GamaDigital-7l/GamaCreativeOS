@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Phone, Mail, MapPin } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Phone, Mail, MapPin, User } from 'lucide-react'; // Adicionado User icon
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -141,7 +141,7 @@ export function CustomerDetail() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <CardTitle className="text-3xl">{customer.name}</CardTitle>
+            <CardTitle className="text-3xl flex items-center gap-2"><User className="h-7 w-7 text-primary" /> {customer.name}</CardTitle>
             <CardDescription>Criado em: {format(new Date(customer.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</CardDescription>
           </div>
         </div>

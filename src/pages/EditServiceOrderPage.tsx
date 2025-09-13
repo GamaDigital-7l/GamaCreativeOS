@@ -2,7 +2,7 @@ import { EditServiceOrderForm } from "@/components/service-orders/EditServiceOrd
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Settings, Wrench } from "lucide-react"; // Adicionado Settings, Wrench icons
 import { useNavigate, useParams } from "react-router-dom";
 
 const EditServiceOrderPage = () => {
@@ -16,7 +16,9 @@ const EditServiceOrderPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate(`/service-orders/${id}`)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Editar Ordem de Serviço</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Wrench className="h-7 w-7 text-primary" /> Editar Ordem de Serviço
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <EditServiceOrderForm />

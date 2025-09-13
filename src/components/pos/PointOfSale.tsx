@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, X, Plus, Minus, ShoppingCart, Loader2, DollarSign, User } from 'lucide-react';
+import { Search, X, Plus, Minus, ShoppingCart, Loader2, DollarSign, User, CreditCard } from 'lucide-react'; // Adicionado CreditCard icon
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label'; // Import Label

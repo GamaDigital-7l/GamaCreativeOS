@@ -2,7 +2,7 @@ import { NewSupplierForm } from "@/components/suppliers/NewSupplierForm";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, PlusCircle, Building } from "lucide-react"; // Adicionado PlusCircle, Building icons
 import { useNavigate } from "react-router-dom";
 
 const NewSupplierPage = () => {
@@ -15,7 +15,9 @@ const NewSupplierPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/suppliers')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Novo Fornecedor</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Building className="h-7 w-7 text-primary" /> Novo Fornecedor
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <NewSupplierForm />

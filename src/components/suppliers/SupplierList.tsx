@@ -4,7 +4,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Building, Eye, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Search, Building, Eye, Trash2, Loader2, User, Phone, Mail } from 'lucide-react'; // Adicionado User, Phone, Mail icons
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import {

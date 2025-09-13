@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Save, Smartphone, ListChecks } from "lucide-react";
+import { Loader2, Save, Smartphone, ListChecks, User, Tag, Lock, Wrench, Hash } from "lucide-react"; // Adicionado User, Tag, Lock, Wrench, Hash icons
 
 const checklistOptions = [
   "Tela intacta",
@@ -211,7 +211,7 @@ export function EditDeviceForm() {
           name="customer_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cliente</FormLabel>
+              <FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Cliente</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -235,7 +235,7 @@ export function EditDeviceForm() {
           name="brand"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Marca</FormLabel>
+              <FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Marca</FormLabel>
               <FormControl>
                 <Input placeholder="Ex: Samsung, Apple" {...field} />
               </FormControl>
@@ -248,7 +248,7 @@ export function EditDeviceForm() {
           name="model"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Modelo</FormLabel>
+              <FormLabel className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Modelo</FormLabel>
               <FormControl>
                 <Input placeholder="Ex: Galaxy S21, iPhone 13" {...field} />
               </FormControl>
@@ -261,7 +261,7 @@ export function EditDeviceForm() {
           name="serial_number"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Número de Série/IMEI</FormLabel>
+              <FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> Número de Série/IMEI</FormLabel>
               <FormControl>
                 <Input placeholder="Opcional" {...field} />
               </FormControl>
@@ -274,7 +274,7 @@ export function EditDeviceForm() {
           name="defect_description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Defeito Relatado</FormLabel>
+              <FormLabel className="flex items-center gap-2"><Wrench className="h-4 w-4" /> Defeito Relatado</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Descreva o problema que o cliente relatou..."
@@ -291,7 +291,7 @@ export function EditDeviceForm() {
           name="password_info"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Informações de Senha/Padrão (Opcional)</FormLabel>
+              <FormLabel className="flex items-center gap-2"><Lock className="h-4 w-4" /> Informações de Senha/Padrão (Opcional)</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Desenhe o padrão ou escreva a senha, se fornecida pelo cliente."

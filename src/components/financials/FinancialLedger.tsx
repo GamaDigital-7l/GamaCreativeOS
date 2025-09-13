@@ -98,7 +98,7 @@ export function FinancialLedger() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Novo Lançamento Financeiro</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><DollarSign className="h-6 w-6 text-primary" /> Novo Lançamento Financeiro</DialogTitle>
             </DialogHeader>
             <NewTransactionForm onSuccess={() => { fetchTransactions(); setIsFormOpen(false); }} />
           </DialogContent>

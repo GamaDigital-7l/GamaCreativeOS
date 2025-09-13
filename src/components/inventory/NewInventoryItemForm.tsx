@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2, PlusCircle, Package } from "lucide-react";
+import { Loader2, PlusCircle, Package, Tag, Hash, DollarSign, Factory, FileText } from "lucide-react"; // Adicionado Tag, Hash, DollarSign, Factory, FileText icons
 import React, { useState } from "react";
 
 const formSchema = z.object({
@@ -91,49 +91,49 @@ export function NewInventoryItemForm() {
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Detalhes do Item</h2>
         <FormField name="name" control={form.control} render={({ field }) => (
           <FormItem>
-            <FormLabel>Nome do Item</FormLabel>
+            <FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Nome do Item</FormLabel>
             <FormControl><Input placeholder="Ex: Tela iPhone 11" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
         <FormField name="sku" control={form.control} render={({ field }) => (
           <FormItem>
-            <FormLabel>SKU (Código de Barras)</FormLabel>
+            <FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> SKU (Código de Barras)</FormLabel>
             <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
         <FormField name="description" control={form.control} render={({ field }) => (
           <FormItem>
-            <FormLabel>Descrição</FormLabel>
+            <FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Descrição</FormLabel>
             <FormControl><Textarea placeholder="Detalhes sobre o item..." {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
         <FormField name="quantity" control={form.control} render={({ field }) => (
           <FormItem>
-            <FormLabel>Quantidade em Estoque</FormLabel>
+            <FormLabel className="flex items-center gap-2"><Package className="h-4 w-4" /> Quantidade em Estoque</FormLabel>
             <FormControl><Input type="number" min="0" step="1" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
         <FormField name="cost_price" control={form.control} render={({ field }) => (
           <FormItem>
-            <FormLabel>Custo (R$)</FormLabel>
+            <FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Custo (R$)</FormLabel>
             <FormControl><Input type="number" min="0" step="0.01" placeholder="0.00" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
         <FormField name="selling_price" control={form.control} render={({ field }) => (
           <FormItem>
-            <FormLabel>Preço de Venda (R$)</FormLabel>
+            <FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Preço de Venda (R$)</FormLabel>
             <FormControl><Input type="number" min="0" step="0.01" placeholder="0.00" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
         <FormField name="supplier" control={form.control} render={({ field }) => (
           <FormItem>
-            <FormLabel>Fornecedor</FormLabel>
+            <FormLabel className="flex items-center gap-2"><Factory className="h-4 w-4" /> Fornecedor</FormLabel>
             <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
             <FormMessage />
           </FormItem>

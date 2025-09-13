@@ -2,7 +2,7 @@ import { InventoryList } from "@/components/inventory/InventoryList";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Package } from "lucide-react"; // Adicionado Package icon
 import { useNavigate } from "react-router-dom";
 
 const InventoryPage = () => {
@@ -15,7 +15,9 @@ const InventoryPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Gerenciar Estoque</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Package className="h-7 w-7 text-primary" /> Gerenciar Estoque
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <InventoryList />

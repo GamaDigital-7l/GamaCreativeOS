@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Loader2, Save, DollarSign, Tag } from "lucide-react";
+import { CalendarIcon, Loader2, Save, DollarSign, Tag, FileText } from "lucide-react"; // Adicionado FileText icon
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { useState } from "react";
@@ -68,11 +68,11 @@ export function NewTransactionForm({ onSuccess }: { onSuccess: () => void }) {
             </RadioGroup>
           </FormControl><FormMessage /></FormItem>
         )} />
-        <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Descrição</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Descrição</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField control={form.control} name="amount" render={({ field }) => (<FormItem><FormLabel>Valor (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
+          <FormField control={form.control} name="amount" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Valor (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
           <FormField control={form.control} name="transaction_date" render={({ field }) => (
-            <FormItem className="flex flex-col"><FormLabel>Data</FormLabel><Popover>
+            <FormItem className="flex flex-col"><FormLabel className="flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> Data</FormLabel><Popover>
               <PopoverTrigger asChild><FormControl>
                 <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
                   {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}

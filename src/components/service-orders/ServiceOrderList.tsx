@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, PlusCircle, Wrench } from 'lucide-react';
+import { Eye, Search, X, PlusCircle, Wrench, User, Smartphone, Clock, CheckCircle, Ban } from 'lucide-react'; // Adicionado User, Smartphone, Clock, CheckCircle, Ban icons
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -186,8 +186,8 @@ export function ServiceOrderList() {
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
                     <TableCell>{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
-                    <TableCell>{order.customers?.name || 'N/A'}</TableCell>
-                    <TableCell>{order.devices?.brand} {order.devices?.model}</TableCell>
+                    <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{order.customers?.name || 'N/A'}</TableCell>
+                    <TableCell className="flex items-center gap-1"><Smartphone className="h-4 w-4 text-muted-foreground" />{order.devices?.brand} {order.devices?.model}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(order.status)}>
                         {serviceOrderStatuses.find(s => s.value === order.status)?.label || order.status}

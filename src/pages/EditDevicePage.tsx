@@ -2,7 +2,7 @@ import { EditDeviceForm } from "@/components/devices/EditDeviceForm";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Settings, Smartphone } from "lucide-react"; // Adicionado Settings, Smartphone icons
 import { useNavigate, useParams } from "react-router-dom";
 
 const EditDevicePage = () => {
@@ -16,7 +16,9 @@ const EditDevicePage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate(`/devices/${id}`)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Editar Dispositivo</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Smartphone className="h-7 w-7 text-primary" /> Editar Dispositivo
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <EditDeviceForm />

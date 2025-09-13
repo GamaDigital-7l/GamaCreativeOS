@@ -2,7 +2,7 @@ import { ServiceOrderForm } from "@/components/service-orders/ServiceOrderForm";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, PlusCircle, Wrench } from "lucide-react"; // Adicionado PlusCircle, Wrench icons
 import { useNavigate } from "react-router-dom";
 
 const NewServiceOrderPage = () => {
@@ -14,7 +14,9 @@ const NewServiceOrderPage = () => {
            <Button variant="ghost" size="icon" onClick={() => navigate('/service-orders')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Nova Ordem de Serviço</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <Wrench className="h-7 w-7 text-primary" /> Nova Ordem de Serviço
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ServiceOrderForm />

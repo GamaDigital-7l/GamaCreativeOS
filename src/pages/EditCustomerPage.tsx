@@ -2,7 +2,7 @@ import { EditCustomerForm } from "@/components/customers/EditCustomerForm";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, UserCog } from "lucide-react"; // Adicionado UserCog icon
 import { useNavigate, useParams } from "react-router-dom";
 
 const EditCustomerPage = () => {
@@ -16,7 +16,9 @@ const EditCustomerPage = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate(`/customers/${id}`)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <CardTitle className="text-3xl text-center flex-grow">Editar Cliente</CardTitle>
+          <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
+            <UserCog className="h-7 w-7 text-primary" /> Editar Cliente
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <EditCustomerForm />

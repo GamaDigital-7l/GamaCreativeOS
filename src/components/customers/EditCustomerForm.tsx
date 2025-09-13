@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Phone, Mail, MapPin, User } from "lucide-react"; // Adicionado Phone, Mail, MapPin, User
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do cliente é obrigatório." }),
@@ -137,7 +137,7 @@ export function EditCustomerForm() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome Completo</FormLabel>
+              <FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Nome Completo</FormLabel>
               <FormControl>
                 <Input placeholder="Nome do cliente" {...field} />
               </FormControl>
@@ -150,7 +150,7 @@ export function EditCustomerForm() {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Telefone</FormLabel>
+              <FormLabel className="flex items-center gap-2"><Phone className="h-4 w-4" /> Telefone</FormLabel>
               <FormControl>
                 <Input placeholder="(XX) XXXXX-XXXX" {...field} />
               </FormControl>
@@ -163,7 +163,7 @@ export function EditCustomerForm() {
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Endereço</FormLabel>
+              <FormLabel className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Endereço</FormLabel>
               <FormControl>
                 <Textarea placeholder="Rua, Número, Bairro, Cidade" className="resize-y min-h-[80px]" {...field} />
               </FormControl>
@@ -176,7 +176,7 @@ export function EditCustomerForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="flex items-center gap-2"><Mail className="h-4 w-4" /> Email</FormLabel>
               <FormControl>
                 <Input type="email" placeholder="email@exemplo.com" {...field} />
               </FormControl>
