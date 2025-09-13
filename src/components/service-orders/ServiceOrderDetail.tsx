@@ -1,14 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom'; // Import Link
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ServiceOrderDetails {
   id: string;
@@ -45,6 +56,7 @@ export function ServiceOrderDetail() {
   const { user, isLoading: isSessionLoading } = useSession();
   const [serviceOrder, setServiceOrder] = useState<ServiceOrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!isSessionLoading && user && id) {
@@ -86,8 +98,84 @@ export function ServiceOrderDetail() {
     }
   };
 
+  const handleDeleteServiceOrder = async () => {
+    if (!serviceOrder || !user) {
+      showError("Não foi possível deletar a Ordem de Serviço. Tente novamente.");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const { customer_id, device_id } = serviceOrder;
+
+      // 1. Delete the service order
+      const { error: serviceOrderError } = await supabase
+        .from('service_orders')
+        .delete()
+        .eq('id', serviceOrder.id);
+
+      if (serviceOrderError) throw serviceOrderError;
+
+      // 2. Check and delete device if it's not linked to other service orders
+      if (device_id) {
+        const { count: deviceServiceOrdersCount, error: deviceCountError } = await supabase
+          .from('service_orders')
+          .select('id', { count: 'exact' })
+          .eq('device_id', device_id);
+
+        if (deviceCountError) throw deviceCountError;
+
+        if (deviceServiceOrdersCount === 0) {
+          const { error: deviceDeleteError } = await supabase
+            .from('devices')
+            .delete()
+            .eq('id', device_id);
+          if (deviceDeleteError) throw deviceDeleteError;
+        }
+      }
+
+      // 3. Check and delete customer if not linked to other devices or service orders
+      if (customer_id) {
+        const { count: customerDevicesCount, error: customerDevicesError } = await supabase
+          .from('devices')
+          .select('id', { count: 'exact' })
+          .eq('customer_id', customer_id);
+
+        if (customerDevicesError) throw customerDevicesError;
+
+        const { count: customerServiceOrdersCount, error: customerServiceOrdersError } = await supabase
+          .from('service_orders')
+          .select('id', { count: 'exact' })
+          .eq('customer_id', customer_id);
+
+        if (customerServiceOrdersError) throw customerServiceOrdersError;
+
+        if (customerDevicesCount === 0 && customerServiceOrdersCount === 0) {
+          const { error: customerDeleteError } = await supabase
+            .from('customers')
+            .delete()
+            .eq('id', customer_id);
+          if (customerDeleteError) throw customerDeleteError;
+        }
+      }
+
+      showSuccess("Ordem de Serviço deletada com sucesso!");
+      navigate('/service-orders');
+    } catch (error: any) {
+      console.error("Erro ao deletar Ordem de Serviço:", error);
+      showError(`Erro ao deletar Ordem de Serviço: ${error.message || "Tente novamente."}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
-    return <p className="text-center text-gray-600 dark:text-gray-400">Carregando detalhes da Ordem de Serviço...</p>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2 text-gray-600 dark:text-gray-400">Carregando detalhes da Ordem de Serviço...</p>
+      </div>
+    );
   }
 
   if (!serviceOrder) {
@@ -133,10 +221,40 @@ export function ServiceOrderDetail() {
             {!['pending', 'in_progress', 'ready', 'completed', 'cancelled'].includes(serviceOrder.status) && serviceOrder.status}
           </Badge>
           <Button variant="outline" size="sm" asChild>
-            <Link to={`/service-orders/${serviceOrder.id}/edit`}> {/* Link to edit page */}
+            <Link to={`/service-orders/${serviceOrder.id}/edit`}>
               <Edit className="h-4 w-4 mr-2" /> Editar
             </Link>
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" disabled={isDeleting}>
+                {isDeleting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4 mr-2" />
+                )}
+                Deletar
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Tem certeza que deseja deletar?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação não pode ser desfeita. Isso excluirá permanentemente esta Ordem de Serviço e, se não houver outras associações, também o aparelho e o cliente relacionados.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteServiceOrder} disabled={isDeleting}>
+                  {isDeleting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    "Deletar"
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </CardHeader>
       <CardContent className="space-y-6 p-6">
