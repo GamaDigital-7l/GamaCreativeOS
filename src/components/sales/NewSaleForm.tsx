@@ -1,0 +1,138 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/integrations/supabase/SessionContext";
+import { showSuccess, showError } from "@/utils/toast";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Loader2, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+const formSchema = z.object({
+  // Device
+  device_brand: z.string().min(2, "Marca é obrigatória."),
+  device_model: z.string().min(2, "Modelo é obrigatório."),
+  imei_serial: z.string().min(10, "IMEI/Serial é obrigatório."),
+  condition: z.string().optional(),
+  notes: z.string().optional(),
+  
+  // Purchase
+  supplier_id: z.string().uuid().optional(),
+  purchase_date: z.date().optional(),
+  acquisition_cost: z.preprocess(val => Number(String(val || '0').replace(",", ".")), z.number().min(0)),
+
+  // Sale
+  customer_id: z.string().uuid().optional(),
+  sale_price: z.preprocess(val => Number(String(val).replace(",", ".")), z.number().positive("Preço de venda é obrigatório.")),
+  payment_method: z.string().optional(),
+});
+
+interface Customer { id: string; name: string; }
+interface Supplier { id: string; name: string; }
+
+export function NewSaleForm() {
+  const { user } = useSession();
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      device_brand: "", device_model: "", imei_serial: "",
+      acquisition_cost: 0, sale_price: 0,
+    },
+  });
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('customers').select('id, name').then(({ data }) => setCustomers(data || []));
+    supabase.from('suppliers').select('id, name').then(({ data }) => setSuppliers(data || []));
+  }, [user]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from('sales').insert({
+        ...values,
+        user_id: user.id,
+        purchase_date: values.purchase_date ? format(values.purchase_date, 'yyyy-MM-dd') : null,
+      });
+      if (error) throw error;
+      showSuccess("Venda registrada com sucesso!");
+      navigate('/sales');
+    } catch (error: any) {
+      showError(`Erro ao registrar venda: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <Tabs defaultValue="device" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="device">Aparelho</TabsTrigger>
+            <TabsTrigger value="purchase">Compra</TabsTrigger>
+            <TabsTrigger value="sale">Venda</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="device">
+            <Card>
+              <CardHeader><CardTitle>Dados do Aparelho</CardTitle><CardDescription>Detalhes do dispositivo que está sendo vendido.</CardDescription></CardHeader>
+              <CardContent className="space-y-4">
+                <FormField name="device_brand" control={form.control} render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="device_model" control={form.control} render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="imei_serial" control={form.control} render={({ field }) => (<FormItem><FormLabel>IMEI / Nº de Série</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="condition" control={form.control} render={({ field }) => (<FormItem><FormLabel>Condição</FormLabel><FormControl><Input placeholder="Ex: Novo, Usado, Vitrine" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="purchase">
+            <Card>
+              <CardHeader><CardTitle>Dados da Compra</CardTitle><CardDescription>Como e por quanto este aparelho foi adquirido.</CardDescription></CardHeader>
+              <CardContent className="space-y-4">
+                <FormField name="supplier_id" control={form.control} render={({ field }) => (<FormItem><FormLabel>Fornecedor</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger></FormControl><SelectContent>{suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                <FormField name="acquisition_cost" control={form.control} render={({ field }) => (<FormItem><FormLabel>Custo de Aquisição (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="purchase_date" control={form.control} render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Data da Compra</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn(!field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}</Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sale">
+            <Card>
+              <CardHeader><CardTitle>Dados da Venda</CardTitle><CardDescription>Para quem e por quanto o aparelho foi vendido.</CardDescription></CardHeader>
+              <CardContent className="space-y-4">
+                <FormField name="customer_id" control={form.control} render={({ field }) => (<FormItem><FormLabel>Cliente</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger></FormControl><SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                <FormField name="sale_price" control={form.control} render={({ field }) => (<FormItem><FormLabel>Preço de Venda (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="payment_method" control={form.control} render={({ field }) => (<FormItem><FormLabel>Forma de Pagamento</FormLabel><FormControl><Input placeholder="Ex: PIX, Cartão 3x" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField name="notes" control={form.control} render={({ field }) => (<FormItem><FormLabel>Observações</FormLabel><FormControl><Textarea placeholder="Detalhes adicionais sobre a venda..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+        <div className="flex justify-end mt-6">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Salvar Venda"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}

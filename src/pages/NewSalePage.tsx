@@ -1,4 +1,4 @@
-// Esta página será implementada na próxima fase com o formulário completo.
+import { NewSaleForm } from "@/components/sales/NewSaleForm";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ const NewSalePage = () => {
           <CardTitle className="text-3xl text-center flex-grow">Registrar Nova Venda</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center p-8">O formulário de nova venda será implementado na próxima etapa.</p>
+          <NewSaleForm />
         </CardContent>
       </Card>
       <MadeWithDyad />
