@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, LayoutDashboard, Users, PlusCircle } from "lucide-react"; // Import Users and PlusCircle icons
+import { LogOut, LayoutDashboard, Users, PlusCircle, Smartphone } from "lucide-react"; // Import Smartphone icon
 
 const Index = () => {
   const { session, isLoading } = useSession();
@@ -48,6 +48,16 @@ const Index = () => {
             <Button asChild className="w-64">
               <Link to="/new-customer" className="flex items-center justify-center gap-2">
                 <PlusCircle className="h-4 w-4" /> Adicionar Cliente
+              </Link>
+            </Button>
+            <Button asChild className="w-64">
+              <Link to="/devices" className="flex items-center justify-center gap-2">
+                <Smartphone className="h-4 w-4" /> Gerenciar Dispositivos
+              </Link>
+            </Button>
+            <Button asChild className="w-64">
+              <Link to="/new-device" className="flex items-center justify-center gap-2">
+                <PlusCircle className="h-4 w-4" /> Adicionar Dispositivo
               </Link>
             </Button>
             <Button variant="outline" onClick={handleLogout} className="w-64 flex items-center justify-center gap-2">
