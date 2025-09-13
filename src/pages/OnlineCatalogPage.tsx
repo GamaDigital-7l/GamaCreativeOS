@@ -24,6 +24,8 @@ interface InventoryItem {
 }
 
 export default function OnlineCatalogPage() {
+  console.log("OnlineCatalogPage is rendering."); // Debug log
+
   const { itemIds: paramItemIds } = useParams<{ itemIds?: string }>();
   const [searchParams] = useSearchParams();
   const categoryFilter = searchParams.get('category');
