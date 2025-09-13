@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut } from "lucide-react";
+import { LogOut, LayoutDashboard } from "lucide-react"; // Import LayoutDashboard icon
 
 const Index = () => {
   const { session, isLoading } = useSession();
@@ -28,7 +28,12 @@ const Index = () => {
           Comece a gerenciar suas ordens de serviço, vendas e estoque aqui!
         </p>
         {session ? (
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center">
+            <Button asChild className="w-64">
+              <Link to="/dashboard" className="flex items-center justify-center gap-2">
+                <LayoutDashboard className="h-4 w-4" /> Dashboard
+              </Link>
+            </Button>
             <Button asChild className="w-64">
               <Link to="/new-service-order">Criar Nova Ordem de Serviço</Link>
             </Button>
