@@ -1,14 +1,16 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut } from "lucide-react";
+import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { href: "/", label: "Início", icon: Home },
   { href: "/service-orders", label: "Ordens de Serviço", icon: Wrench },
+  { href: "/sales", label: "Vendas", icon: ShoppingCart },
   { href: "/customers", label: "Clientes", icon: Users },
   { href: "/devices", label: "Dispositivos", icon: Smartphone },
   { href: "/inventory", label: "Estoque", icon: Package },
+  { href: "/suppliers", label: "Fornecedores", icon: Building },
 ];
 
 const bottomNavItems = [

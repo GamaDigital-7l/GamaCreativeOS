@@ -27,6 +27,10 @@ import EditInventoryItemPage from "./pages/EditInventoryItemPage";
 import SettingsPage from "./pages/SettingsPage";
 import PrintServiceOrderPage from "./pages/PrintServiceOrderPage";
 import PhotoUploadPage from "./pages/PhotoUploadPage";
+import SuppliersPage from "./pages/SuppliersPage";
+import NewSupplierPage from "./pages/NewSupplierPage";
+import SalesPage from "./pages/SalesPage";
+import NewSalePage from "./pages/NewSalePage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 
@@ -48,10 +52,12 @@ const App = () => (
             {/* Rotas dentro do layout principal (com menu lateral) */}
             <Route element={<Layout />}>
               <Route path="/" element={<Index />} />
-              <Route path="/new-service-order" element={<NewServiceOrderPage />} />
               <Route path="/service-orders" element={<ServiceOrdersPage />} />
+              <Route path="/new-service-order" element={<NewServiceOrderPage />} />
               <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
               <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
+              <Route path="/sales" element={<SalesPage />} />
+              <Route path="/sales/new" element={<NewSalePage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/new-customer" element={<NewCustomerPage />} />
               <Route path="/customers/:id" element={<CustomerDetailPage />} />
@@ -60,12 +66,14 @@ const App = () => (
               <Route path="/new-device" element={<NewDevicePage />} />
               <Route path="/devices/:id" element={<DeviceDetailPage />} />
               <Route path="/devices/:id/edit" element={<EditDevicePage />} />
-              <Route path="/profile" element={<UserProfilePage />} />
-              <Route path="/profile/edit" element={<EditUserProfilePage />} />
               <Route path="/inventory" element={<InventoryPage />} />
               <Route path="/inventory/new" element={<NewInventoryItemPage />} />
               <Route path="/inventory/:id" element={<InventoryItemDetailPage />} />
               <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
+              <Route path="/suppliers" element={<SuppliersPage />} />
+              <Route path="/suppliers/new" element={<NewSupplierPage />} />
+              <Route path="/profile" element={<UserProfilePage />} />
+              <Route path="/profile/edit" element={<EditUserProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
