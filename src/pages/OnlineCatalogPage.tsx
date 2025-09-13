@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom'; // Adicionado useNavigate
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Share2, Copy, Package, Tag, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Share2, Copy, Package, Tag, Image as ImageIcon, Eye } from 'lucide-react'; // Adicionado Eye icon
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,14 +20,13 @@ interface InventoryItem {
   description?: string;
   selling_price: number;
   category?: string;
-  image_urls?: string[]; // Alterado para array de strings
+  image_urls?: string[];
 }
 
 export default function OnlineCatalogPage() {
-  console.log("OnlineCatalogPage is rendering."); // Debug log
-
   const { itemIds: paramItemIds } = useParams<{ itemIds?: string }>();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate(); // Inicializa useNavigate
   const categoryFilter = searchParams.get('category');
 
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -49,8 +48,8 @@ export default function OnlineCatalogPage() {
     try {
       let query = supabase
         .from('inventory_items')
-        .select('id, name, description, selling_price, category, image_urls') // Selecionando image_urls
-        .gt('quantity', 0); // Only show items in stock
+        .select('id, name, description, selling_price, category, image_urls')
+        .gt('quantity', 0);
 
       if (paramItemIds) {
         const idsArray = paramItemIds.split(',');
@@ -62,13 +61,12 @@ export default function OnlineCatalogPage() {
       const { data, error } = await query;
 
       if (error) throw error;
-      console.log("Fetched catalog items:", data); // Debug log
       setItems(data || []);
       if (paramItemIds) {
         setSelectedItems(paramItemIds.split(','));
       }
     } catch (err: any) {
-      console.error("Error fetching catalog items:", err); // Debug log
+      console.error("Error fetching catalog items:", err);
       setError("Não foi possível carregar os itens do catálogo.");
     } finally {
       setIsLoading(false);
@@ -98,11 +96,13 @@ export default function OnlineCatalogPage() {
     } else if (shareOption === 'all') {
       // No specific params needed for all items
     }
+    console.log("Generated share link:", link); // Debug log
     setShareLink(link);
     setIsShareDialogOpen(true);
   };
 
   const handleCopyLink = () => {
+    console.log("Copying link:", shareLink); // Debug log
     navigator.clipboard.writeText(shareLink);
     showSuccess("Link copiado para a área de transferência!");
   };
@@ -116,14 +116,16 @@ export default function OnlineCatalogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-8 flex flex-col items-center">
-      <Card className="w-full max-w-4xl mb-6">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Catálogo Online</CardTitle>
-          <CardDescription>Explore nossos produtos disponíveis.</CardDescription>
+    <div className="min-h-screen bg-gradient-to-br from-background to-primary/10 p-4 sm:p-8 flex flex-col items-center">
+      <Card className="w-full max-w-5xl mb-6 bg-card text-card-foreground shadow-lg">
+        <CardHeader className="text-center pb-4 border-b border-border">
+          <CardTitle className="text-4xl font-extrabold text-primary mb-2">Nosso Catálogo</CardTitle>
+          <CardDescription className="text-lg text-muted-foreground">
+            Descubra a variedade de produtos e serviços que oferecemos.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
             <Select value={currentCategoryFilter} onValueChange={(value) => {
               setCurrentCategoryFilter(value);
               const newSearchParams = new URLSearchParams(searchParams);
@@ -132,9 +134,9 @@ export default function OnlineCatalogPage() {
               } else {
                 newSearchParams.set('category', value);
               }
-              window.history.replaceState(null, '', `?${newSearchParams.toString()}`);
+              navigate({ search: newSearchParams.toString() }); // Usar navigate para atualizar a URL
             }}>
-              <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectTrigger className="w-full sm:w-[250px] h-10 text-base">
                 <SelectValue placeholder="Filtrar por Categoria" />
               </SelectTrigger>
               <SelectContent>
@@ -145,36 +147,42 @@ export default function OnlineCatalogPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={generateAndOpenShareDialog} className="w-full sm:w-auto">
-              <Share2 className="h-4 w-4 mr-2" /> Enviar para Cliente
+            <Button onClick={generateAndOpenShareDialog} className="w-full sm:w-auto px-6 py-2 text-base">
+              <Share2 className="h-4 w-4 mr-2" /> Compartilhar Catálogo
             </Button>
           </div>
 
           {items.length === 0 ? (
-            <p className="text-center text-muted-foreground">Nenhum produto encontrado nesta categoria.</p>
+            <p className="text-center text-muted-foreground text-lg py-10">Nenhum produto encontrado nesta categoria.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {items.map(item => (
-                <Card key={item.id} className="relative overflow-hidden">
-                  <div className="absolute top-2 right-2 z-10">
+                <Card key={item.id} className="relative overflow-hidden group cursor-pointer hover:shadow-xl transition-shadow duration-300">
+                  <div className="absolute top-3 right-3 z-10">
                     <Checkbox
                       checked={selectedItems.includes(item.id)}
                       onCheckedChange={(checked) => handleSelectItem(item.id, checked as boolean)}
+                      className="w-5 h-5"
                     />
                   </div>
-                  <CardContent className="p-0">
+                  <CardContent className="p-0" onClick={() => navigate(`/catalog/item/${item.id}`)}>
                     {item.image_urls && item.image_urls.length > 0 ? (
-                      <img src={item.image_urls[0]} alt={item.name} className="w-full h-48 object-cover rounded-t-lg" />
+                      <img src={item.image_urls[0]} alt={item.name} className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className="w-full h-48 bg-muted flex items-center justify-center rounded-t-lg">
                         <ImageIcon className="h-12 w-12 text-muted-foreground" />
                       </div>
                     )}
                     <div className="p-4 space-y-2">
-                      <h3 className="text-xl font-semibold">{item.name}</h3>
+                      <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors duration-300">{item.name}</h3>
                       {item.category && <Badge variant="secondary" className="mb-2">{item.category}</Badge>}
-                      <p className="text-muted-foreground text-sm line-clamp-2">{item.description || 'Sem descrição.'}</p>
-                      <p className="text-2xl font-bold text-primary">R$ {item.selling_price.toFixed(2)}</p>
+                      <p className="text-muted-foreground text-sm line-clamp-2">{item.description || 'Sem descrição detalhada.'}</p>
+                      <div className="flex items-center justify-between pt-2">
+                        <p className="text-2xl font-bold text-primary">R$ {item.selling_price.toFixed(2)}</p>
+                        <Button variant="ghost" size="icon" className="group-hover:opacity-100 opacity-0 transition-opacity duration-300">
+                          <Eye className="h-5 w-5 text-primary" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
