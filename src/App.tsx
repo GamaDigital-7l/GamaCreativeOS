@@ -40,6 +40,7 @@ import FinancialsPage from "./pages/FinancialsPage";
 import GamificationPage from "./pages/GamificationPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
+import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/service-orders/:id/print" element={<PrintServiceOrderPage />} />
             <Route path="/service-orders/:id/print-label" element={<PrintServiceOrderLabelPage />} />
             <Route path="/quote/:id" element={<QuoteApprovalPage />} />
+            <Route path="/sales/:id/print" element={<PrintableSaleReceiptPage />} />
 
             {/* Rotas dentro do layout principal (com menu lateral) */}
             <Route element={<Layout />}>

@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X } from 'lucide-react';
+import { Eye, Search, X, PlusCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -117,8 +117,13 @@ export function ServiceOrderList() {
 
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-2xl">Ordens de Serviço</CardTitle>
+        <Button asChild>
+          <Link to="/new-service-order">
+            <PlusCircle className="h-4 w-4 mr-2" /> Nova Ordem de Serviço
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-4 mb-6">

@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -96,6 +96,11 @@ export function SaleDetail() {
             <CardDescription>Venda registrada em: {format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to={`/sales/${sale.id}/print`} target="_blank">
+                <Printer className="h-4 w-4 mr-2" /> Imprimir Recibo
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" asChild><Link to={`/sales/${sale.id}/edit`}><Edit className="h-4 w-4 mr-2" /> Editar</Link></Button>
             <AlertDialog>
               <AlertDialogTrigger asChild><Button variant="destructive" size="sm"><Trash2 className="h-4 w-4 mr-2" /> Deletar</Button></AlertDialogTrigger>
