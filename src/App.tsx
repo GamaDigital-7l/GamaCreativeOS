@@ -19,7 +19,8 @@ import DevicesPage from "./pages/DevicesPage";
 import NewDevicePage from "./pages/NewDevicePage";
 import DeviceDetailPage from "./pages/DeviceDetailPage";
 import EditDevicePage from "./pages/EditDevicePage";
-import UserProfilePage from "./pages/UserProfilePage"; // Import the new UserProfilePage
+import UserProfilePage from "./pages/UserProfilePage";
+import EditUserProfilePage from "./pages/EditUserProfilePage"; // Import the new EditUserProfilePage
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 
 const queryClient = new QueryClient();
@@ -46,7 +47,8 @@ const App = () => (
             <Route path="/new-device" element={<NewDevicePage />} />
             <Route path="/devices/:id" element={<DeviceDetailPage />} />
             <Route path="/devices/:id/edit" element={<EditDevicePage />} />
-            <Route path="/profile" element={<UserProfilePage />} /> {/* Add user profile route */}
+            <Route path="/profile" element={<UserProfilePage />} />
+            <Route path="/profile/edit" element={<EditUserProfilePage />} /> {/* Add edit user profile route */}
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

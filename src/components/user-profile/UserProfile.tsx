@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Loader2, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Import Link
 
 interface UserProfileData {
   id: string;
@@ -92,8 +92,10 @@ export function UserProfile() {
           </h3>
           <p className="text-muted-foreground">{profile?.email}</p>
         </div>
-        <Button className="w-full">
-          Editar Perfil
+        <Button asChild className="w-full">
+          <Link to="/profile/edit">
+            Editar Perfil
+          </Link>
         </Button>
       </CardContent>
     </Card>
