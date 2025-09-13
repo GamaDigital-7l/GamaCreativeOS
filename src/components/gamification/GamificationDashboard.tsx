@@ -1,32 +1,149 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React, { useEffect, useState, useMemo } from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { RankingList } from './RankingList';
 import { UserGoalsProgress } from './UserGoalsProgress';
 import { UserAchievements } from './UserAchievements';
+import { supabase } from '@/integrations/supabase/client';
+import { useSession } from '@/integrations/supabase/SessionContext';
+import { showError } from '@/utils/toast';
+import { Loader2 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react'; // Para ícones de conquistas
 
-// Dados de exemplo para visualização
-const mockRanking = [
-  { rank: 1, name: 'Ana Silva', points: 1250, avatarUrl: 'https://i.pravatar.cc/150?u=ana' },
-  { rank: 2, name: 'Bruno Costa', points: 1100, avatarUrl: 'https://i.pravatar.cc/150?u=bruno' },
-  { rank: 3, name: 'Carlos Dias', points: 980, avatarUrl: 'https://i.pravatar.cc/150?u=carlos' },
-  { rank: 4, name: 'Você', points: 850, avatarUrl: 'https://i.pravatar.cc/150?u=voce', isCurrentUser: true },
-  { rank: 5, name: 'Daniela Lima', points: 720, avatarUrl: 'https://i.pravatar.cc/150?u=daniela' },
-];
+interface RankingUser {
+  id: string;
+  rank: number;
+  name: string;
+  points: number;
+  avatarUrl?: string;
+  isCurrentUser?: boolean;
+}
 
-const mockGoals = [
-  { id: '1', name: 'Vendas do Mês', currentValue: 7500, targetValue: 10000, metric: 'R$' },
-  { id: '2', name: 'OS Concluídas', currentValue: 42, targetValue: 50, metric: 'OS' },
-  { id: '3', name: 'Venda de Acessórios', currentValue: 15, targetValue: 25, metric: 'Itens' },
-];
+interface Goal {
+  id: string;
+  name: string;
+  description?: string;
+  metric: string;
+  targetValue: number;
+  currentValue: number;
+}
 
-const mockAchievements = [
-  { id: '1', name: 'Vendedor Mestre', description: 'Bateu a meta de vendas por 3 meses seguidos.', icon: 'Gem' },
-  { id: '2', name: 'Rei do Reparo', description: 'Concluiu 100 Ordens de Serviço.', icon: 'Wrench' },
-  { id: '3', name: 'Início Rápido', description: 'Bateu a meta na primeira semana do mês.', icon: 'Zap' },
-  { id: '4', name: 'Cliente Feliz', description: 'Recebeu 10 avaliações 5 estrelas.', icon: 'Star' },
-];
+interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: keyof typeof LucideIcons;
+  earned: boolean;
+}
 
 export function GamificationDashboard() {
+  const { user, isLoading: isSessionLoading } = useSession();
+  const [ranking, setRanking] = useState<RankingUser[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchGamificationData();
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+      // Opcionalmente, redirecionar para o login ou mostrar uma mensagem
+    }
+  }, [user, isSessionLoading]);
+
+  const fetchGamificationData = async () => {
+    setIsLoading(true);
+    try {
+      // Buscar todos os perfis para o ranking
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url, gamification_points')
+        .order('gamification_points', { ascending: false });
+
+      if (profilesError) throw profilesError;
+
+      const processedRanking: RankingUser[] = profilesData.map((profile, index) => ({
+        id: profile.id,
+        rank: index + 1,
+        name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Usuário Desconhecido',
+        points: profile.gamification_points || 0,
+        avatarUrl: profile.avatar_url || undefined,
+        isCurrentUser: profile.id === user?.id,
+      }));
+      setRanking(processedRanking);
+
+      // Buscar metas e progresso do usuário
+      const { data: goalsData, error: goalsError } = await supabase
+        .from('gamification_goals')
+        .select('*'); // Selecionar todas as colunas para metas
+
+      if (goalsError) throw goalsError;
+
+      const { data: userProgressData, error: userProgressError } = await supabase
+        .from('gamification_user_progress')
+        .select('goal_id, current_value')
+        .eq('user_id', user?.id);
+
+      if (userProgressError) throw userProgressError;
+
+      const userProgressMap = new Map(userProgressData.map(p => [p.goal_id, p.current_value]));
+
+      const processedGoals: Goal[] = goalsData.map(goal => ({
+        id: goal.id,
+        name: goal.name,
+        description: goal.description || undefined,
+        metric: goal.metric,
+        targetValue: goal.target_value,
+        currentValue: userProgressMap.get(goal.id) || 0,
+      }));
+      setGoals(processedGoals);
+
+      // Buscar conquistas e conquistas do usuário
+      const { data: achievementsData, error: achievementsError } = await supabase
+        .from('gamification_achievements')
+        .select('*');
+
+      if (achievementsError) throw achievementsError;
+
+      const { data: userAchievementsData, error: userAchievementsError } = await supabase
+        .from('gamification_user_achievements')
+        .select('achievement_id')
+        .eq('user_id', user?.id);
+
+      if (userAchievementsError) throw userAchievementsError;
+
+      const earnedAchievementIds = new Set(userAchievementsData.map(ua => ua.achievement_id));
+
+      const processedAchievements: Achievement[] = achievementsData.map(ach => ({
+        id: ach.id,
+        name: ach.name,
+        description: ach.description,
+        icon: (ach.icon_name as keyof typeof LucideIcons) || 'Award', // Ícone padrão se não especificado
+        earned: earnedAchievementIds.has(ach.id),
+      }));
+      setAchievements(processedAchievements);
+
+    } catch (error: any) {
+      console.error("Erro ao carregar dados de gamificação:", error);
+      showError(`Erro ao carregar gamificação: ${error.message || "Tente novamente."}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2 text-gray-600 dark:text-gray-400">Carregando dados de gamificação...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <p className="text-center text-red-500">Você precisa estar logado para ver a gamificação.</p>;
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -38,11 +155,11 @@ export function GamificationDashboard() {
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-1">
-          <RankingList ranking={mockRanking} />
+          <RankingList ranking={ranking} />
         </div>
         <div className="md:col-span-2 space-y-6">
-          <UserGoalsProgress goals={mockGoals} />
-          <UserAchievements achievements={mockAchievements} />
+          <UserGoalsProgress goals={goals} />
+          <UserAchievements achievements={achievements} />
         </div>
       </div>
     </div>
