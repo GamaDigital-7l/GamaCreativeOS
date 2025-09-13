@@ -8,7 +8,8 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import NewServiceOrderPage from "./pages/NewServiceOrder";
 import ServiceOrdersPage from "./pages/ServiceOrdersPage";
-import ServiceOrderDetailPage from "./pages/ServiceOrderDetailPage"; // Import the new detail page
+import ServiceOrderDetailPage from "./pages/ServiceOrderDetailPage";
+import EditServiceOrderPage from "./pages/EditServiceOrderPage"; // Import the new edit page
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 
 const queryClient = new QueryClient();
@@ -24,7 +25,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/new-service-order" element={<NewServiceOrderPage />} />
             <Route path="/service-orders" element={<ServiceOrdersPage />} />
-            <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} /> {/* Add the dynamic detail route */}
+            <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
+            <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} /> {/* Add the dynamic edit route */}
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom'; // Import Link
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
@@ -132,8 +132,10 @@ export function ServiceOrderDetail() {
             {serviceOrder.status === 'cancelled' && 'Cancelado'}
             {!['pending', 'in_progress', 'ready', 'completed', 'cancelled'].includes(serviceOrder.status) && serviceOrder.status}
           </Badge>
-          <Button variant="outline" size="sm">
-            <Edit className="h-4 w-4 mr-2" /> Editar
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/service-orders/${serviceOrder.id}/edit`}> {/* Link to edit page */}
+              <Edit className="h-4 w-4 mr-2" /> Editar
+            </Link>
           </Button>
         </div>
       </CardHeader>
