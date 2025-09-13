@@ -5,8 +5,8 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Loader2, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon } from 'lucide-react'; // Adicionado ImageIcon
-import { Badge } from '@/components/ui/badge'; // Import Badge
+import { ArrowLeft, Edit, Loader2, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface ItemDetails {
   id: string;
@@ -18,8 +18,8 @@ interface ItemDetails {
   cost_price: number;
   selling_price: number;
   supplier?: string;
-  category?: string; // Nova coluna
-  image_url?: string; // Nova coluna
+  category?: string;
+  image_urls?: string[]; // Alterado para array de strings
 }
 
 export function InventoryItemDetail() {
@@ -89,9 +89,15 @@ export function InventoryItemDetail() {
         </Button>
       </CardHeader>
       <CardContent className="space-y-4 p-6">
-        {item.image_url && (
+        {item.image_urls && item.image_urls.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+            {item.image_urls.map((url, index) => (
+              <img key={index} src={url} alt={`${item.name} - ${index + 1}`} className="w-full h-32 object-cover rounded-md border" />
+            ))}
+          </div>
+        ) : (
           <div className="flex justify-center mb-4">
-            <img src={item.image_url} alt={item.name} className="max-h-64 object-contain rounded-md border" />
+            <ImageIcon className="h-24 w-24 text-muted-foreground" />
           </div>
         )}
         <div className="flex items-start gap-2">

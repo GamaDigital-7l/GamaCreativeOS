@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Share2, Copy, CheckCircle, XCircle, Package, Tag, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Share2, Copy, Package, Tag, Image as ImageIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MadeWithDyad } from '@/components/made-with-dyad';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface InventoryItem {
   id: string;
@@ -19,7 +20,7 @@ interface InventoryItem {
   description?: string;
   selling_price: number;
   category?: string;
-  image_url?: string;
+  image_urls?: string[]; // Alterado para array de strings
 }
 
 export default function OnlineCatalogPage() {
@@ -34,6 +35,7 @@ export default function OnlineCatalogPage() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [shareLink, setShareLink] = useState('');
   const [currentCategoryFilter, setCurrentCategoryFilter] = useState(categoryFilter || 'all');
+  const [shareOption, setShareOption] = useState<'selected' | 'category' | 'all'>('selected');
 
   useEffect(() => {
     fetchCatalogItems();
@@ -45,7 +47,7 @@ export default function OnlineCatalogPage() {
     try {
       let query = supabase
         .from('inventory_items')
-        .select('id, name, description, selling_price, category, image_url')
+        .select('id, name, description, selling_price, category, image_urls') // Selecionando image_urls
         .gt('quantity', 0); // Only show items in stock
 
       if (paramItemIds) {
@@ -58,12 +60,13 @@ export default function OnlineCatalogPage() {
       const { data, error } = await query;
 
       if (error) throw error;
+      console.log("Fetched catalog items:", data); // Debug log
       setItems(data || []);
       if (paramItemIds) {
         setSelectedItems(paramItemIds.split(','));
       }
     } catch (err: any) {
-      console.error("Error fetching catalog items:", err);
+      console.error("Error fetching catalog items:", err); // Debug log
       setError("Não foi possível carregar os itens do catálogo.");
     } finally {
       setIsLoading(false);
@@ -84,14 +87,14 @@ export default function OnlineCatalogPage() {
     );
   };
 
-  const generateShareLink = (itemIdsToShare: string[] | 'all' | 'category') => {
+  const generateAndOpenShareDialog = () => {
     let link = `${window.location.origin}/catalog`;
-    if (itemIdsToShare === 'all') {
-      // No specific params needed for all items
-    } else if (itemIdsToShare === 'category' && currentCategoryFilter !== 'all') {
+    if (shareOption === 'selected' && selectedItems.length > 0) {
+      link += `/${selectedItems.join(',')}`;
+    } else if (shareOption === 'category' && currentCategoryFilter !== 'all') {
       link += `?category=${currentCategoryFilter}`;
-    } else if (Array.isArray(itemIdsToShare) && itemIdsToShare.length > 0) {
-      link += `/${itemIdsToShare.join(',')}`;
+    } else if (shareOption === 'all') {
+      // No specific params needed for all items
     }
     setShareLink(link);
     setIsShareDialogOpen(true);
@@ -121,7 +124,6 @@ export default function OnlineCatalogPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
             <Select value={currentCategoryFilter} onValueChange={(value) => {
               setCurrentCategoryFilter(value);
-              // Update URL search params to reflect category filter
               const newSearchParams = new URLSearchParams(searchParams);
               if (value === 'all') {
                 newSearchParams.delete('category');
@@ -141,14 +143,9 @@ export default function OnlineCatalogPage() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button onClick={() => generateShareLink(selectedItems)} disabled={selectedItems.length === 0} className="w-full sm:w-auto">
-                <Share2 className="h-4 w-4 mr-2" /> Compartilhar Selecionados
-              </Button>
-              <Button variant="outline" onClick={() => generateShareLink('all')} className="w-full sm:w-auto">
-                <Share2 className="h-4 w-4 mr-2" /> Compartilhar Catálogo Completo
-              </Button>
-            </div>
+            <Button onClick={generateAndOpenShareDialog} className="w-full sm:w-auto">
+              <Share2 className="h-4 w-4 mr-2" /> Enviar para Cliente
+            </Button>
           </div>
 
           {items.length === 0 ? (
@@ -164,8 +161,8 @@ export default function OnlineCatalogPage() {
                     />
                   </div>
                   <CardContent className="p-0">
-                    {item.image_url ? (
-                      <img src={item.image_url} alt={item.name} className="w-full h-48 object-cover rounded-t-lg" />
+                    {item.image_urls && item.image_urls.length > 0 ? (
+                      <img src={item.image_urls[0]} alt={item.name} className="w-full h-48 object-cover rounded-t-lg" />
                     ) : (
                       <div className="w-full h-48 bg-muted flex items-center justify-center rounded-t-lg">
                         <ImageIcon className="h-12 w-12 text-muted-foreground" />
@@ -190,17 +187,33 @@ export default function OnlineCatalogPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Compartilhar Catálogo</DialogTitle>
-            <DialogDescription>Copie o link abaixo para compartilhar com seus clientes.</DialogDescription>
+            <DialogDescription>Selecione o que deseja compartilhar e copie o link.</DialogDescription>
           </DialogHeader>
-          <div className="flex items-center space-x-2 py-4">
-            <div className="grid flex-1 gap-2">
-              <Label htmlFor="share-link" className="sr-only">Link</Label>
-              <Input id="share-link" defaultValue={shareLink} readOnly />
+          <div className="py-4 space-y-4">
+            <RadioGroup value={shareOption} onValueChange={(value: 'selected' | 'category' | 'all') => setShareOption(value)}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="selected" id="share-selected" disabled={selectedItems.length === 0} />
+                <Label htmlFor="share-selected">Itens Selecionados ({selectedItems.length})</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="category" id="share-category" disabled={currentCategoryFilter === 'all'} />
+                <Label htmlFor="share-category">Categoria Atual ({currentCategoryFilter !== 'all' ? currentCategoryFilter : 'N/A'})</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="all" id="share-all" />
+                <Label htmlFor="share-all">Catálogo Completo</Label>
+              </div>
+            </RadioGroup>
+            <div className="flex items-center space-x-2">
+              <div className="grid flex-1 gap-2">
+                <Label htmlFor="share-link" className="sr-only">Link</Label>
+                <Input id="share-link" defaultValue={shareLink} readOnly />
+              </div>
+              <Button type="button" size="sm" className="px-3" onClick={handleCopyLink}>
+                <span className="sr-only">Copiar</span>
+                <Copy className="h-4 w-4" />
+              </Button>
             </div>
-            <Button type="button" size="sm" className="px-3" onClick={handleCopyLink}>
-              <span className="sr-only">Copiar</span>
-              <Copy className="h-4 w-4" />
-            </Button>
           </div>
           <DialogFooter className="sm:justify-center">
             <Button type="button" variant="secondary" onClick={() => setIsShareDialogOpen(false)}>

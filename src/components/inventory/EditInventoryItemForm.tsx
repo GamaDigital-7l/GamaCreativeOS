@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form"; // Import useFieldArray
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Save, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon } from "lucide-react"; // Adicionado ImageIcon
+import { Loader2, Save, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon, PlusCircle, Trash2 } from "lucide-react"; // Adicionado PlusCircle, Trash2
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do item é obrigatório." }),
@@ -36,8 +36,8 @@ const formSchema = z.object({
     z.number().min(0, { message: "Preço de venda não pode ser negativo." })
   ),
   supplier: z.string().optional(),
-  category: z.string().optional(), // Nova coluna
-  image_url: z.string().url({ message: "URL de imagem inválida." }).optional().or(z.literal('')), // Nova coluna
+  category: z.string().optional(),
+  image_urls: z.array(z.string().url({ message: "URL de imagem inválida." }).or(z.literal(''))).max(5, "Máximo de 5 imagens.").optional(), // Alterado para array
 });
 
 export function EditInventoryItemForm() {
@@ -49,6 +49,11 @@ export function EditInventoryItemForm() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "image_urls",
   });
 
   useEffect(() => {
@@ -73,7 +78,10 @@ export function EditInventoryItemForm() {
           .single();
 
         if (error) throw error;
-        form.reset(data);
+        form.reset({
+          ...data,
+          image_urls: data.image_urls || [], // Garantir que seja um array
+        });
       } catch (error: any) {
         showError(`Erro ao carregar dados: ${error.message}`);
         navigate('/inventory');
@@ -94,9 +102,9 @@ export function EditInventoryItemForm() {
         .from('inventory_items')
         .update({
           ...values,
-          sku: values.sku || null, // Treat empty string as null
-          category: values.category || null, // Treat empty string as null
-          image_url: values.image_url || null, // Treat empty string as null
+          sku: values.sku || null,
+          category: values.category || null,
+          image_urls: values.image_urls?.filter(url => url) || null, // Filtrar URLs vazias
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -154,13 +162,37 @@ export function EditInventoryItemForm() {
             <FormMessage />
           </FormItem>
         )} />
-        <FormField name="image_url" control={form.control} render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> URL da Imagem (Opcional)</FormLabel>
-            <FormControl><Input placeholder="https://exemplo.com/imagem.jpg" {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
+        
+        <h3 className="text-xl font-bold mt-8 mb-4 flex items-center gap-2"><ImageIcon className="h-5 w-5 text-primary" /> Imagens do Produto (Máx. 5)</h3>
+        <div className="space-y-2">
+          {fields.map((field, index) => (
+            <FormField
+              key={field.id}
+              control={form.control}
+              name={`image_urls.${index}`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="sr-only">URL da Imagem {index + 1}</FormLabel>
+                  <div className="flex items-center gap-2">
+                    <FormControl>
+                      <Input placeholder="https://exemplo.com/imagem.jpg" {...field} />
+                    </FormControl>
+                    <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ))}
+          {fields.length < 5 && (
+            <Button type="button" variant="outline" onClick={() => append("")} className="w-full">
+              <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Imagem
+            </Button>
+          )}
+        </div>
+
         <FormField name="quantity" control={form.control} render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2"><Package className="h-4 w-4" /> Quantidade em Estoque</FormLabel>
@@ -185,7 +217,7 @@ export function EditInventoryItemForm() {
         <FormField name="supplier" control={form.control} render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2"><Factory className="h-4 w-4" /> Fornecedor</FormLabel>
-            <FormControl><Input {...field} /></FormControl>
+            <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
