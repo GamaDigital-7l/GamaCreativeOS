@@ -1,5 +1,7 @@
 import { ServiceOrderSummary } from "@/components/dashboard/ServiceOrderSummary";
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
+import { SalesSummary } from "@/components/dashboard/SalesSummary"; // New import
+import { POSSalesSummary } from "@/components/dashboard/POSSalesSummary"; // New import
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -25,6 +27,11 @@ const Index = () => {
       </div>
       <div className="space-y-8">
         <FinancialSummary />
+        <h2 className="text-2xl font-semibold tracking-tight mb-4">Resumo de Vendas</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <SalesSummary />
+          <POSSalesSummary />
+        </div>
         <ServiceOrderSummary />
       </div>
       <div className="mt-auto pt-8">

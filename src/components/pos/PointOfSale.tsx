@@ -260,7 +260,7 @@ export function PointOfSale() {
                         <div className="text-3xl font-bold text-center text-primary">Total: R$ {total.toFixed(2)}</div>
                         
                         <div>
-                          <Label htmlFor="customer-select" className="flex items-center gap-2 mb-2"><User className="h-4 w-4" /> Cliente</Label>
+                          <Label htmlFor="customer-select" className="flex items-center gap-2 mb-2"><User className="h-4 w-4" /> Cliente <span className="text-red-500">*</span></Label> {/* Added mandatory indicator */}
                           <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                             <SelectTrigger id="customer-select">
                               <SelectValue placeholder="Selecione um cliente" />

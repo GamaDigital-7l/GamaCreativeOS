@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownCircle, ArrowUpCircle, DollarSign, Plus, Wallet } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select components
 
 interface Transaction {
   id: string;
@@ -18,6 +19,9 @@ interface Transaction {
   amount: number;
   type: 'income' | 'expense';
   category?: string;
+  related_service_order_id?: string;
+  related_sale_id?: string;
+  related_pos_sale_id?: string;
 }
 
 export function FinancialLedger() {
@@ -25,10 +29,11 @@ export function FinancialLedger() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [transactionTypeFilter, setTransactionTypeFilter] = useState('all'); // New state for filter
 
   useEffect(() => {
     if (user) fetchTransactions();
-  }, [user]);
+  }, [user, transactionTypeFilter]); // Re-fetch when filter changes
 
   const fetchTransactions = async () => {
     setIsLoading(true);
@@ -36,13 +41,30 @@ export function FinancialLedger() {
     const startDate = format(startOfMonth(today), 'yyyy-MM-dd');
     const endDate = format(endOfMonth(today), 'yyyy-MM-dd');
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('financial_transactions')
-      .select('*')
+      .select('*, related_service_order_id, related_sale_id, related_pos_sale_id') // Select related IDs
       .gte('transaction_date', startDate)
       .lte('transaction_date', endDate)
       .eq('user_id', user?.id) // Filter by user_id
       .order('transaction_date', { ascending: false });
+
+    // Apply filter based on transactionTypeFilter
+    if (transactionTypeFilter === 'service_order') {
+      query = query.not('related_service_order_id', 'is', null);
+    } else if (transactionTypeFilter === 'device_sale') {
+      query = query.not('related_sale_id', 'is', null);
+    } else if (transactionTypeFilter === 'pos_sale') {
+      query = query.not('related_pos_sale_id', 'is', null);
+    } else if (transactionTypeFilter === 'manual') {
+      // Filter for transactions that are not related to any specific module
+      query = query
+        .is('related_service_order_id', null)
+        .is('related_sale_id', null)
+        .is('related_pos_sale_id', null);
+    }
+
+    const { data, error } = await query;
 
     if (error) showError("Erro ao buscar lançamentos.");
     else setTransactions(data || []);
@@ -91,10 +113,22 @@ export function FinancialLedger() {
         </Card>
       </div>
 
-      <div className="flex justify-end mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+        <Select value={transactionTypeFilter} onValueChange={setTransactionTypeFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filtrar por tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os Lançamentos</SelectItem>
+            <SelectItem value="manual">Lançamentos Manuais</SelectItem>
+            <SelectItem value="service_order">Ordens de Serviço</SelectItem>
+            <SelectItem value="device_sale">Vendas de Aparelhos</SelectItem>
+            <SelectItem value="pos_sale">Vendas PDV</SelectItem>
+          </SelectContent>
+        </Select>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="mr-2 h-4 w-4" /> Adicionar Lançamento</Button>
+            <Button className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Adicionar Lançamento</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
