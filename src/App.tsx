@@ -40,7 +40,8 @@ import QuoteApprovalPage from "./pages/QuoteApprovalPage";
 import FinancialsPage from "./pages/FinancialsPage";
 import GamificationPage from "./pages/GamificationPage";
 import OnlineCatalogPage from "./pages/OnlineCatalogPage";
-import ProductDetailPage from "./pages/ProductDetailPage"; // New import
+import ProductDetailPage from "./pages/ProductDetailPage";
+import PublicCatalogPage from "./pages/PublicCatalogPage"; // New import
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
@@ -63,9 +64,11 @@ const App = () => (
             <Route path="/service-orders/:id/print-warranty" element={<PrintableServiceOrderWarrantyPage />} />
             <Route path="/quote/:id" element={<QuoteApprovalPage />} />
             <Route path="/sales/:id/print" element={<PrintableSaleReceiptPage />} />
-            <Route path="/catalog" element={<OnlineCatalogPage />} />
-            <Route path="/catalog/:itemIds" element={<OnlineCatalogPage />} />
-            <Route path="/catalog/item/:id" element={<ProductDetailPage />} /> {/* Nova rota para detalhes do produto */}
+            
+            {/* Rotas do Catálogo Online (públicas) */}
+            <Route path="/public-catalog" element={<PublicCatalogPage />} />
+            <Route path="/public-catalog/:itemIds" element={<PublicCatalogPage />} />
+            <Route path="/catalog/item/:id" element={<ProductDetailPage />} /> {/* Detalhes do produto (público) */}
 
             {/* Rotas dentro do layout principal (com menu lateral) */}
             <Route element={<Layout />}>
@@ -94,6 +97,8 @@ const App = () => (
               <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
               <Route path="/suppliers" element={<SuppliersPage />} />
               <Route path="/suppliers/new" element={<NewSupplierPage />} />
+              <Route path="/catalog" element={<OnlineCatalogPage />} /> {/* Catálogo interno para gerenciamento */}
+              <Route path="/catalog/:itemIds" element={<OnlineCatalogPage />} /> {/* Catálogo interno para gerenciamento */}
               <Route path="/gamification" element={<GamificationPage />} />
               <Route path="/profile" element={<UserProfilePage />} />
               <Route path="/profile/edit" element={<EditUserProfilePage />} />

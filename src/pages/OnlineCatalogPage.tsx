@@ -88,13 +88,13 @@ export default function OnlineCatalogPage() {
   };
 
   const generateAndOpenShareDialog = () => {
-    let link = `${window.location.origin}/catalog`;
+    let link = `${window.location.origin}/public-catalog`; // Aponta para a nova página pública
     if (shareOption === 'selected' && selectedItems.length > 0) {
       link += `/${selectedItems.join(',')}`;
     } else if (shareOption === 'category' && currentCategoryFilter !== 'all') {
       link += `?category=${currentCategoryFilter}`;
     } else if (shareOption === 'all') {
-      // No specific params needed for all items
+      // No specific params needed for all items, base link is enough
     }
     console.log("Generated share link:", link); // Debug log
     setShareLink(link);
