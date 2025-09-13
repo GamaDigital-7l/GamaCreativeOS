@@ -255,39 +255,41 @@ export function NewDeviceForm() {
               <div className="mb-4">
                 <FormLabel className="text-base">Estado do Aparelho (Marque o que se aplica)</FormLabel>
               </div>
-              {checklistOptions.map((item) => (
-                <FormField
-                  key={item}
-                  control={form.control}
-                  name="checklist"
-                  render={({ field }) => {
-                    return (
-                      <FormItem
-                        key={item}
-                        className="flex flex-row items-start space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item)}
-                            onCheckedChange={(checked) => {
-                              return checked
-                                ? field.onChange([...(field.value || []), item])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      (value) => value !== item
-                                    )
-                                  );
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          {item}
-                        </FormLabel>
-                      </FormItem>
-                    );
-                  }}
-                />
-              ))}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {checklistOptions.map((item) => (
+                  <FormField
+                    key={item}
+                    control={form.control}
+                    name="checklist"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={item}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(item)}
+                              onCheckedChange={(checked) => {
+                                return checked
+                                  ? field.onChange([...(field.value || []), item])
+                                  : field.onChange(
+                                      field.value?.filter(
+                                        (value) => value !== item
+                                      )
+                                    );
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            {item}
+                          </FormLabel>
+                        </FormItem>
+                      );
+                    }}
+                  />
+                ))}
+              </div>
               <FormMessage />
             </FormItem>
           )}

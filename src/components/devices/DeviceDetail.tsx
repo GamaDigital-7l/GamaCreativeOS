@@ -202,8 +202,8 @@ export function DeviceDetail() {
         {device.password_info && <p><strong>Informações de Senha:</strong> {device.password_info}</p>}
         {device.checklist && device.checklist.length > 0 && (
           <div>
-            <p className="font-semibold mt-2">Checklist:</p>
-            <ul className="list-disc list-inside ml-4">
+            <p className="font-semibold mt-2">Checklist de Entrada:</p>
+            <ul className="list-disc list-inside ml-4 grid grid-cols-2 md:grid-cols-3 gap-x-4">
               {device.checklist.map((item, index) => (
                 <li key={index}>{item}</li>
               ))}
