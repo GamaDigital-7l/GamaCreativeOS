@@ -5,7 +5,8 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Loader2, Package, Tag, Hash, DollarSign, Factory, FileText } from 'lucide-react'; // Adicionado FileText icon
+import { ArrowLeft, Edit, Loader2, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon } from 'lucide-react'; // Adicionado ImageIcon
+import { Badge } from '@/components/ui/badge'; // Import Badge
 
 interface ItemDetails {
   id: string;
@@ -17,6 +18,8 @@ interface ItemDetails {
   cost_price: number;
   selling_price: number;
   supplier?: string;
+  category?: string; // Nova coluna
+  image_url?: string; // Nova coluna
 }
 
 export function InventoryItemDetail() {
@@ -86,9 +89,18 @@ export function InventoryItemDetail() {
         </Button>
       </CardHeader>
       <CardContent className="space-y-4 p-6">
+        {item.image_url && (
+          <div className="flex justify-center mb-4">
+            <img src={item.image_url} alt={item.name} className="max-h-64 object-contain rounded-md border" />
+          </div>
+        )}
         <div className="flex items-start gap-2">
           <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
           <p><strong>Descrição:</strong> {item.description || 'N/A'}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Tag className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Categoria:</strong> {item.category ? <Badge variant="secondary">{item.category}</Badge> : 'N/A'}</p>
         </div>
         <div className="flex items-center gap-2">
           <Hash className="h-5 w-5 text-muted-foreground" />

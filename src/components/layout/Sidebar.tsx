@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy } from "lucide-react";
+import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store } from "lucide-react"; // Adicionado Store icon
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ const navItems = [
   { href: "/devices", label: "Dispositivos", icon: Smartphone },
   { href: "/inventory", label: "Estoque", icon: Package },
   { href: "/suppliers", label: "Fornecedores", icon: Building },
+  { href: "/catalog", label: "Catálogo Online", icon: Store }, // Novo item de navegação
   { href: "/gamification", label: "Gamificação", icon: Trophy },
 ];
 

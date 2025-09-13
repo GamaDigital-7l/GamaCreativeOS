@@ -27,7 +27,7 @@ import EditInventoryItemPage from "./pages/EditInventoryItemPage";
 import SettingsPage from "./pages/SettingsPage";
 import PrintServiceOrderPage from "./pages/PrintServiceOrderPage";
 import PrintServiceOrderLabelPage from "./pages/PrintServiceOrderLabelPage";
-import PrintableServiceOrderWarrantyPage from "./pages/PrintableServiceOrderWarrantyPage"; // New import
+import PrintableServiceOrderWarrantyPage from "./pages/PrintableServiceOrderWarrantyPage";
 import PhotoUploadPage from "./pages/PhotoUploadPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import NewSupplierPage from "./pages/NewSupplierPage";
@@ -39,6 +39,7 @@ import PointOfSalePage from "./pages/PointOfSalePage";
 import QuoteApprovalPage from "./pages/QuoteApprovalPage";
 import FinancialsPage from "./pages/FinancialsPage";
 import GamificationPage from "./pages/GamificationPage";
+import OnlineCatalogPage from "./pages/OnlineCatalogPage"; // New import
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
@@ -58,9 +59,11 @@ const App = () => (
             <Route path="/upload-photos/:id" element={<PhotoUploadPage />} />
             <Route path="/service-orders/:id/print" element={<PrintServiceOrderPage />} />
             <Route path="/service-orders/:id/print-label" element={<PrintServiceOrderLabelPage />} />
-            <Route path="/service-orders/:id/print-warranty" element={<PrintableServiceOrderWarrantyPage />} /> {/* New Route */}
+            <Route path="/service-orders/:id/print-warranty" element={<PrintableServiceOrderWarrantyPage />} />
             <Route path="/quote/:id" element={<QuoteApprovalPage />} />
             <Route path="/sales/:id/print" element={<PrintableSaleReceiptPage />} />
+            <Route path="/catalog" element={<OnlineCatalogPage />} /> {/* Rota para o catálogo completo */}
+            <Route path="/catalog/:itemIds" element={<OnlineCatalogPage />} /> {/* Rota para itens específicos do catálogo */}
 
             {/* Rotas dentro do layout principal (com menu lateral) */}
             <Route element={<Layout />}>

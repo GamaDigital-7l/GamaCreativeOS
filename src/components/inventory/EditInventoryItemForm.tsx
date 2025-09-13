@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Save, Package, Tag, Hash, DollarSign, Factory, FileText } from "lucide-react"; // Adicionado Tag, Hash, DollarSign, Factory, FileText icons
+import { Loader2, Save, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon } from "lucide-react"; // Adicionado ImageIcon
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do item é obrigatório." }),
@@ -36,6 +36,8 @@ const formSchema = z.object({
     z.number().min(0, { message: "Preço de venda não pode ser negativo." })
   ),
   supplier: z.string().optional(),
+  category: z.string().optional(), // Nova coluna
+  image_url: z.string().url({ message: "URL de imagem inválida." }).optional().or(z.literal('')), // Nova coluna
 });
 
 export function EditInventoryItemForm() {
@@ -93,6 +95,8 @@ export function EditInventoryItemForm() {
         .update({
           ...values,
           sku: values.sku || null, // Treat empty string as null
+          category: values.category || null, // Treat empty string as null
+          image_url: values.image_url || null, // Treat empty string as null
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -140,6 +144,20 @@ export function EditInventoryItemForm() {
           <FormItem>
             <FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Descrição</FormLabel>
             <FormControl><Textarea {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField name="category" control={form.control} render={({ field }) => (
+          <FormItem>
+            <FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Categoria</FormLabel>
+            <FormControl><Input placeholder="Ex: Telas, Baterias, Acessórios" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField name="image_url" control={form.control} render={({ field }) => (
+          <FormItem>
+            <FormLabel className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> URL da Imagem (Opcional)</FormLabel>
+            <FormControl><Input placeholder="https://exemplo.com/imagem.jpg" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />

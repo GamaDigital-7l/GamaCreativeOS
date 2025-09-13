@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from '@/components/ui/badge'; // Import Badge
 
 interface InventoryItem {
   id: string;
@@ -34,6 +35,7 @@ interface InventoryItem {
   quantity: number;
   cost_price: number;
   selling_price: number;
+  category?: string; // Nova coluna
 }
 
 export function InventoryList() {
@@ -58,13 +60,13 @@ export function InventoryList() {
     try {
       let query = supabase
         .from('inventory_items')
-        .select(`id, name, sku, quantity, cost_price, selling_price`)
+        .select(`id, name, sku, quantity, cost_price, selling_price, category`) // Incluindo category
         .eq('user_id', user?.id)
         .order('name', { ascending: true });
 
       if (searchTerm) {
         query = query.or(
-          `name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%`
+          `name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%` // Adicionado category na busca
         );
       }
 
@@ -113,7 +115,7 @@ export function InventoryList() {
         <div className="relative flex-grow mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por nome ou SKU..."
+            placeholder="Buscar por nome, SKU ou categoria..." // Atualizado placeholder
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 pr-8"
@@ -141,6 +143,7 @@ export function InventoryList() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>SKU</TableHead>
+                  <TableHead>Categoria</TableHead> {/* Nova coluna */}
                   <TableHead>Quantidade</TableHead>
                   <TableHead>Custo (R$)</TableHead>
                   <TableHead>Preço de Venda (R$)</TableHead>
@@ -152,6 +155,7 @@ export function InventoryList() {
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.sku || 'N/A'}</TableCell>
+                    <TableCell>{item.category ? <Badge variant="outline">{item.category}</Badge> : 'N/A'}</TableCell> {/* Exibindo categoria */}
                     <TableCell>{item.quantity}</TableCell>
                     <TableCell>{item.cost_price.toFixed(2)}</TableCell>
                     <TableCell>{item.selling_price.toFixed(2)}</TableCell>
