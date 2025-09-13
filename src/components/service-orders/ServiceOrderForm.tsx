@@ -3,182 +3,202 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { PhotoUploadDialog } from "./PhotoUploadDialog";
-
-const checklistOptions = [
-  "Tela intacta",
-  "Tela trincada",
-  "Carcaça intacta",
-  "Carcaça com arranhões",
-  "Carcaça amassada",
-  "Bateria ok",
-  "Bateria estufada",
-  "Câmera ok",
-  "Câmera com defeito",
-  "Botões ok",
-  "Botões com defeito",
-  "Conector de carga ok",
-  "Conector de carga com defeito",
-  "Ligando",
-  "Não ligando",
-];
+import { useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Loader2, AlertTriangle, Check, ChevronsUpDown, PlusCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+import { format, addDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const formSchema = z.object({
-  customerName: z.string().min(2, { message: "Nome do cliente é obrigatório." }),
-  customerPhone: z.string().optional(),
-  customerAddress: z.string().optional(),
-  customerEmail: z.string().email({ message: "Email inválido." }).optional().or(z.literal('')),
-  deviceBrand: z.string().min(2, { message: "Marca do aparelho é obrigatória." }),
-  deviceModel: z.string().min(2, { message: "Modelo do aparelho é obrigatório." }),
-  deviceSerialNumber: z.string().optional(),
-  defectDescription: z.string().min(10, { message: "Descrição do defeito é obrigatória e deve ter pelo menos 10 caracteres." }),
-  passwordInfo: z.string().optional(),
-  checklist: z.array(z.string()).optional(),
-  issueDescription: z.string().optional(),
+  customerId: z.string({ required_error: "Selecione um cliente." }),
+  deviceId: z.string({ required_error: "Selecione um aparelho." }),
+  issueDescription: z.string().min(10, { message: "A descrição do problema é obrigatória." }),
 });
+
+interface Entity { id: string; name: string; }
+interface Device extends Entity { brand: string; model: string; }
+interface WarrantyInfo { id: string; endDate: Date; }
 
 export function ServiceOrderForm() {
   const { user } = useSession();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPhotoDialog, setShowPhotoDialog] = useState(false);
-  const [newServiceOrderId, setNewServiceOrderId] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<Entity[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Entity | null>(null);
+  const [warrantyInfo, setWarrantyInfo] = useState<WarrantyInfo | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      customerName: "",
-      customerPhone: "",
-      customerAddress: "",
-      customerEmail: "",
-      deviceBrand: "",
-      deviceModel: "",
-      deviceSerialNumber: "",
-      defectDescription: "",
-      passwordInfo: "",
-      checklist: [],
-      issueDescription: "",
-    },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) {
-      showError("Você precisa estar logado para criar uma Ordem de Serviço.");
-      navigate('/login');
-      return;
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('customers').select('id, name').order('name').then(({ data }) => setCustomers(data || []));
+  }, [user]);
+
+  const handleCustomerSelect = async (customerId: string) => {
+    form.setValue("customerId", customerId);
+    form.setValue("deviceId", ""); // Reset device selection
+    setWarrantyInfo(null);
+    const customer = customers.find(c => c.id === customerId);
+    setSelectedCustomer(customer || null);
+    const { data } = await supabase.from('devices').select('id, name:model, brand, model').eq('customer_id', customerId);
+    setDevices(data as Device[] || []);
+  };
+
+  const handleDeviceSelect = async (deviceId: string) => {
+    form.setValue("deviceId", deviceId);
+    const { data, error } = await supabase
+      .from('service_orders')
+      .select('id, finalized_at, warranty_days')
+      .eq('device_id', deviceId)
+      .eq('status', 'completed')
+      .not('finalized_at', 'is', null)
+      .not('warranty_days', 'is', null)
+      .order('finalized_at', { ascending: false })
+      .limit(1);
+
+    if (data && data.length > 0) {
+      const lastOs = data[0];
+      const warrantyEndDate = addDays(new Date(lastOs.finalized_at), lastOs.warranty_days);
+      if (warrantyEndDate > new Date()) {
+        setWarrantyInfo({ id: lastOs.id, endDate: warrantyEndDate });
+      } else {
+        setWarrantyInfo(null);
+      }
+    } else {
+      setWarrantyInfo(null);
     }
+  };
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) return;
     setIsSubmitting(true);
     try {
-      // 1. Create Customer
-      const { data: customerData, error: customerError } = await supabase
-        .from('customers')
-        .insert({
-          user_id: user.id,
-          name: values.customerName,
-          phone: values.customerPhone,
-          address: values.customerAddress,
-          email: values.customerEmail,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.from('service_orders').insert({
+        customer_id: values.customerId,
+        device_id: values.deviceId,
+        user_id: user.id,
+        issue_description: values.issueDescription,
+        status: 'pending',
+      }).select().single();
 
-      if (customerError) throw customerError;
-
-      // 2. Create Device
-      const { data: deviceData, error: deviceError } = await supabase
-        .from('devices')
-        .insert({
-          customer_id: customerData.id,
-          user_id: user.id,
-          brand: values.deviceBrand,
-          model: values.deviceModel,
-          serial_number: values.deviceSerialNumber,
-          defect_description: values.defectDescription,
-          password_info: values.passwordInfo,
-          checklist: values.checklist,
-        })
-        .select()
-        .single();
-
-      if (deviceError) throw deviceError;
-
-      // 3. Create Service Order
-      const { data: serviceOrderData, error: serviceOrderError } = await supabase
-        .from('service_orders')
-        .insert({
-          customer_id: customerData.id,
-          device_id: deviceData.id,
-          user_id: user.id,
-          issue_description: values.issueDescription || values.defectDescription,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (serviceOrderError) throw serviceOrderError;
-
+      if (error) throw error;
       showSuccess("Ordem de Serviço criada com sucesso!");
-      setNewServiceOrderId(serviceOrderData.id);
-      setShowPhotoDialog(true);
-      form.reset();
+      navigate(`/service-orders/${data.id}/edit`);
     } catch (error: any) {
-      console.error("Erro ao criar Ordem de Serviço:", error);
-      showError(`Erro ao criar Ordem de Serviço: ${error.message || "Tente novamente."}`);
+      showError(`Erro ao criar OS: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  const handleDialogClose = () => {
-    setShowPhotoDialog(false);
-    navigate(`/service-orders/${newServiceOrderId}`);
-  };
-
   return (
-    <>
-      {newServiceOrderId && (
-        <PhotoUploadDialog
-          isOpen={showPhotoDialog}
-          onClose={handleDialogClose}
-          serviceOrderId={newServiceOrderId}
-        />
-      )}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
-          {/* ... All form fields remain the same ... */}
-          <h2 className="text-2xl font-bold mb-4">Dados do Cliente</h2>
-          <FormField control={form.control} name="customerName" render={({ field }) => (<FormItem><FormLabel>Nome Completo</FormLabel><FormControl><Input placeholder="Nome do cliente" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <FormField control={form.control} name="customerPhone" render={({ field }) => (<FormItem><FormLabel>Telefone</FormLabel><FormControl><Input placeholder="(XX) XXXXX-XXXX" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <FormField control={form.control} name="customerAddress" render={({ field }) => (<FormItem><FormLabel>Endereço</FormLabel><FormControl><Input placeholder="Rua, Número, Bairro, Cidade" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <FormField control={form.control} name="customerEmail" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="email@exemplo.com" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <h2 className="text-2xl font-bold mt-8 mb-4">Dados do Aparelho</h2>
-          <FormField control={form.control} name="deviceBrand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input placeholder="Ex: Samsung, Apple" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <FormField control={form.control} name="deviceModel" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Galaxy S21, iPhone 13" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <FormField control={form.control} name="deviceSerialNumber" render={({ field }) => (<FormItem><FormLabel>Número de Série/IMEI</FormLabel><FormControl><Input placeholder="Opcional" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <FormField control={form.control} name="defectDescription" render={({ field }) => (<FormItem><FormLabel>Defeito Relatado</FormLabel><FormControl><Textarea placeholder="Descreva o problema que o cliente relatou..." className="resize-y min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <FormField control={form.control} name="passwordInfo" render={({ field }) => (<FormItem><FormLabel>Informações de Senha/Padrão (Opcional)</FormLabel><FormControl><Textarea placeholder="Desenhe o padrão ou escreva a senha, se fornecida pelo cliente." className="resize-y min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <h2 className="text-2xl font-bold mt-8 mb-4">Checklist do Aparelho</h2>
-          <FormField control={form.control} name="checklist" render={() => (<FormItem><div className="mb-4"><FormLabel className="text-base">Estado do Aparelho (Marque o que se aplica)</FormLabel></div>{checklistOptions.map((item) => (<FormField key={item} control={form.control} name="checklist" render={({ field }) => (<FormItem key={item} className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value?.includes(item)} onCheckedChange={(checked) => {return checked ? field.onChange([...(field.value || []), item]) : field.onChange(field.value?.filter((value) => value !== item));}} /></FormControl><FormLabel className="font-normal">{item}</FormLabel></FormItem>)} />))}<FormMessage /></FormItem>)} />
-          <h2 className="text-2xl font-bold mt-8 mb-4">Detalhes da Ordem de Serviço</h2>
-          <FormField control={form.control} name="issueDescription" render={({ field }) => (<FormItem><FormLabel>Descrição do Problema (para OS)</FormLabel><FormControl><Textarea placeholder="Detalhes adicionais do problema para a ordem de serviço. Se vazio, usará a descrição do defeito." className="resize-y min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <Button type="submit" className="w-full" disabled={isSubmitting}>Criar Ordem de Serviço</Button>
-        </form>
-      </Form>
-    </>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField control={form.control} name="customerId" render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>1. Selecione o Cliente</FormLabel>
+              <EntitySelector
+                entities={customers}
+                placeholder="Buscar cliente..."
+                notFoundText="Nenhum cliente encontrado."
+                onSelect={handleCustomerSelect}
+                value={field.value}
+              />
+              <FormMessage />
+              <Button variant="link" asChild className="p-0 h-auto mt-2 self-start"><Link to="/new-customer"><PlusCircle className="mr-2 h-4 w-4"/>Cadastrar novo cliente</Link></Button>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="deviceId" render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>2. Selecione o Aparelho</FormLabel>
+              <EntitySelector
+                entities={devices.map(d => ({ id: d.id, name: `${d.brand} ${d.model}` }))}
+                placeholder="Buscar aparelho..."
+                notFoundText="Nenhum aparelho encontrado."
+                onSelect={handleDeviceSelect}
+                value={field.value}
+                disabled={!selectedCustomer}
+              />
+              <FormMessage />
+               <Button variant="link" asChild className="p-0 h-auto mt-2 self-start"><Link to="/new-device"><PlusCircle className="mr-2 h-4 w-4"/>Cadastrar novo aparelho</Link></Button>
+            </FormItem>
+          )} />
+        </div>
+
+        {warrantyInfo && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Aparelho em Garantia!</AlertTitle>
+            <AlertDescription>
+              Este aparelho está na garantia de um serviço anterior (OS <Link to={`/service-orders/${warrantyInfo.id}`} className="underline font-bold">{warrantyInfo.id.substring(0,8)}</Link>)
+              até {format(warrantyInfo.endDate, 'dd/MM/yyyy', { locale: ptBR })}.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <FormField control={form.control} name="issueDescription" render={({ field }) => (
+          <FormItem>
+            <FormLabel>3. Defeito / Problema Relatado</FormLabel>
+            <FormControl>
+              <Textarea placeholder="Descreva o problema relatado pelo cliente..." {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando OS...</> : "Criar Ordem de Serviço"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
+// Helper component for searchable dropdown
+function EntitySelector({ entities, placeholder, notFoundText, onSelect, value, disabled }: {
+  entities: Entity[], placeholder: string, notFoundText: string, onSelect: (id: string) => void, value: string, disabled?: boolean
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <FormControl>
+          <Button variant="outline" role="combobox" disabled={disabled} className={cn("w-full justify-between", !value && "text-muted-foreground")}>
+            {value ? entities.find(e => e.id === value)?.name : placeholder}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </FormControl>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+        <Command>
+          <CommandInput placeholder={placeholder} />
+          <CommandList>
+            <CommandEmpty>{notFoundText}</CommandEmpty>
+            <CommandGroup>
+              {entities.map((entity) => (
+                <CommandItem value={entity.name} key={entity.id} onSelect={() => { onSelect(entity.id); setOpen(false); }}>
+                  <Check className={cn("mr-2 h-4 w-4", entity.id === value ? "opacity-100" : "opacity-0")} />
+                  {entity.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
