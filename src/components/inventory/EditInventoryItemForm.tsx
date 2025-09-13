@@ -92,6 +92,7 @@ export function EditInventoryItemForm() {
         .from('inventory_items')
         .update({
           ...values,
+          sku: values.sku || null, // Treat empty string as null
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)

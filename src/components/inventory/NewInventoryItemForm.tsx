@@ -69,6 +69,7 @@ export function NewInventoryItemForm() {
         .from('inventory_items')
         .insert({
           ...values,
+          sku: values.sku || null, // Treat empty string as null
           user_id: user.id,
         });
 
