@@ -139,7 +139,7 @@ export function EditServiceOrderForm() {
       setIsLoadingData(true);
       try {
         const { data: settingsData } = await supabase.from("user_settings").select("default_guarantee_terms").eq("id", user.id).single();
-        const { data: inventoryData } = await supabase.from('inventory_items').select('id, name, quantity, cost_price, selling_price').eq('user_id', user.id);
+        const { data: inventoryData } = await supabase.from('inventory_items').select('id, name, quantity, cost_price, selling_price').eq('user.id', user.id);
         setInventoryOptions(inventoryData || []);
 
         // Fetch custom field definitions
@@ -586,8 +586,7 @@ export function EditServiceOrderForm() {
                   </TooltipContent>
                 )}
               </Tooltip>
-            </Button>
-
+            </TooltipProvider>
           </div>
         </form>
       </Form>
