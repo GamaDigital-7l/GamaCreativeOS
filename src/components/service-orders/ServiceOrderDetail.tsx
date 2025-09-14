@@ -33,7 +33,7 @@ interface ServiceOrderDetails {
   guarantee_terms?: string;
   photos?: string[];
   customers: { id: string; name: string; phone?: string; address?: string; email?: string; };
-  devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; }; // Changed to Record<string, string>
+  devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; };
   service_order_inventory_items: {
     quantity_used: number;
     price_at_time: number;
@@ -51,6 +51,7 @@ export function ServiceOrderDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false); // State for delete loading
 
   useEffect(() => {
     if (user && id) {
@@ -123,6 +124,37 @@ export function ServiceOrderDetail() {
     }
   };
 
+  const handleDeleteServiceOrder = async () => {
+    if (!id || !user || !serviceOrder) return;
+    setIsDeleting(true);
+    try {
+      // Revert inventory quantities first
+      if (serviceOrder.service_order_inventory_items && serviceOrder.service_order_inventory_items.length > 0) {
+        const stockRevertPromises = serviceOrder.service_order_inventory_items.map(item =>
+          supabase.rpc('increment_quantity', { item_id: item.inventory_items?.id, amount: item.quantity_used })
+        );
+        await Promise.all(stockRevertPromises);
+      }
+
+      // Delete related financial transactions
+      await supabase.from('financial_transactions').delete().eq('related_service_order_id', id).eq('user_id', user.id);
+
+      // Delete service order inventory items
+      await supabase.from('service_order_inventory_items').delete().eq('service_order_id', id);
+
+      // Finally, delete the service order
+      const { error } = await supabase.from('service_orders').delete().eq('id', id).eq('user_id', user.id);
+      if (error) throw error;
+
+      showSuccess("Ordem de Serviço deletada com sucesso!");
+      navigate('/service-orders');
+    } catch (error: any) {
+      showError(`Erro ao deletar OS: ${error.message}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -139,7 +171,7 @@ export function ServiceOrderDetail() {
 
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Button variant="ghost" size="icon" className="-ml-2" onClick={() => navigate('/service-orders')}><ArrowLeft className="h-5 w-5" /></Button>
@@ -147,7 +179,7 @@ export function ServiceOrderDetail() {
               </div>
               <CardDescription>ID: {serviceOrder.id.substring(0, 8)}...</CardDescription>
             </div>
-            <div className="flex items-center gap-2 flex-wrap justify-end">
+            <div className="flex items-center gap-2 flex-wrap justify-end mt-2 sm:mt-0">
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print`} target="_blank"><Printer className="h-4 w-4 mr-2" /> Imprimir OS</Link></Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print-label`} target="_blank"><Ticket className="h-4 w-4 mr-2" /> Imprimir Etiqueta</Link></Button>
               {serviceOrder.status === 'completed' && (
@@ -164,6 +196,29 @@ export function ServiceOrderDetail() {
                   <DollarSign className="h-4 w-4 mr-2" /> Finalizar OS
                 </Button>
               )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={isDeleting}>
+                    {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                    Deletar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Tem certeza que deseja deletar?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. Isso excluirá permanentemente esta Ordem de Serviço,
+                      reverterá os itens de estoque utilizados e removerá os lançamentos financeiros associados.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteServiceOrder} disabled={isDeleting}>
+                      {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Deletar"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </CardHeader>

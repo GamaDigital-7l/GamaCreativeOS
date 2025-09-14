@@ -339,7 +339,7 @@ export function EditServiceOrderForm() {
                 </Button>
               </div>
             ))}
-            <Button type="button" variant="outline" onClick={() => handleAddInventoryItem(inventoryOptions[0]?.id || '')} className="w-full">
+            <Button type="button" variant="outline" onClick={() => handleAddInventoryItem(inventoryOptions[0]?.id || '')} className="w-full" disabled={inventoryOptions.length === 0}>
               <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
             </Button>
           </div>

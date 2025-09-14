@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form"; // Added useFieldArray
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -11,7 +11,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, ListChecks, Tag, Hash, Lock, UserPlus } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, ListChecks, Tag, Hash, Lock, UserPlus, Package, Trash2, DollarSign } from "lucide-react"; // Added Package, Trash2, DollarSign
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -30,6 +30,19 @@ const formSchema = z.object({
   newDevicePassword: z.string().optional(),
   newDeviceChecklist: z.record(z.string()).optional(),
   issueDescription: z.string().min(10, { message: "A descrição do problema é obrigatória." }),
+  serviceDetails: z.string().optional(), // Added serviceDetails
+  partsCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()), // Added partsCost
+  serviceCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()), // Added serviceCost
+  totalAmount: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()), // Added totalAmount
+  guaranteeTerms: z.string().optional(), // Added guaranteeTerms
+  warranty_days: z.preprocess((val) => Number(val || 0), z.number().int().min(0).optional()), // Added warranty_days
+  inventoryItems: z.array(z.object({ // Added inventoryItems
+    inventory_item_id: z.string(),
+    name: z.string(),
+    quantity_used: z.preprocess((val) => Number(val || 1), z.number().int().min(1)),
+    cost_at_time: z.number(),
+    price_at_time: z.number(),
+  })).optional(),
 }).superRefine((data, ctx) => {
   if (data.deviceSelection === 'existing' && !data.deviceId) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selecione um aparelho existente.", path: ["deviceId"] });
@@ -46,6 +59,13 @@ const formSchema = z.object({
 
 interface Entity { id: string; name: string; }
 interface Device extends Entity { brand: string; model: string; }
+type InventoryItemOption = {
+  id: string;
+  name: string;
+  quantity: number;
+  cost_price: number;
+  selling_price: number;
+};
 
 export function ServiceOrderForm() {
   const { user } = useSession();
@@ -53,22 +73,54 @@ export function ServiceOrderForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState<Entity[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [inventoryOptions, setInventoryOptions] = useState<InventoryItemOption[]>([]); // New state for inventory
   const [newServiceOrderId, setNewServiceOrderId] = useState<string | null>(null);
   const [isNewCustomerOpen, setIsNewCustomerOpen] = useState(false);
+  const [defaultGuaranteeTerms, setDefaultGuaranteeTerms] = useState<string | undefined>(undefined);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { deviceSelection: "existing", newDeviceChecklist: {} },
+    defaultValues: { 
+      deviceSelection: "existing", 
+      newDeviceChecklist: {},
+      serviceDetails: "",
+      partsCost: 0,
+      serviceCost: 0,
+      totalAmount: 0,
+      guaranteeTerms: "",
+      warranty_days: 90,
+      inventoryItems: [],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "inventoryItems",
   });
 
   const deviceSelection = form.watch("deviceSelection");
   const customerId = form.watch("customerId");
+  const watchedItems = form.watch("inventoryItems");
+  const watchedServiceCost = form.watch("serviceCost");
 
   useEffect(() => {
-    console.log("ServiceOrderForm mounted or updated. User:", user); // Debug log
     if (!user) return;
-    supabase.from('customers').select('id, name').eq('user_id', user.id).order('name').then(({ data }) => setCustomers(data || []));
-  }, [user]);
+    const fetchInitialData = async () => {
+      // Fetch customers
+      const { data: customersData } = await supabase.from('customers').select('id, name').eq('user_id', user.id).order('name');
+      setCustomers(customersData || []);
+
+      // Fetch inventory items
+      const { data: inventoryData } = await supabase.from('inventory_items').select('id, name, quantity, cost_price, selling_price').eq('user_id', user.id);
+      setInventoryOptions(inventoryData || []);
+
+      // Fetch default guarantee terms from user settings
+      const { data: settingsData } = await supabase.from("user_settings").select("default_guarantee_terms").eq("id", user.id).single();
+      setDefaultGuaranteeTerms(settingsData?.default_guarantee_terms || "Não há termos de garantia padrão definidos.");
+      form.setValue("guaranteeTerms", settingsData?.default_guarantee_terms || "Não há termos de garantia padrão definidos.");
+    };
+    fetchInitialData();
+  }, [user, form]);
 
   useEffect(() => {
     if (customerId) {
@@ -80,10 +132,26 @@ export function ServiceOrderForm() {
     form.setValue("deviceId", undefined);
   }, [customerId, form]);
 
+  useEffect(() => {
+    const newPartsCost = watchedItems?.reduce((total, item) => total + (item.price_at_time * item.quantity_used), 0) || 0;
+    form.setValue("partsCost", newPartsCost);
+    form.setValue("totalAmount", newPartsCost + (watchedServiceCost || 0));
+  }, [watchedItems, watchedServiceCost, form]);
+
   const handleNewCustomerSuccess = (newCustomer: { id: string; name: string }) => {
     setCustomers(prev => [...prev, newCustomer].sort((a, b) => a.name.localeCompare(b.name)));
     form.setValue("customerId", newCustomer.id);
     setIsNewCustomerOpen(false);
+  };
+
+  const handleAddInventoryItem = (itemId: string) => {
+    const item = inventoryOptions.find(i => i.id === itemId);
+    if (item) {
+      append({
+        inventory_item_id: item.id, name: item.name, quantity_used: 1,
+        cost_at_time: item.cost_price, price_at_time: item.selling_price,
+      });
+    }
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -100,8 +168,8 @@ export function ServiceOrderForm() {
           model: values.newDeviceModel,
           serial_number: values.newDeviceSerial,
           password_info: values.newDevicePassword,
-          checklist: values.newDeviceChecklist || {}, // Store as JSONB object directly
-          defect_description: values.issueDescription, // Using main description here
+          checklist: values.newDeviceChecklist || {},
+          defect_description: values.issueDescription,
         }).select('id').single();
 
         if (deviceError) throw deviceError;
@@ -113,10 +181,32 @@ export function ServiceOrderForm() {
         device_id: finalDeviceId,
         user_id: user.id,
         issue_description: values.issueDescription,
+        service_details: values.serviceDetails,
+        parts_cost: values.partsCost,
+        service_cost: values.serviceCost,
+        total_amount: values.totalAmount,
+        guarantee_terms: values.guaranteeTerms,
+        warranty_days: values.warranty_days,
         status: 'pending',
       }).select('id').single();
 
       if (osError) throw osError;
+
+      // Insert service order inventory items
+      if (values.inventoryItems && values.inventoryItems.length > 0) {
+        const itemsToInsert = values.inventoryItems.map(item => ({
+          service_order_id: osData.id, inventory_item_id: item.inventory_item_id, user_id: user.id,
+          quantity_used: item.quantity_used, cost_at_time: item.cost_at_time, price_at_time: item.price_at_time,
+        }));
+        const { error: itemsError } = await supabase.from('service_order_inventory_items').insert(itemsToInsert);
+        if (itemsError) throw itemsError;
+
+        // Deduct from inventory
+        const stockDeductPromises = values.inventoryItems.map(item =>
+          supabase.rpc('decrement_quantity', { item_id: item.inventory_item_id, amount: item.quantity_used })
+        );
+        await Promise.all(stockDeductPromises);
+      }
 
       showSuccess("Ordem de Serviço criada com sucesso!");
       setNewServiceOrderId(osData.id);
@@ -195,6 +285,106 @@ export function ServiceOrderForm() {
                 <FormMessage />
               </FormItem>
             )} />
+          </div>
+
+          <div className="p-4 border rounded-lg space-y-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" /> 4. Detalhes do Serviço e Orçamento</h2>
+            <FormField control={form.control} name="serviceDetails" render={({ field }) => (<FormItem><FormLabel>Detalhes do Serviço Proposto</FormLabel><FormControl><Textarea placeholder="Descreva o serviço a ser realizado..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
+
+            <h3 className="text-xl font-bold mt-8 mb-4 flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Peças e Materiais Utilizados</h3>
+            <div className="space-y-4">
+              {fields.map((item, index) => (
+                <div key={item.id} className="flex flex-col sm:flex-row items-center gap-2 p-2 border rounded-md">
+                  <FormField
+                    control={form.control}
+                    name={`inventoryItems.${index}.inventory_item_id`}
+                    render={({ field }) => (
+                      <FormItem className="flex-grow w-full sm:w-auto">
+                        <FormLabel className="sr-only">Item</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
+                              >
+                                {field.value
+                                  ? inventoryOptions.find((option) => option.id === field.value)?.name
+                                  : "Selecione um item"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                              <CommandInput placeholder="Buscar item..." />
+                              <CommandList>
+                                <CommandEmpty>Nenhum item encontrado.</CommandEmpty>
+                                <CommandGroup>
+                                  {inventoryOptions.map((option) => (
+                                    <CommandItem
+                                      value={option.name}
+                                      key={option.id}
+                                      onSelect={() => {
+                                        field.onChange(option.id);
+                                        form.setValue(`inventoryItems.${index}.name`, option.name);
+                                        form.setValue(`inventoryItems.${index}.cost_at_time`, option.cost_price);
+                                        form.setValue(`inventoryItems.${index}.price_at_time`, option.selling_price);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          option.id === field.value ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {option.name} (Qtd: {option.quantity})
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`inventoryItems.${index}.quantity_used`}
+                    render={({ field }) => (
+                      <FormItem className="w-24">
+                        <FormLabel className="sr-only">Quantidade</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="font-semibold w-24 text-right">
+                    R$ {(watchedItems?.[index]?.price_at_time * watchedItems?.[index]?.quantity_used || 0).toFixed(2)}
+                  </div>
+                  <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" onClick={() => handleAddInventoryItem(inventoryOptions[0]?.id || '')} className="w-full" disabled={inventoryOptions.length === 0}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <FormField control={form.control} name="serviceCost" render={({ field }) => (<FormItem><FormLabel>Custo da Mão de Obra (R$)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="partsCost" render={({ field }) => (<FormItem><FormLabel>Custo das Peças (R$)</FormLabel><FormControl><Input type="number" readOnly disabled {...field} /></FormControl><FormMessage /></FormItem>)} />
+            </div>
+            <div className="text-right font-bold text-xl mt-4">Total: R$ {form.watch("totalAmount")?.toFixed(2)}</div>
+            
+            <FormField control={form.control} name="warranty_days" render={({ field }) => (<FormItem><FormLabel>Garantia (dias)</FormLabel><FormControl><Input type="number" min="0" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="guaranteeTerms" render={({ field }) => (<FormItem><FormLabel>Termos de Garantia</FormLabel><FormControl><Textarea placeholder="Termos de garantia específicos..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando OS...</> : <><PlusCircle className="mr-2 h-4 w-4" /> Criar Ordem de Serviço</>}</Button>
