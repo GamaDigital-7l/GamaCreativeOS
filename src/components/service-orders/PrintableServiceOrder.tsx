@@ -65,7 +65,12 @@ interface PrintableData {
   }[];
 }
 
-export function PrintableServiceOrder() {
+interface PrintableServiceOrderProps {
+  printMode: 'client_only' | 'store_client';
+  paperFormat: 'a4' | 'receipt';
+}
+
+export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServiceOrderProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useSession();
@@ -218,8 +223,8 @@ export function PrintableServiceOrder() {
     );
   };
 
-  const renderDefaultTemplate = () => (
-    <div className="max-w-4xl mx-auto p-8 space-y-6 border rounded-lg bg-white text-gray-800">
+  const renderDefaultTemplate = (copyType: 'client' | 'store' | 'single') => (
+    <div className="max-w-4xl mx-auto p-8 space-y-6 border rounded-lg bg-white text-gray-800 mb-8">
       <header className="flex justify-between items-start pb-4 border-b border-gray-300">
         <div>
           <h1 className="text-2xl font-bold">Ordem de Serviço</h1>
@@ -228,6 +233,7 @@ export function PrintableServiceOrder() {
         <div className="text-right">
           <p><strong>Data:</strong> {format(new Date(serviceOrder.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
           <p><strong>Status:</strong> {serviceOrder.status}</p>
+          {copyType !== 'single' && <p className="text-xs font-bold mt-1">VIA {copyType.toUpperCase()}</p>}
         </div>
       </header>
 
@@ -242,7 +248,7 @@ export function PrintableServiceOrder() {
           <h2 className="text-lg font-semibold border-b pb-1 mb-2">Dispositivo</h2>
           <p><strong>Marca/Modelo:</strong> {device.brand} {device.model}</p>
           <p><strong>Série/IMEI:</strong> {device.serial_number || 'N/A'}</p>
-          <p><strong>Defeito Relatado:</strong> {device.defect_description}</p>
+          <p><strong>Defeito Relatado:</strong> {serviceOrder.issue_description}</p>
           <p className="mt-2"><strong>Senha/Padrão:</strong></p>
           {device.password_info ? (
             <p>{device.password_info}</p>
@@ -323,8 +329,8 @@ export function PrintableServiceOrder() {
     </div>
   );
 
-  const renderCompactTemplate = () => (
-    <div className="max-w-2xl mx-auto p-6 space-y-4 border rounded-lg bg-white text-gray-800 text-sm">
+  const renderCompactTemplate = (copyType: 'client' | 'store' | 'single') => (
+    <div className="max-w-2xl mx-auto p-6 space-y-4 border rounded-lg bg-white text-gray-800 text-sm mb-8">
       <header className="flex justify-between items-start pb-3 border-b border-gray-300">
         <div>
           <h1 className="xl font-bold">Ordem de Serviço</h1>
@@ -333,6 +339,7 @@ export function PrintableServiceOrder() {
         <div className="text-right">
           <p>Data: {format(new Date(serviceOrder.created_at), 'dd/MM/yyyy', { locale: ptBR })}</p>
           <p>Status: {serviceOrder.status}</p>
+          {copyType !== 'single' && <p className="text-xs font-bold mt-1">VIA {copyType.toUpperCase()}</p>}
         </div>
       </header>
 
@@ -346,7 +353,7 @@ export function PrintableServiceOrder() {
         <h2 className="font-semibold border-b pb-1 mb-1">Dispositivo</h2>
         <p>Marca/Modelo: {device.brand} {device.model}</p>
         <p>Série/IMEI: {device.serial_number || 'N/A'}</p>
-        <p>Defeito: {device.defect_description}</p>
+        <p>Defeito: {serviceOrder.issue_description}</p>
       </section>
 
       {renderClientChecklist()}
@@ -391,12 +398,13 @@ export function PrintableServiceOrder() {
     </div>
   );
 
-  const renderDetailedTemplate = () => (
-    <div className="max-w-5xl mx-auto p-10 space-y-8 border-2 border-black bg-white text-gray-900">
+  const renderDetailedTemplate = (copyType: 'client' | 'store' | 'single') => (
+    <div className="max-w-5xl mx-auto p-10 space-y-8 border-2 border-black bg-white text-gray-900 mb-8">
       <header className="text-center pb-6 border-b-2 border-black">
         <h1 className="text-4xl font-extrabold text-blue-700">SUA LOJA AQUI</h1>
         <p className="text-md text-gray-700 mt-2">Seu Endereço Completo, Cidade - UF | Telefone: (XX) XXXX-XXXX | Email: contato@suaempresa.com</p>
         <h2 className="text-3xl font-bold mt-4">ORDEM DE SERVIÇO DETALHADA</h2>
+        {copyType !== 'single' && <p className="text-lg font-bold mt-2">VIA {copyType.toUpperCase()}</p>}
       </header>
 
       <section className="grid grid-cols-2 gap-x-12 gap-y-4 text-md">
@@ -422,7 +430,7 @@ export function PrintableServiceOrder() {
           <p><strong>Marca:</strong> {device.brand}</p>
           <p><strong>Modelo:</strong> {device.model}</p>
           <p><strong>Série/IMEI:</strong> {device.serial_number || 'N/A'}</p>
-          <p className="col-span-2"><strong>Defeito Relatado:</strong> {device.defect_description || 'N/A'}</p>
+          <p className="col-span-2"><strong>Defeito Relatado:</strong> {serviceOrder.issue_description || 'N/A'}</p>
           <p className="col-span-2"><strong>Informações de Senha:</strong> {device.password_info || 'N/A'}</p>
           {device.checklist && Object.keys(device.checklist).length > 0 && (
             <div className="col-span-2 mt-2">
@@ -507,28 +515,81 @@ export function PrintableServiceOrder() {
     </div>
   );
 
-  const renderTemplate = () => {
+  const renderReceiptTemplate = () => (
+    <div className="w-[80mm] mx-auto p-2 text-xs font-sans text-gray-900 leading-tight">
+      <header className="text-center pb-2 border-b border-dashed border-gray-500 mb-2">
+        <h1 className="text-sm font-bold">SUA LOJA AQUI</h1>
+        <p>Endereço, Cidade</p>
+        <p>Tel: (XX) XXXX-XXXX</p>
+        <p className="mt-1 font-bold">ORDEM DE SERVIÇO</p>
+      </header>
+
+      <section className="mb-2">
+        <p><strong>OS ID:</strong> {serviceOrder.id.substring(0, 8)}</p>
+        <p><strong>Data:</strong> {format(new Date(serviceOrder.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
+        <p><strong>Status:</strong> {serviceOrder.status}</p>
+      </section>
+
+      <section className="mb-2 border-t border-dashed border-gray-500 pt-2">
+        <p><strong>Cliente:</strong> {customer.name}</p>
+        <p><strong>Telefone:</strong> {customer.phone || 'N/A'}</p>
+      </section>
+
+      <section className="mb-2 border-t border-dashed border-gray-500 pt-2">
+        <p><strong>Aparelho:</strong> {device.brand} {device.model}</p>
+        <p><strong>IMEI/Série:</strong> {device.serial_number || 'N/A'}</p>
+        <p><strong>Defeito:</strong> {serviceOrder.issue_description}</p>
+        <p><strong>Serviço:</strong> {serviceOrder.service_details || 'N/A'}</p>
+      </section>
+
+      {items.length > 0 && (
+        <section className="mb-2 border-t border-dashed border-gray-500 pt-2">
+          <p className="font-bold">Peças Utilizadas:</p>
+          {items.map((item: any, index: number) => (
+            <p key={index}>- {item.inventory_items?.name || 'Item'} (x{item.quantity_used})</p>
+          ))}
+        </section>
+      )}
+
+      <section className="mb-2 border-t border-dashed border-gray-500 pt-2 text-right">
+        <p><strong>Total:</strong> R$ {(serviceOrder.total_amount || 0).toFixed(2)}</p>
+      </section>
+
+      <footer className="border-t border-dashed border-gray-500 pt-2 text-center">
+        <p className="text-[0.6rem] text-gray-600">{finalGuaranteeTerms.substring(0, 100)}...</p>
+        <p className="mt-2">Obrigado!</p>
+      </footer>
+    </div>
+  );
+
+  const renderContent = (copyType: 'client' | 'store' | 'single') => {
     switch (settings.service_order_template) {
       case 'compact':
-        return renderCompactTemplate();
+        return renderCompactTemplate(copyType);
       case 'detailed':
-        return renderDetailedTemplate();
+        return renderDetailedTemplate(copyType);
       case 'default':
       default:
-        return renderDefaultTemplate();
+        return renderDefaultTemplate(copyType);
     }
   };
 
   return (
     <div className="font-sans text-gray-800">
-      <div className="p-4 bg-gray-100 text-center print:hidden">
-        <Button onClick={() => window.print()}>
-          <Printer className="mr-2 h-4 w-4" /> Imprimir Ordem de Serviço
-        </Button>
-      </div>
-      <div className="p-4">
-        {renderTemplate()}
-      </div>
+      {paperFormat === 'receipt' ? (
+        renderReceiptTemplate()
+      ) : (
+        <div className="p-4">
+          {printMode === 'client_only' && renderContent('single')}
+          {printMode === 'store_client' && (
+            <>
+              {renderContent('client')}
+              <div className="border-b-4 border-dashed border-gray-400 my-8 print:my-4 print:border-b-2 print:h-0.5 print:break-after-page"></div> {/* Separator for two copies */}
+              {renderContent('store')}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
