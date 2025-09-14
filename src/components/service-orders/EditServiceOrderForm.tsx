@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Check, ChevronsUpDown, PlusCircle, Trash2, DollarSign, Wrench, Package, CalendarDays, Save, List, Type } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle, Trash2, DollarSign, Wrench, Package, CalendarDays, Save, List, Type, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentDialog } from "./PaymentDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -144,7 +144,7 @@ export function EditServiceOrderForm() {
       setIsLoadingData(true);
       try {
         const { data: settingsData } = await supabase.from("user_settings").select("default_guarantee_terms").eq("id", user.id).single();
-        const { data: inventoryData } = await supabase.from('inventory_items').select('id, name, quantity, cost_price, selling_price').eq('user.id', user.id);
+        const { data: inventoryData } = await supabase.from('inventory_items').select('id, name, quantity, cost_price, selling_price').eq('user_id', user.id);
         setInventoryOptions(inventoryData || []);
 
         // Fetch custom field definitions
