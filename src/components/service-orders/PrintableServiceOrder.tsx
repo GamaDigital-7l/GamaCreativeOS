@@ -53,6 +53,13 @@ interface PrintableData {
   settings: {
     service_order_template: string;
     default_guarantee_terms?: string;
+    // New company fields
+    company_logo_url?: string;
+    company_name?: string;
+    company_phone?: string;
+    company_address?: string;
+    company_cnpj?: string;
+    company_slogan?: string;
   };
   customFieldValues: {
     value: string;
@@ -97,7 +104,7 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
 
         const { data: settingsData } = await supabase
           .from('user_settings')
-          .select('service_order_template, default_guarantee_terms')
+          .select('service_order_template, default_guarantee_terms, company_logo_url, company_name, company_phone, company_address, company_cnpj, company_slogan')
           .eq('id', user.id)
           .single();
 
@@ -223,19 +230,26 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
     );
   };
 
+  const renderCompanyHeader = (copyType: 'client' | 'store' | 'single', isReceipt: boolean = false) => (
+    <div className={cn("text-center", isReceipt ? "pb-2 border-b border-dashed border-gray-500 mb-2" : "pb-4 border-b border-gray-300")}>
+      {settings.company_logo_url && (
+        <img src={settings.company_logo_url} alt="Logo da Empresa" className={cn("mx-auto mb-2", isReceipt ? "max-h-10" : "max-h-20")} />
+      )}
+      <h1 className={cn("font-bold", isReceipt ? "text-sm" : "text-2xl")}>{settings.company_name || "SUA LOJA AQUI"}</h1>
+      {settings.company_slogan && <p className={cn("mt-1", isReceipt ? "text-xs" : "text-sm text-gray-700")}>{settings.company_slogan}</p>}
+      <p className={cn("mt-1", isReceipt ? "text-xs" : "text-sm text-gray-700")}>
+        {settings.company_address && `${settings.company_address} | `}
+        {settings.company_phone && `Tel: ${settings.company_phone}`}
+        {settings.company_cnpj && ` | CNPJ: ${settings.company_cnpj}`}
+      </p>
+      <h2 className={cn("font-bold mt-2", isReceipt ? "text-sm" : "text-xl")}>ORDEM DE SERVIÇO</h2>
+      {copyType !== 'single' && <p className={cn("font-bold mt-1", isReceipt ? "text-xs" : "text-md")}>VIA {copyType.toUpperCase()}</p>}
+    </div>
+  );
+
   const renderDefaultTemplate = (copyType: 'client' | 'store' | 'single') => (
     <div className="max-w-4xl mx-auto p-8 space-y-6 border rounded-lg bg-white text-gray-800 mb-8">
-      <header className="flex justify-between items-start pb-4 border-b border-gray-300">
-        <div>
-          <h1 className="text-2xl font-bold">Ordem de Serviço</h1>
-          <p className="text-sm text-gray-500">ID: {serviceOrder.id.substring(0, 8)}</p>
-        </div>
-        <div className="text-right">
-          <p><strong>Data:</strong> {format(new Date(serviceOrder.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
-          <p><strong>Status:</strong> {serviceOrder.status}</p>
-          {copyType !== 'single' && <p className="text-xs font-bold mt-1">VIA {copyType.toUpperCase()}</p>}
-        </div>
-      </header>
+      {renderCompanyHeader(copyType)}
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
@@ -331,17 +345,7 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
 
   const renderCompactTemplate = (copyType: 'client' | 'store' | 'single') => (
     <div className="max-w-2xl mx-auto p-6 space-y-4 border rounded-lg bg-white text-gray-800 text-sm mb-8">
-      <header className="flex justify-between items-start pb-3 border-b border-gray-300">
-        <div>
-          <h1 className="xl font-bold">Ordem de Serviço</h1>
-          <p>ID: {serviceOrder.id.substring(0, 8)}</p>
-        </div>
-        <div className="text-right">
-          <p>Data: {format(new Date(serviceOrder.created_at), 'dd/MM/yyyy', { locale: ptBR })}</p>
-          <p>Status: {serviceOrder.status}</p>
-          {copyType !== 'single' && <p className="text-xs font-bold mt-1">VIA {copyType.toUpperCase()}</p>}
-        </div>
-      </header>
+      {renderCompanyHeader(copyType)}
 
       <section>
         <h2 className="font-semibold border-b pb-1 mb-1">Cliente</h2>
@@ -401,8 +405,16 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
   const renderDetailedTemplate = (copyType: 'client' | 'store' | 'single') => (
     <div className="max-w-5xl mx-auto p-10 space-y-8 border-2 border-black bg-white text-gray-900 mb-8">
       <header className="text-center pb-6 border-b-2 border-black">
-        <h1 className="text-4xl font-extrabold text-blue-700">SUA LOJA AQUI</h1>
-        <p className="text-md text-gray-700 mt-2">Seu Endereço Completo, Cidade - UF | Telefone: (XX) XXXX-XXXX | Email: contato@suaempresa.com</p>
+        {settings.company_logo_url && (
+          <img src={settings.company_logo_url} alt="Logo da Empresa" className="mx-auto mb-4 max-h-24" />
+        )}
+        <h1 className="text-4xl font-extrabold text-blue-700">{settings.company_name || "SUA LOJA AQUI"}</h1>
+        {settings.company_slogan && <p className="text-md text-gray-700 mt-2">{settings.company_slogan}</p>}
+        <p className="text-md text-gray-700 mt-2">
+          {settings.company_address && `${settings.company_address} | `}
+          {settings.company_phone && `Telefone: ${settings.company_phone}`}
+          {settings.company_cnpj && ` | CNPJ: ${settings.company_cnpj}`}
+        </p>
         <h2 className="text-3xl font-bold mt-4">ORDEM DE SERVIÇO DETALHADA</h2>
         {copyType !== 'single' && <p className="text-lg font-bold mt-2">VIA {copyType.toUpperCase()}</p>}
       </header>
@@ -517,12 +529,7 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
 
   const renderReceiptTemplate = () => (
     <div className="w-[80mm] mx-auto p-2 text-xs font-sans text-gray-900 leading-tight">
-      <header className="text-center pb-2 border-b border-dashed border-gray-500 mb-2">
-        <h1 className="text-sm font-bold">SUA LOJA AQUI</h1>
-        <p>Endereço, Cidade</p>
-        <p>Tel: (XX) XXXX-XXXX</p>
-        <p className="mt-1 font-bold">ORDEM DE SERVIÇO</p>
-      </header>
+      {renderCompanyHeader('single', true)}
 
       <section className="mb-2">
         <p><strong>OS ID:</strong> {serviceOrder.id.substring(0, 8)}</p>
