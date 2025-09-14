@@ -122,7 +122,7 @@ export function POSSalesList() {
               </TableHeader>
               <TableBody>
                 {posSales.map((sale) => (
-                  <TableRow key={sale.id}>
+                  <TableRow key={sale.id} className="cursor-pointer" onClick={() => navigate(`/pos-sales/${sale.id}`)}>
                     <TableCell className="font-medium">{sale.id.substring(0, 8)}...</TableCell>
                     <TableCell>{format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
                     <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{sale.customers?.name || 'N/A'}</TableCell>
@@ -130,7 +130,7 @@ export function POSSalesList() {
                     <TableCell>{sale.payment_method || 'N/A'}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/pos-sales/${sale.id}`}> {/* Assuming a detail page for POS sales */}
+                        <Link to={`/pos-sales/${sale.id}`} onClick={(e) => e.stopPropagation()}> {/* Prevent double navigation */}
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>

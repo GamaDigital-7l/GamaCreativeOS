@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { cn } from "@/lib/utils";
 import { PhotoUploadDialog } from "./PhotoUploadDialog";
 import { NewCustomerForm } from "../customers/NewCustomerForm";
-import { VisualChecklist } from "./VisualChecklist";
+// import { VisualChecklist } from "./VisualChecklist"; // Removido
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClientChecklistInput } from "./ClientChecklistInput"; // Import new component
@@ -36,7 +36,7 @@ const formSchema = z.object({
   deviceModel: z.string().min(2, { message: "Modelo do aparelho é obrigatório." }),
   deviceSerial: z.string().optional(),
   devicePassword: z.string().optional(),
-  deviceChecklist: z.record(z.string()).optional(), // Visual checklist for new device
+  // deviceChecklist: z.record(z.string()).optional(), // Removido
   
   clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(),
   isUntestable: z.boolean().default(false),
@@ -116,7 +116,7 @@ export function ServiceOrderForm() {
       deviceModel: "",
       deviceSerial: "",
       devicePassword: "",
-      deviceChecklist: {},
+      // deviceChecklist: {}, // Removido
 
       clientChecklist: {},
       isUntestable: false,
@@ -218,7 +218,7 @@ export function ServiceOrderForm() {
         model: values.deviceModel,
         serial_number: values.deviceSerial,
         password_info: values.devicePassword,
-        checklist: values.deviceChecklist || {},
+        // checklist: values.deviceChecklist || {}, // Removido
         defect_description: values.issueDescription, // Use issueDescription as defect_description for new device
       }).select('id').single();
 
@@ -320,23 +320,19 @@ export function ServiceOrderForm() {
             )} />
           </div>
 
-          {customerId && (
-            <div className="p-4 border rounded-lg space-y-4">
-              <h2 className="font-semibold text-lg flex items-center gap-2"><Smartphone className="h-5 w-5 text-primary" /> 2. Aparelho</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                <div className="space-y-4">
-                  <FormField control={form.control} name="deviceBrand" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="deviceModel" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="deviceSerial" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> Série/IMEI (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="devicePassword" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Lock className="h-4 w-4" /> Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                </div>
-                <div>
-                  <FormLabel className="flex items-center gap-2"><ListChecks className="h-4 w-4" /> Checklist Visual</FormLabel>
-                  <Controller control={form.control} name="deviceChecklist" render={({ field }) => (<VisualChecklist value={field.value || {}} onChange={field.onChange} />)} />
-                </div>
+          {/* Device fields - always visible */}
+          <div className="p-4 border rounded-lg space-y-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2"><Smartphone className="h-5 w-5 text-primary" /> 2. Aparelho</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+              <div className="space-y-4">
+                <FormField control={form.control} name="deviceBrand" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="deviceModel" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="deviceSerial" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> Série/IMEI (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="devicePassword" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Lock className="h-4 w-4" /> Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
               </div>
+              {/* Removed VisualChecklist here */}
             </div>
-          )}
+          </div>
 
           <div className="p-4 border rounded-lg">
             <FormField control={form.control} name="issueDescription" render={({ field }) => (

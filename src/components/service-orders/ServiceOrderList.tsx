@@ -183,7 +183,7 @@ export function ServiceOrderList() {
               </TableHeader>
               <TableBody>
                 {serviceOrders.map((order) => (
-                  <TableRow key={order.id}>
+                  <TableRow key={order.id} className="cursor-pointer" onClick={() => navigate(`/service-orders/${order.id}`)}>
                     <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
                     <TableCell>{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
                     <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{order.customers?.name || 'N/A'}</TableCell>
@@ -196,7 +196,7 @@ export function ServiceOrderList() {
                     <TableCell className="max-w-[200px] truncate">{order.issue_description}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/service-orders/${order.id}`}>
+                        <Link to={`/service-orders/${order.id}`} onClick={(e) => e.stopPropagation()}> {/* Prevent double navigation */}
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>

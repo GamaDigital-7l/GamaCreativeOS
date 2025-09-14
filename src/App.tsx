@@ -46,7 +46,8 @@ import OnlineCatalogPage from "./pages/OnlineCatalogPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import PublicCatalogPage from "./pages/PublicCatalogPage";
 import ManageCustomFieldsPage from "./pages/ManageCustomFieldsPage";
-import POSSalesListPage from "./pages/POSSalesListPage"; // New import
+import POSSalesListPage from "./pages/POSSalesListPage";
+import POSSaleDetailPage from "./pages/POSSaleDetailPage"; // New import
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
@@ -87,7 +88,8 @@ const App = () => (
               <Route path="/sales/:id" element={<SaleDetailPage />} />
               <Route path="/sales/:id/edit" element={<EditSalePage />} />
               <Route path="/pos" element={<PointOfSalePage />} />
-              <Route path="/pos/history" element={<POSSalesListPage />} /> {/* New route */}
+              <Route path="/pos/history" element={<POSSalesListPage />} />
+              <Route path="/pos-sales/:id" element={<POSSaleDetailPage />} /> {/* New route for POS sale details */}
               <Route path="/financials" element={<FinancialsPage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/new-customer" element={<NewCustomerPage />} />
