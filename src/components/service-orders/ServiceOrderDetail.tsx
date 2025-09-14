@@ -6,7 +6,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText, List, PowerOff } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText, List, PowerOff, ListChecks } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -156,7 +156,7 @@ export function ServiceOrderDetail() {
       }
 
       // Delete related financial transactions
-      await supabase.from('financial_transactions').delete().eq('related_service_order_id', id).eq('user_id', user.id);
+      await supabase.from('financial_transactions').delete().eq('related_service_order_id', id).eq('user.id', user.id);
 
       // Delete service order custom field values
       await supabase.from('service_order_field_values').delete().eq('service_order_id', id);
