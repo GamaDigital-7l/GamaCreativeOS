@@ -31,16 +31,16 @@ const clientChecklistOptions = [
 
 const formSchema = z.object({
   customerId: z.string({ required_error: "Selecione um cliente." }),
-  deviceSelection: z.enum(["existing", "new"], { required_error: "Selecione uma opção." }),
-  deviceId: z.string().optional(),
-  newDeviceBrand: z.string().optional(),
-  newDeviceModel: z.string().optional(),
-  newDeviceSerial: z.string().optional(),
-  newDevicePassword: z.string().optional(),
-  newDeviceChecklist: z.record(z.string()).optional(),
+  // Device fields are now direct and always required for new OS
+  deviceBrand: z.string().min(2, { message: "Marca do aparelho é obrigatória." }),
+  deviceModel: z.string().min(2, { message: "Modelo do aparelho é obrigatório." }),
+  deviceSerial: z.string().optional(),
+  devicePassword: z.string().optional(),
+  deviceChecklist: z.record(z.string()).optional(), // Visual checklist for new device
+  
   clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(),
   isUntestable: z.boolean().default(false),
-  casing_status: z.enum(['good', 'scratched', 'damaged']).optional().nullable(), // New field
+  casing_status: z.enum(['good', 'scratched', 'damaged']).optional().nullable(),
   issueDescription: z.string().min(10, { message: "A descrição do problema é obrigatória." }),
   serviceDetails: z.string().optional(),
   partsCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
@@ -57,17 +57,6 @@ const formSchema = z.object({
   })).optional(),
   customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(),
 }).superRefine((data, ctx) => {
-  if (data.deviceSelection === 'existing' && !data.deviceId) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selecione um aparelho existente.", path: ["deviceId"] });
-  }
-  if (data.deviceSelection === 'new') {
-    if (!data.newDeviceBrand || data.newDeviceBrand.length < 2) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Marca é obrigatória.", path: ["newDeviceBrand"] });
-    }
-    if (!data.newDeviceModel || data.newDeviceModel.length < 2) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Modelo é obrigatório.", path: ["newDeviceModel"] });
-    }
-  }
   // Custom field validation
   if (data.customFields) {
     Object.entries(data.customFields).forEach(([fieldId, value]) => {
@@ -92,7 +81,6 @@ const formSchema = z.object({
 });
 
 interface Entity { id: string; name: string; }
-interface Device extends Entity { brand: string; model: string; }
 type InventoryItemOption = {
   id: string;
   name: string;
@@ -115,7 +103,6 @@ export function ServiceOrderForm() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState<Entity[]>([]);
-  const [devices, setDevices] = useState<Device[]>([]);
   const [inventoryOptions, setInventoryOptions] = useState<InventoryItemOption[]>([]);
   const [customFieldDefinitions, setCustomFieldDefinitions] = useState<CustomFieldDefinition[]>([]);
   const [newServiceOrderId, setNewServiceOrderId] = useState<string | null>(null);
@@ -124,11 +111,16 @@ export function ServiceOrderForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { 
-      deviceSelection: "existing", 
-      newDeviceChecklist: {},
+      // Default values for device fields (now direct)
+      deviceBrand: "",
+      deviceModel: "",
+      deviceSerial: "",
+      devicePassword: "",
+      deviceChecklist: {},
+
       clientChecklist: {},
       isUntestable: false,
-      casing_status: null, // Initialize new field
+      casing_status: null,
       serviceDetails: "",
       partsCost: 0,
       serviceCost: 0,
@@ -146,7 +138,6 @@ export function ServiceOrderForm() {
     name: "inventoryItems",
   });
 
-  const deviceSelection = form.watch("deviceSelection");
   const customerId = form.watch("customerId");
   const watchedItems = form.watch("inventoryItems");
   const watchedServiceCost = form.watch("serviceCost");
@@ -192,16 +183,6 @@ export function ServiceOrderForm() {
   }, [user, form]);
 
   useEffect(() => {
-    if (customerId) {
-      supabase.from('devices').select('id, brand, model').eq('customer_id', customerId)
-        .then(({ data }) => setDevices(data as Device[] || []));
-    } else {
-      setDevices([]);
-    }
-    form.setValue("deviceId", undefined);
-  }, [customerId, form]);
-
-  useEffect(() => {
     const newPartsCost = watchedItems?.reduce((total, item) => total + (item.price_at_time * item.quantity_used), 0) || 0;
     form.setValue("partsCost", newPartsCost);
     form.setValue("totalAmount", newPartsCost + (watchedServiceCost || 0));
@@ -226,25 +207,24 @@ export function ServiceOrderForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) return;
     setIsSubmitting(true);
-    let finalDeviceId = values.deviceId;
+    let finalDeviceId: string | undefined;
 
     try {
-      if (values.deviceSelection === 'new') {
-        const { data: newDevice, error: deviceError } = await supabase.from('devices').insert({
-          customer_id: values.customerId,
-          user_id: user.id,
-          brand: values.newDeviceBrand,
-          model: values.newDeviceModel,
-          serial_number: values.newDeviceSerial,
-          password_info: values.newDevicePassword,
-          checklist: values.newDeviceChecklist || {},
-          defect_description: values.issueDescription,
-        }).select('id').single();
+      // Always create a new device record
+      const { data: newDevice, error: deviceError } = await supabase.from('devices').insert({
+        customer_id: values.customerId,
+        user_id: user.id,
+        brand: values.deviceBrand,
+        model: values.deviceModel,
+        serial_number: values.deviceSerial,
+        password_info: values.devicePassword,
+        checklist: values.deviceChecklist || {},
+        defect_description: values.issueDescription, // Use issueDescription as defect_description for new device
+      }).select('id').single();
 
-        if (deviceError) throw deviceError;
-        finalDeviceId = newDevice.id;
-      }
-
+      if (deviceError) throw deviceError;
+      finalDeviceId = newDevice.id;
+      
       const { data: osData, error: osError } = await supabase.from('service_orders').insert({
         customer_id: values.customerId,
         device_id: finalDeviceId,
@@ -259,7 +239,7 @@ export function ServiceOrderForm() {
         status: 'pending',
         client_checklist: values.clientChecklist || {},
         is_untestable: values.isUntestable,
-        casing_status: values.casing_status, // Save new field
+        casing_status: values.casing_status,
       }).select('id').single();
 
       if (osError) throw osError;
@@ -342,38 +322,19 @@ export function ServiceOrderForm() {
 
           {customerId && (
             <div className="p-4 border rounded-lg space-y-4">
-              <FormField control={form.control} name="deviceSelection" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-semibold text-lg flex items-center gap-2"><Smartphone className="h-5 w-5 text-primary" /> 2. Aparelho</FormLabel>
-                  <FormControl>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex flex-col sm:flex-row gap-4 pt-2">
-                      <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="existing" /></FormControl><FormLabel className="font-normal ml-2">Selecionar existente</FormLabel></FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="new" /></FormControl><FormLabel className="font-normal ml-2">Cadastrar novo</FormLabel></FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                </FormItem>
-              )} />
-
-              {deviceSelection === 'existing' && (
-                <FormField control={form.control} name="deviceId" render={({ field }) => (
-                  <FormItem className="flex flex-col"><EntitySelector entities={devices.map(d => ({ id: d.id, name: `${d.brand} ${d.model}` }))} placeholder="Buscar aparelho..." notFoundText="Nenhum aparelho cadastrado." onSelect={(id) => field.onChange(id)} value={field.value || ''} /><FormMessage /></FormItem>
-                )} />
-              )}
-
-              {deviceSelection === 'new' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                  <div className="space-y-4">
-                    <FormField control={form.control} name="newDeviceBrand" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="newDeviceModel" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="newDeviceSerial" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> Série/IMEI (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="newDevicePassword" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Lock className="h-4 w-4" /> Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  </div>
-                  <div>
-                    <FormLabel className="flex items-center gap-2"><ListChecks className="h-4 w-4" /> Checklist Visual</FormLabel>
-                    <Controller control={form.control} name="newDeviceChecklist" render={({ field }) => (<VisualChecklist value={field.value || {}} onChange={field.onChange} />)} />
-                  </div>
+              <h2 className="font-semibold text-lg flex items-center gap-2"><Smartphone className="h-5 w-5 text-primary" /> 2. Aparelho</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                <div className="space-y-4">
+                  <FormField control={form.control} name="deviceBrand" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Tag className="h-4 w-4" /> Marca</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="deviceModel" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="deviceSerial" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> Série/IMEI (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="devicePassword" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Lock className="h-4 w-4" /> Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
-              )}
+                <div>
+                  <FormLabel className="flex items-center gap-2"><ListChecks className="h-4 w-4" /> Checklist Visual</FormLabel>
+                  <Controller control={form.control} name="deviceChecklist" render={({ field }) => (<VisualChecklist value={field.value || {}} onChange={field.onChange} />)} />
+                </div>
+              </div>
             </div>
           )}
 
