@@ -6,7 +6,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText, List } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText, List, PowerOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -32,7 +32,8 @@ interface ServiceOrderDetails {
   total_amount?: number;
   guarantee_terms?: string;
   photos?: string[];
-  client_checklist?: string[]; // New field
+  client_checklist?: Record<string, 'ok' | 'not_working'>; // Updated type
+  is_untestable?: boolean; // New field
   customers: { id: string; name: string; phone?: string; address?: string; email?: string; };
   devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; };
   service_order_inventory_items: {
@@ -78,7 +79,7 @@ export function ServiceOrderDetail() {
           *, 
           customers (*), 
           devices (*), 
-          service_order_inventory_items (quantity_used, price_at_time, inventory_items (name)),
+          service_order_inventory_items (*, inventory_items (name)),
           service_order_field_values (value, custom_field_id, service_order_custom_fields (field_name, field_type, order_index))
         `)
         .eq('id', orderId)
@@ -309,16 +310,24 @@ export function ServiceOrderDetail() {
           </div>
 
           {/* Client Checklist Display */}
-          {serviceOrder.client_checklist && serviceOrder.client_checklist.length > 0 && (
+          {serviceOrder.is_untestable ? (
+            <div className="p-3 bg-orange-100 text-orange-800 rounded-md flex items-center gap-2">
+              <PowerOff className="h-5 w-5" />
+              <p className="font-semibold">Aparelho entrou desligado / não testável. O checklist do cliente não foi preenchido.</p>
+            </div>
+          ) : (serviceOrder.client_checklist && Object.keys(serviceOrder.client_checklist).length > 0 && (
             <div>
               <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><ListChecks className="h-5 w-5" /> Checklist do Cliente</h3>
               <ul className="list-disc list-inside ml-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4">
-                {serviceOrder.client_checklist.map((item, index) => (
-                  <li key={index}>{item}</li>
+                {Object.entries(serviceOrder.client_checklist).map(([item, status], index) => (
+                  <li key={index} className={cn("flex items-center gap-1", status === 'ok' ? 'text-green-600' : 'text-red-600')}>
+                    {status === 'ok' ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                    {item}: {status === 'ok' ? 'Funciona' : 'Não Funciona'}
+                  </li>
                 ))}
               </ul>
             </div>
-          )}
+          ))}
 
           {/* Custom Fields Display */}
           {Object.keys(groupedCustomFields).length > 0 && (

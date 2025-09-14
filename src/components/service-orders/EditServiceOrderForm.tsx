@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { PaymentDialog } from "./PaymentDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ClientChecklistInput } from "./ClientChecklistInput"; // Import new component
 
 const serviceOrderStatuses = ["pending", "in_progress", "ready", "completed", "cancelled"];
 
@@ -50,7 +51,8 @@ const formSchema = z.object({
     cost_at_time: z.number(),
     price_at_time: z.number(),
   })).optional(),
-  clientChecklist: z.array(z.string()).optional(), // New field for client checklist
+  clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(), // Updated schema
+  isUntestable: z.boolean().default(false), // New field
   customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(),
 }).superRefine((data, ctx) => {
   // Custom field validation
@@ -110,7 +112,8 @@ export function EditServiceOrderForm() {
       issueDescription: "", serviceDetails: "",
       partsCost: 0, serviceCost: 0, totalAmount: 0, guaranteeTerms: "", warranty_days: 90,
       status: "pending", inventoryItems: [],
-      clientChecklist: [], // Initialize new field
+      clientChecklist: {}, // Initialize new field as object
+      isUntestable: false, // Initialize new field
       customFields: {},
     },
     context: { customFieldDefinitions },
@@ -187,7 +190,8 @@ export function EditServiceOrderForm() {
             price_at_time: item.price_at_time,
             quantity_used: item.quantity_used,
           })),
-          clientChecklist: data.client_checklist || [], // Load new field
+          clientChecklist: data.client_checklist || {}, // Load new field as object
+          isUntestable: data.is_untestable || false, // Load new field
           customFields: initialCustomFieldValues,
         });
       } catch (err: any) {
@@ -287,7 +291,8 @@ export function EditServiceOrderForm() {
         parts_cost: values.partsCost, service_cost: values.serviceCost, total_amount: values.totalAmount,
         guarantee_terms: values.guaranteeTerms, warranty_days: values.warranty_days,
         status: values.status, updated_at: new Date().toISOString(),
-        client_checklist: values.clientChecklist || null, // Save new field
+        client_checklist: values.clientChecklist || {}, // Save new field as object
+        is_untestable: values.isUntestable, // Save new field
       }).eq('id', id);
 
       showSuccess("Ordem de Serviço atualizada!");
@@ -360,37 +365,26 @@ export function EditServiceOrderForm() {
           {/* Client Checklist Section */}
           <div className="p-4 border rounded-lg space-y-4">
             <h2 className="font-semibold text-lg flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary" /> Checklist do Cliente</h2>
+            <FormDescription>
+              Marque o status de cada item do aparelho ou indique se não foi possível testar.
+            </FormDescription>
             <FormField
               control={form.control}
               name="clientChecklist"
-              render={() => (
-                <FormItem>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {clientChecklistOptions.map((item) => (
-                      <FormField
-                        key={item}
-                        control={form.control}
-                        name="clientChecklist"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(item)}
-                                onCheckedChange={(checked) => {
-                                  return checked
-                                    ? field.onChange([...(field.value || []), item])
-                                    : field.onChange(field.value?.filter((value) => value !== item));
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal">{item}</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
+              render={({ field }) => (
+                <FormField
+                  control={form.control}
+                  name="isUntestable"
+                  render={({ field: isUntestableField }) => (
+                    <ClientChecklistInput
+                      options={clientChecklistOptions}
+                      value={field.value || {}}
+                      onChange={field.onChange}
+                      isUntestable={isUntestableField.value}
+                      onIsUntestableChange={isUntestableField.onChange}
+                    />
+                  )}
+                />
               )}
             />
           </div>
@@ -473,55 +467,55 @@ export function EditServiceOrderForm() {
                   name={`inventoryItems.${index}.inventory_item_id`}
                   render={({ field }) => (
                     <FormItem className="flex-grow w-full sm:w-auto">
-                      <FormLabel className="sr-only">Item</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
-                            >
-                              {field.value
-                                ? inventoryOptions.find((option) => option.id === field.value)?.name
-                                : "Selecione um item"}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                          <Command>
-                            <CommandInput placeholder="Buscar item..." />
-                            <CommandList>
-                              <CommandEmpty>Nenhum item encontrado.</CommandEmpty>
-                              <CommandGroup>
-                                {inventoryOptions.map((option) => (
-                                  <CommandItem
-                                    value={option.name}
-                                    key={option.id}
-                                    onSelect={() => {
-                                      field.onChange(option.id);
-                                      form.setValue(`inventoryItems.${index}.name`, option.name);
-                                      form.setValue(`inventoryItems.${index}.cost_at_time`, option.cost_price);
-                                      form.setValue(`inventoryItems.${index}.price_at_time`, option.selling_price);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        option.id === field.value ? "opacity-100" : "opacity-0"
-                                      )}
-                                    />
+                        <FormLabel className="sr-only">Item</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
+                              >
+                                {field.value
+                                  ? inventoryOptions.find((option) => option.id === field.value)?.name
+                                  : "Selecione um item"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                              <CommandInput placeholder="Buscar item..." />
+                              <CommandList>
+                                <CommandEmpty>Nenhum item encontrado.</CommandEmpty>
+                                <CommandGroup>
+                                  {inventoryOptions.map((option) => (
+                                    <CommandItem
+                                      value={option.name}
+                                      key={option.id}
+                                      onSelect={() => {
+                                        field.onChange(option.id);
+                                        form.setValue(`inventoryItems.${index}.name`, option.name);
+                                        form.setValue(`inventoryItems.${index}.cost_at_time`, option.cost_price);
+                                        form.setValue(`inventoryItems.${index}.price_at_time`, option.selling_price);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          option.id === field.value ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
                                     {option.name} (Qtd: {option.quantity})
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
                   )}
                 />
                 <FormField
@@ -555,7 +549,7 @@ export function EditServiceOrderForm() {
             <FormField control={form.control} name="serviceCost" render={({ field }) => (<FormItem><FormLabel>Custo da Mão de Obra (R$)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="partsCost" render={({ field }) => (<FormItem><FormLabel>Custo das Peças (R$)</FormLabel><FormControl><Input type="number" readOnly disabled {...field} /></FormControl><FormMessage /></FormItem>)} />
           </div>
-          <div className="text-right font-bold text-xl">Total: R$ {watchedTotalAmount?.toFixed(2)}</div>
+          <div className="text-right font-bold text-xl">Total: R$ {form.watch("totalAmount")?.toFixed(2)}</div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField control={form.control} name="warranty_days" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><CalendarDays className="h-4 w-4" /> Garantia (dias)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />

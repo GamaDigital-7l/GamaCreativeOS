@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
-import { Loader2, Printer } from 'lucide-react';
+import { Loader2, Printer, CheckCircle, XCircle, PowerOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 // Define a more comprehensive type for the data needed
 interface PrintableData {
@@ -22,7 +23,8 @@ interface PrintableData {
     guarantee_terms?: string;
     customer_signature?: string;
     approved_at?: string;
-    client_checklist?: string[]; // New field
+    client_checklist?: Record<string, 'ok' | 'not_working'>; // Updated type
+    is_untestable?: boolean; // New field
   };
   customer: {
     name: string;
@@ -168,13 +170,27 @@ export function PrintableServiceOrder() {
   };
 
   const renderClientChecklist = () => {
-    if (!serviceOrder.client_checklist || serviceOrder.client_checklist.length === 0) return null;
+    if (serviceOrder.is_untestable) {
+      return (
+        <section className="mt-4">
+          <h2 className="text-lg font-semibold border-b pb-1 mb-2">Checklist do Cliente</h2>
+          <div className="flex items-center gap-2 text-orange-700">
+            <PowerOff className="h-5 w-5" />
+            <p>Aparelho entrou desligado / não testável. Checklist não aplicável.</p>
+          </div>
+        </section>
+      );
+    }
+    if (!serviceOrder.client_checklist || Object.keys(serviceOrder.client_checklist).length === 0) return null;
     return (
       <section className="mt-4">
         <h2 className="text-lg font-semibold border-b pb-1 mb-2">Checklist do Cliente</h2>
         <ul className="list-disc list-inside ml-4 grid grid-cols-2 gap-x-4 text-sm">
-          {serviceOrder.client_checklist.map((item, index) => (
-            <li key={index}>{item}</li>
+          {Object.entries(serviceOrder.client_checklist).map(([item, status], index) => (
+            <li key={index} className={cn("flex items-center gap-1", status === 'ok' ? 'text-green-600' : 'text-red-600')}>
+              {status === 'ok' ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+              {item}: {status === 'ok' ? 'Funciona' : 'Não Funciona'}
+            </li>
           ))}
         </ul>
       </section>

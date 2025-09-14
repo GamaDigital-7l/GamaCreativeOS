@@ -21,6 +21,7 @@ import { NewCustomerForm } from "../customers/NewCustomerForm";
 import { VisualChecklist } from "./VisualChecklist";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ClientChecklistInput } from "./ClientChecklistInput"; // Import new component
 
 const clientChecklistOptions = [
   "Tela", "Bateria", "Conector", "Carcaça", "Touch", "Câmera Frontal",
@@ -37,7 +38,8 @@ const formSchema = z.object({
   newDeviceSerial: z.string().optional(),
   newDevicePassword: z.string().optional(),
   newDeviceChecklist: z.record(z.string()).optional(),
-  clientChecklist: z.array(z.string()).optional(), // New field for client checklist
+  clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(), // Updated schema
+  isUntestable: z.boolean().default(false), // New field
   issueDescription: z.string().min(10, { message: "A descrição do problema é obrigatória." }),
   serviceDetails: z.string().optional(),
   partsCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
@@ -123,7 +125,8 @@ export function ServiceOrderForm() {
     defaultValues: { 
       deviceSelection: "existing", 
       newDeviceChecklist: {},
-      clientChecklist: [], // Initialize new field
+      clientChecklist: {}, // Initialize new field as object
+      isUntestable: false, // Initialize new field
       serviceDetails: "",
       partsCost: 0,
       serviceCost: 0,
@@ -252,7 +255,8 @@ export function ServiceOrderForm() {
         guarantee_terms: values.guaranteeTerms,
         warranty_days: values.warranty_days,
         status: 'pending',
-        client_checklist: values.clientChecklist || null, // Save new field
+        client_checklist: values.clientChecklist || {}, // Save as object
+        is_untestable: values.isUntestable, // Save new field
       }).select('id').single();
 
       if (osError) throw osError;
@@ -384,39 +388,25 @@ export function ServiceOrderForm() {
           <div className="p-4 border rounded-lg space-y-4">
             <h2 className="font-semibold text-lg flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary" /> 4. Checklist do Cliente</h2>
             <FormDescription>
-              Marque os itens que o cliente deseja que sejam verificados ou que fazem parte do serviço.
+              Marque o status de cada item do aparelho ou indique se não foi possível testar.
             </FormDescription>
             <FormField
               control={form.control}
               name="clientChecklist"
-              render={() => (
-                <FormItem>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {clientChecklistOptions.map((item) => (
-                      <FormField
-                        key={item}
-                        control={form.control}
-                        name="clientChecklist"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(item)}
-                                onCheckedChange={(checked) => {
-                                  return checked
-                                    ? field.onChange([...(field.value || []), item])
-                                    : field.onChange(field.value?.filter((value) => value !== item));
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal">{item}</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
+              render={({ field }) => (
+                <FormField
+                  control={form.control}
+                  name="isUntestable"
+                  render={({ field: isUntestableField }) => (
+                    <ClientChecklistInput
+                      options={clientChecklistOptions}
+                      value={field.value || {}}
+                      onChange={field.onChange}
+                      isUntestable={isUntestableField.value}
+                      onIsUntestableChange={isUntestableField.onChange}
+                    />
+                  )}
+                />
               )}
             />
           </div>
