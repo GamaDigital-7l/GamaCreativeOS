@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -542,7 +542,7 @@ export function ServiceOrderForm() {
                                           option.id === field.value ? "opacity-100" : "opacity-0"
                                         )}
                                       />
-                                      {option.name} (Qtd: {option.quantity})
+                                    {option.name} (Qtd: {option.quantity})
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>

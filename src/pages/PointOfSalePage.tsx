@@ -2,7 +2,7 @@ import { PointOfSale } from "@/components/pos/PointOfSale";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Receipt, History } from "lucide-react"; // Adicionado History icon
+import { ArrowLeft, Receipt, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const PointOfSalePage = () => {
@@ -22,7 +22,7 @@ const PointOfSalePage = () => {
             <Button variant="outline" onClick={() => navigate('/pos/history')}>
               <History className="mr-2 h-4 w-4" /> Consultar Vendas
             </Button>
-            {/* O botão "Iniciar Nova Venda" é implícito, pois esta página já é a interface de nova venda */}
+            {/* A interface atual já é para iniciar uma nova venda. */}
           </div>
         </CardHeader>
         <CardContent>
