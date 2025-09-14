@@ -41,10 +41,11 @@ import PointOfSalePage from "./pages/PointOfSalePage";
 import QuoteApprovalPage from "./pages/QuoteApprovalPage";
 import FinancialsPage from "./pages/FinancialsPage";
 import GamificationPage from "./pages/GamificationPage";
-import ManageGamificationPage from "./pages/ManageGamificationPage"; // New import
+import ManageGamificationPage from "./pages/ManageGamificationPage";
 import OnlineCatalogPage from "./pages/OnlineCatalogPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import PublicCatalogPage from "./pages/PublicCatalogPage";
+import ManageCustomFieldsPage from "./pages/ManageCustomFieldsPage"; // New import
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
@@ -105,10 +106,11 @@ const App = () => (
               <Route path="/catalog" element={<OnlineCatalogPage />} />
               <Route path="/catalog/:itemIds" element={<OnlineCatalogPage />} />
               <Route path="/gamification" element={<GamificationPage />} />
-              <Route path="/gamification/manage" element={<ManageGamificationPage />} /> {/* New route */}
+              <Route path="/gamification/manage" element={<ManageGamificationPage />} />
               <Route path="/profile" element={<UserProfilePage />} />
               <Route path="/profile/edit" element={<EditUserProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/settings/custom-fields" element={<ManageCustomFieldsPage />} /> {/* New route */}
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

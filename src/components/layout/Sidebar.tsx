@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store } from "lucide-react"; // Adicionado Store icon
+import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus } from "lucide-react"; // Adicionado ListPlus icon
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,8 @@ const navItems = [
 ];
 
 const bottomNavItems = [
-  { href: "/gamification/manage", label: "Gerenciar Gamificação", icon: Trophy }, // New item
+  { href: "/gamification/manage", label: "Gerenciar Gamificação", icon: Trophy },
+  { href: "/settings/custom-fields", label: "Campos da OS", icon: ListPlus }, // New item
   { href: "/settings", label: "Configurações", icon: Settings },
   { href: "/profile", label: "Meu Perfil", icon: UserCircle },
 ];
