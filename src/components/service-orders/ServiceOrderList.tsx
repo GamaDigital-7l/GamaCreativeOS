@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Adicionado useNavigate
 import { Button } from '@/components/ui/button';
 import { Eye, Search, X, PlusCircle, Wrench, User, Smartphone, Clock, CheckCircle, Ban } from 'lucide-react'; // Adicionado User, Smartphone, Clock, CheckCircle, Ban icons
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,7 @@ const serviceOrderStatuses = [
 
 export function ServiceOrderList() {
   const { user, isLoading: isSessionLoading } = useSession();
+  const navigate = useNavigate(); // Inicializado useNavigate
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
