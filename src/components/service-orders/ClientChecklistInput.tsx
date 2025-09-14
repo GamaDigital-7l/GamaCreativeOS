@@ -3,8 +3,8 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button'; // Import Button
+import { Card } from '@/components/ui/card';
 import { CheckCircle, XCircle, PowerOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,12 +30,6 @@ export const ClientChecklistInput: React.FC<ClientChecklistInputProps> = ({
     onChange({ ...value, [item]: status });
   };
 
-  const getStatusColor = (item: string) => {
-    if (value[item] === 'ok') return 'text-green-500';
-    if (value[item] === 'not_working') return 'text-red-500';
-    return 'text-muted-foreground';
-  };
-
   return (
     <div className="space-y-4">
       <Card className="p-4">
@@ -56,26 +50,32 @@ export const ClientChecklistInput: React.FC<ClientChecklistInputProps> = ({
 
       <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4", isUntestable && "opacity-50 pointer-events-none")}>
         {options.map((item) => (
-          <Card key={item} className="p-3">
+          <Card key={item} className="p-3 flex flex-col">
             <Label className="font-medium mb-2 block">{item}</Label>
-            <RadioGroup
-              value={value[item] || ''}
-              onValueChange={(status: ChecklistStatus) => handleStatusChange(item, status)}
-              className="flex gap-4 mt-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="ok" id={`${item}-ok`} />
-                <Label htmlFor={`${item}-ok`} className="flex items-center gap-1 text-green-500">
-                  <CheckCircle className="h-4 w-4" /> Funciona
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="not_working" id={`${item}-not_working`} />
-                <Label htmlFor={`${item}-not_working`} className="flex items-center gap-1 text-red-500">
-                  <XCircle className="h-4 w-4" /> Não Funciona
-                </Label>
-              </div>
-            </RadioGroup>
+            <div className="flex gap-2 mt-auto"> {/* Use mt-auto to push buttons to bottom */}
+              <Button
+                type="button"
+                variant={value[item] === 'ok' ? 'default' : 'outline'}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1",
+                  value[item] === 'ok' ? "bg-green-600 hover:bg-green-700 text-white" : "text-green-600 border-green-600 hover:bg-green-100"
+                )}
+                onClick={() => handleStatusChange(item, 'ok')}
+              >
+                <CheckCircle className="h-4 w-4" /> OK
+              </Button>
+              <Button
+                type="button"
+                variant={value[item] === 'not_working' ? 'default' : 'outline'}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1",
+                  value[item] === 'not_working' ? "bg-red-600 hover:bg-red-700 text-white" : "text-red-600 border-red-600 hover:bg-red-100"
+                )}
+                onClick={() => handleStatusChange(item, 'not_working')}
+              >
+                <XCircle className="h-4 w-4" /> N/F
+              </Button>
+            </div>
           </Card>
         ))}
       </div>
