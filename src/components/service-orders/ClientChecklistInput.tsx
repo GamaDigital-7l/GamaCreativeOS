@@ -3,8 +3,8 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button'; // Import Button
 import { Card } from '@/components/ui/card';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'; // Import ToggleGroup components
 import { CheckCircle, XCircle, PowerOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,8 +26,15 @@ export const ClientChecklistInput: React.FC<ClientChecklistInputProps> = ({
   onIsUntestableChange,
   options,
 }) => {
-  const handleStatusChange = (item: string, status: ChecklistStatus) => {
-    onChange({ ...value, [item]: status });
+  const handleStatusChange = (item: string, status: ChecklistStatus | null) => {
+    if (status) {
+      onChange({ ...value, [item]: status });
+    } else {
+      // If status is null (deselected), remove the item from the state
+      const newState = { ...value };
+      delete newState[item];
+      onChange(newState);
+    }
   };
 
   return (
@@ -37,7 +44,13 @@ export const ClientChecklistInput: React.FC<ClientChecklistInputProps> = ({
           <Checkbox
             id="is-untestable"
             checked={isUntestable}
-            onCheckedChange={(checked: boolean) => onIsUntestableChange(checked)}
+            onCheckedChange={(checked: boolean) => {
+              onIsUntestableChange(checked);
+              if (checked) {
+                // Clear all checklist items if untestable is checked
+                onChange({});
+              }
+            }}
           />
           <Label htmlFor="is-untestable" className="flex items-center gap-2 text-base font-medium">
             <PowerOff className="h-5 w-5 text-orange-500" /> Aparelho entrou desligado / não testável
@@ -52,30 +65,34 @@ export const ClientChecklistInput: React.FC<ClientChecklistInputProps> = ({
         {options.map((item) => (
           <Card key={item} className="p-3 flex flex-col">
             <Label className="font-medium mb-2 block">{item}</Label>
-            <div className="flex gap-2 mt-auto"> {/* Use mt-auto to push buttons to bottom */}
-              <Button
-                type="button"
-                variant={value[item] === 'ok' ? 'default' : 'outline'}
+            <ToggleGroup
+              type="single"
+              value={value[item] || ''}
+              onValueChange={(status: string) => handleStatusChange(item, status as ChecklistStatus)}
+              className="flex justify-center gap-2 mt-auto"
+              disabled={isUntestable}
+            >
+              <ToggleGroupItem
+                value="ok"
+                aria-label="Funciona"
                 className={cn(
                   "flex-1 flex items-center justify-center gap-1",
                   value[item] === 'ok' ? "bg-green-600 hover:bg-green-700 text-white" : "text-green-600 border-green-600 hover:bg-green-100"
                 )}
-                onClick={() => handleStatusChange(item, 'ok')}
               >
                 <CheckCircle className="h-4 w-4" /> OK
-              </Button>
-              <Button
-                type="button"
-                variant={value[item] === 'not_working' ? 'default' : 'outline'}
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="not_working"
+                aria-label="Não Funciona"
                 className={cn(
                   "flex-1 flex items-center justify-center gap-1",
                   value[item] === 'not_working' ? "bg-red-600 hover:bg-red-700 text-white" : "text-red-600 border-red-600 hover:bg-red-100"
                 )}
-                onClick={() => handleStatusChange(item, 'not_working')}
               >
                 <XCircle className="h-4 w-4" /> N/F
-              </Button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </Card>
         ))}
       </div>
