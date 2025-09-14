@@ -6,7 +6,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText, List } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -41,6 +41,15 @@ interface ServiceOrderDetails {
       name: string;
     } | null;
   }[];
+  service_order_field_values: {
+    value: string;
+    custom_field_id: string;
+    service_order_custom_fields: {
+      field_name: string;
+      field_type: string;
+      order_index: number;
+    } | null;
+  }[];
 }
 
 export function ServiceOrderDetail() {
@@ -64,7 +73,13 @@ export function ServiceOrderDetail() {
     try {
       const { data, error } = await supabase
         .from('service_orders')
-        .select(`*, customers (*), devices (*), service_order_inventory_items (quantity_used, price_at_time, inventory_items (name))`)
+        .select(`
+          *, 
+          customers (*), 
+          devices (*), 
+          service_order_inventory_items (quantity_used, price_at_time, inventory_items (name)),
+          service_order_field_values (value, custom_field_id, service_order_custom_fields (field_name, field_type, order_index))
+        `)
         .eq('id', orderId)
         .single();
       if (error) throw error;
@@ -139,6 +154,9 @@ export function ServiceOrderDetail() {
       // Delete related financial transactions
       await supabase.from('financial_transactions').delete().eq('related_service_order_id', id).eq('user_id', user.id);
 
+      // Delete service order custom field values
+      await supabase.from('service_order_field_values').delete().eq('service_order_id', id);
+
       // Delete service order inventory items
       await supabase.from('service_order_inventory_items').delete().eq('service_order_id', id);
 
@@ -163,6 +181,18 @@ export function ServiceOrderDetail() {
   }
 
   const canFinalize = serviceOrder.status !== 'completed' && serviceOrder.status !== 'cancelled' && (serviceOrder.status === 'ready' || serviceOrder.approval_status === 'approved');
+
+  // Group custom field values by field_name
+  const groupedCustomFields = serviceOrder.service_order_field_values.reduce((acc, fieldValue) => {
+    const fieldName = fieldValue.service_order_custom_fields?.field_name;
+    if (fieldName) {
+      if (!acc[fieldName]) {
+        acc[fieldName] = [];
+      }
+      acc[fieldName].push(fieldValue.value);
+    }
+    return acc;
+  }, {} as Record<string, string[]>);
 
   return (
     <>
@@ -276,6 +306,20 @@ export function ServiceOrderDetail() {
               </div>
             )}
           </div>
+
+          {/* Custom Fields Display */}
+          {Object.keys(groupedCustomFields).length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><List className="h-5 w-5" /> Campos Personalizados</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Object.entries(groupedCustomFields).map(([fieldName, values]) => (
+                  <div key={fieldName}>
+                    <p><strong>{fieldName}:</strong> {values.join(', ')}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Service Details */}
           <div>

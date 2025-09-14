@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,10 +20,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Check, ChevronsUpDown, PlusCircle, Trash2, DollarSign, Wrench, Package, CalendarDays, Save } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle, Trash2, DollarSign, Wrench, Package, CalendarDays, Save, List, Type } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentDialog } from "./PaymentDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const serviceOrderStatuses = ["pending", "in_progress", "ready", "completed", "cancelled"];
 
@@ -43,6 +44,29 @@ const formSchema = z.object({
     cost_at_time: z.number(),
     price_at_time: z.number(),
   })).optional(),
+  customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(), // New field for custom fields
+}).superRefine((data, ctx) => {
+  // Custom field validation
+  if (data.customFields) {
+    Object.entries(data.customFields).forEach(([fieldId, value]) => {
+      const customFieldDef = (ctx as any)._root.customFieldDefinitions?.find((f: any) => f.id === fieldId);
+      if (customFieldDef?.is_required) {
+        if (typeof value === 'string' && !value.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `${customFieldDef.field_name} é obrigatório.`,
+            path: [`customFields.${fieldId}`],
+          });
+        } else if (Array.isArray(value) && value.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `${customFieldDef.field_name} é obrigatório.`,
+            path: [`customFields.${fieldId}`],
+          });
+        }
+      }
+    });
+  }
 });
 
 type InventoryItemOption = {
@@ -53,6 +77,15 @@ type InventoryItemOption = {
   selling_price: number;
 };
 
+interface CustomFieldDefinition {
+  id: string;
+  field_name: string;
+  field_type: 'text' | 'textarea' | 'select' | 'checkbox';
+  is_required: boolean;
+  options?: string[];
+  order_index: number;
+}
+
 export function EditServiceOrderForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -60,6 +93,7 @@ export function EditServiceOrderForm() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inventoryOptions, setInventoryOptions] = useState<InventoryItemOption[]>([]);
+  const [customFieldDefinitions, setCustomFieldDefinitions] = useState<CustomFieldDefinition[]>([]); // New state for custom field definitions
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [serviceOrderData, setServiceOrderData] = useState<any>(null);
 
@@ -69,7 +103,9 @@ export function EditServiceOrderForm() {
       issueDescription: "", serviceDetails: "",
       partsCost: 0, serviceCost: 0, totalAmount: 0, guaranteeTerms: "", warranty_days: 90,
       status: "pending", inventoryItems: [],
+      customFields: {}, // Initialize custom fields as an empty object
     },
+    context: { customFieldDefinitions }, // Pass custom field definitions to context for validation
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -98,10 +134,36 @@ export function EditServiceOrderForm() {
         const { data: inventoryData } = await supabase.from('inventory_items').select('id, name, quantity, cost_price, selling_price').eq('user_id', user.id);
         setInventoryOptions(inventoryData || []);
 
-        const { data, error } = await supabase.from('service_orders').select(`*, customers(name), service_order_inventory_items (*, inventory_items(name))`).eq('id', id).single();
+        // Fetch custom field definitions
+        const { data: customFieldsDefData, error: customFieldsDefError } = await supabase
+          .from('service_order_custom_fields')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('order_index', { ascending: true });
+        if (customFieldsDefError) {
+          showError(`Erro ao carregar definições de campos personalizados: ${customFieldsDefError.message}`);
+        } else {
+          setCustomFieldDefinitions(customFieldsDefData || []);
+        }
+
+        const { data, error } = await supabase.from('service_orders').select(`*, customers(name), service_order_inventory_items (*, inventory_items(name)), service_order_field_values(*)`).eq('id', id).single();
         if (error) throw error;
         
         setServiceOrderData(data);
+
+        // Map existing custom field values
+        const initialCustomFieldValues: Record<string, string | string[]> = {};
+        customFieldsDefData?.forEach(fieldDef => {
+          const valuesForField = data.service_order_field_values
+            .filter((fv: any) => fv.custom_field_id === fieldDef.id)
+            .map((fv: any) => fv.value);
+          
+          if (fieldDef.field_type === 'checkbox') {
+            initialCustomFieldValues[fieldDef.id] = valuesForField;
+          } else {
+            initialCustomFieldValues[fieldDef.id] = valuesForField[0] || '';
+          }
+        });
 
         form.reset({
           issueDescription: data.issue_description || "", serviceDetails: data.service_details || "",
@@ -117,6 +179,7 @@ export function EditServiceOrderForm() {
             cost_at_time: item.cost_at_time,
             price_at_time: item.price_at_time,
           })),
+          customFields: initialCustomFieldValues,
         });
       } catch (err: any) {
         showError(`Erro ao carregar dados: ${err.message}`);
@@ -182,6 +245,32 @@ export function EditServiceOrderForm() {
           quantity_used: item.quantity_used, cost_at_time: item.cost_at_time, price_at_time: item.price_at_time,
         }));
         await supabase.from('service_order_inventory_items').insert(itemsToInsert);
+      }
+
+      // Update custom field values
+      await supabase.from('service_order_field_values').delete().eq('service_order_id', id); // Delete existing values
+      if (values.customFields) {
+        const customFieldValuesToInsert = Object.entries(values.customFields)
+          .map(([fieldId, value]) => {
+            if (Array.isArray(value)) {
+              return value.map(singleValue => ({
+                service_order_id: id,
+                custom_field_id: fieldId,
+                value: singleValue,
+              }));
+            }
+            return {
+              service_order_id: id,
+              custom_field_id: fieldId,
+              value: typeof value === 'string' ? value : String(value),
+            };
+          })
+          .flat()
+          .filter(item => item.value !== '' && item.value !== null);
+
+        if (customFieldValuesToInsert.length > 0) {
+          await supabase.from('service_order_field_values').insert(customFieldValuesToInsert);
+        }
       }
 
       await supabase.from('service_orders').update({
@@ -257,6 +346,75 @@ export function EditServiceOrderForm() {
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Wrench className="h-6 w-6 text-primary" /> Detalhes do Serviço</h2>
           <FormField control={form.control} name="issueDescription" render={({ field }) => (<FormItem><FormLabel>Defeito Relatado</FormLabel><FormControl><Textarea placeholder="Descreva o problema..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
           <FormField control={form.control} name="serviceDetails" render={({ field }) => (<FormItem><FormLabel>Detalhes do Serviço</FormLabel><FormControl><Textarea placeholder="Descreva o serviço a ser realizado..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
+
+          {/* Dynamic Custom Fields Section */}
+          {customFieldDefinitions.length > 0 && (
+            <div className="p-4 border rounded-lg space-y-4">
+              <h2 className="font-semibold text-lg flex items-center gap-2"><List className="h-5 w-5 text-primary" /> Campos Personalizados</h2>
+              {customFieldDefinitions.map(fieldDef => (
+                <FormField
+                  key={fieldDef.id}
+                  control={form.control}
+                  name={`customFields.${fieldDef.id}`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        {fieldDef.field_name} {fieldDef.is_required && <span className="text-red-500">*</span>}
+                      </FormLabel>
+                      <FormControl>
+                        {fieldDef.field_type === 'text' && <Input {...field} />}
+                        {fieldDef.field_type === 'textarea' && <Textarea className="min-h-[80px]" {...field} />}
+                        {fieldDef.field_type === 'select' && (
+                          <Select onValueChange={field.onChange} defaultValue={field.value as string}>
+                            <SelectTrigger><SelectValue placeholder={`Selecione ${fieldDef.field_name}`} /></SelectTrigger>
+                            <SelectContent>
+                              {fieldDef.options?.map(option => (
+                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {fieldDef.field_type === 'checkbox' && (
+                          <div className="flex flex-col space-y-2">
+                            {fieldDef.options?.map(option => (
+                              <FormField
+                                key={option}
+                                control={form.control}
+                                name={`customFields.${fieldDef.id}`}
+                                render={({ field: checkboxField }) => {
+                                  const checked = Array.isArray(checkboxField.value) && checkboxField.value.includes(option);
+                                  return (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={checked}
+                                          onCheckedChange={(isChecked) => {
+                                            if (isChecked) {
+                                              checkboxField.onChange([...(Array.isArray(checkboxField.value) ? checkboxField.value : []), option]);
+                                            } else {
+                                              checkboxField.onChange((checkboxField.value as string[]).filter(
+                                                (value) => value !== option
+                                              ));
+                                            }
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">{option}</FormLabel>
+                                    </FormItem>
+                                  );
+                                }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
+          )}
 
           <h2 className="text-2xl font-bold mt-8 mb-4 flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Peças e Materiais Utilizados</h2>
           <div className="space-y-4">

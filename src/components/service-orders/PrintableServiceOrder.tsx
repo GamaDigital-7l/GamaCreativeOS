@@ -27,6 +27,7 @@ interface PrintableData {
     name: string;
     phone?: string;
     address?: string;
+    email?: string;
   };
   device: {
     id: string;
@@ -48,6 +49,15 @@ interface PrintableData {
     service_order_template: string;
     default_guarantee_terms?: string;
   };
+  customFieldValues: {
+    value: string;
+    custom_field_id: string;
+    service_order_custom_fields: {
+      field_name: string;
+      field_type: string;
+      order_index: number;
+    } | null;
+  }[];
 }
 
 export function PrintableServiceOrder() {
@@ -64,7 +74,13 @@ export function PrintableServiceOrder() {
       try {
         const { data: serviceOrderData, error } = await supabase
           .from('service_orders')
-          .select(`*, customers(*), devices(*), service_order_inventory_items(*, inventory_items(name))`)
+          .select(`
+            *, 
+            customers(*), 
+            devices(*), 
+            service_order_inventory_items(*, inventory_items(name)),
+            service_order_field_values (value, custom_field_id, service_order_custom_fields (field_name, field_type, order_index))
+          `)
           .eq('id', id)
           .single();
         if (error) throw error;
@@ -81,6 +97,7 @@ export function PrintableServiceOrder() {
           device: serviceOrderData.devices,
           items: serviceOrderData.service_order_inventory_items,
           settings: settingsData || { service_order_template: 'default', default_guarantee_terms: "Não há termos de garantia padrão definidos." },
+          customFieldValues: serviceOrderData.service_order_field_values || [],
         });
       } catch (err: any) {
         showError(`Erro ao carregar dados para impressão: ${err.message}`);
@@ -100,7 +117,7 @@ export function PrintableServiceOrder() {
     return <div className="p-8 text-center text-red-500">Não foi possível carregar os dados da Ordem de Serviço.</div>;
   }
 
-  const { serviceOrder, customer, device, items, settings } = data;
+  const { serviceOrder, customer, device, items, settings, customFieldValues } = data;
 
   const renderPasswordPattern = () => (
     <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
@@ -120,7 +137,34 @@ export function PrintableServiceOrder() {
   );
 
   // Determine which guarantee terms to use
-  const finalGuaranteeTerms = serviceOrder.guarantee_terms || settings.default_guarantee_terms || "Não há termos de garantia definidos para esta ordem de serviço.";
+  const finalGuaranteeTerms = serviceOrder.guarantee_terms || settings.default_guarantee_terms || "Não há termos de garantia padrão definidos para esta ordem de serviço.";
+
+  // Group custom field values by field_name and sort by order_index
+  const groupedCustomFields = customFieldValues
+    .filter(fv => fv.service_order_custom_fields) // Ensure field definition exists
+    .sort((a, b) => (a.service_order_custom_fields?.order_index || 0) - (b.service_order_custom_fields?.order_index || 0))
+    .reduce((acc, fieldValue) => {
+      const fieldName = fieldValue.service_order_custom_fields?.field_name;
+      if (fieldName) {
+        if (!acc[fieldName]) {
+          acc[fieldName] = [];
+        }
+        acc[fieldName].push(fieldValue.value);
+      }
+      return acc;
+    }, {} as Record<string, string[]>);
+
+  const renderCustomFields = () => {
+    if (Object.keys(groupedCustomFields).length === 0) return null;
+    return (
+      <section>
+        <h2 className="text-lg font-semibold border-b pb-1 mb-2">Informações Adicionais</h2>
+        {Object.entries(groupedCustomFields).map(([fieldName, values]) => (
+          <p key={fieldName}><strong>{fieldName}:</strong> {values.join(', ')}</p>
+        ))}
+      </section>
+    );
+  };
 
   const renderDefaultTemplate = () => (
     <div className="max-w-4xl mx-auto p-8 space-y-6 border rounded-lg bg-white text-gray-800">
@@ -167,6 +211,8 @@ export function PrintableServiceOrder() {
           )}
         </div>
       </section>
+
+      {renderCustomFields()} {/* Render custom fields here */}
 
       <section>
         <h2 className="text-lg font-semibold border-b pb-1 mb-2">Serviço e Peças</h2>
@@ -248,6 +294,8 @@ export function PrintableServiceOrder() {
         <p>Série/IMEI: {device.serial_number || 'N/A'}</p>
         <p>Defeito: {device.defect_description}</p>
       </section>
+
+      {renderCustomFields()} {/* Render custom fields here */}
 
       <section>
         <h2 className="font-semibold border-b pb-1 mb-1">Serviço</h2>
@@ -332,6 +380,8 @@ export function PrintableServiceOrder() {
           )}
         </div>
       </section>
+
+      {renderCustomFields()} {/* Render custom fields here */}
 
       <section className="text-md">
         <h3 className="text-xl font-bold border-b border-gray-500 pb-1 mb-2">Serviços e Peças Utilizadas</h3>
