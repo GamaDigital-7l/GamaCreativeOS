@@ -16,6 +16,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { QuoteShareDialog } from './QuoteShareDialog';
 import { PaymentDialog } from './PaymentDialog';
+import { cn } from '@/lib/utils'; // Import cn for conditional classes
 
 interface ServiceOrderDetails {
   id: string;
@@ -32,8 +33,9 @@ interface ServiceOrderDetails {
   total_amount?: number;
   guarantee_terms?: string;
   photos?: string[];
-  client_checklist?: Record<string, 'ok' | 'not_working'>; // Updated type
-  is_untestable?: boolean; // New field
+  client_checklist?: Record<string, 'ok' | 'not_working'>;
+  is_untestable?: boolean;
+  casing_status?: 'good' | 'scratched' | 'damaged' | null; // New field
   customers: { id: string; name: string; phone?: string; address?: string; email?: string; };
   devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; };
   service_order_inventory_items: {
@@ -196,6 +198,15 @@ export function ServiceOrderDetail() {
     return acc;
   }, {} as Record<string, string[]>);
 
+  const getCasingStatusLabel = (status: 'good' | 'scratched' | 'damaged' | null | undefined) => {
+    switch (status) {
+      case 'good': return <Badge variant="success">Bom Estado</Badge>;
+      case 'scratched': return <Badge variant="warning" className="bg-yellow-600 text-white">Arranhado</Badge>;
+      case 'damaged': return <Badge variant="destructive">Amassado/Quebrado</Badge>;
+      default: return <Badge variant="secondary">N/A</Badge>;
+    }
+  };
+
   return (
     <>
       <QuoteShareDialog isOpen={isShareDialogOpen} onClose={() => setIsShareDialogOpen(false)} serviceOrderId={serviceOrder.id} />
@@ -315,19 +326,29 @@ export function ServiceOrderDetail() {
               <PowerOff className="h-5 w-5" />
               <p className="font-semibold">Aparelho entrou desligado / não testável. O checklist do cliente não foi preenchido.</p>
             </div>
-          ) : (serviceOrder.client_checklist && Object.keys(serviceOrder.client_checklist).length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><ListChecks className="h-5 w-5" /> Checklist do Cliente</h3>
-              <ul className="list-disc list-inside ml-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4">
-                {Object.entries(serviceOrder.client_checklist).map(([item, status], index) => (
-                  <li key={index} className={cn("flex items-center gap-1", status === 'ok' ? 'text-green-600' : 'text-red-600')}>
-                    {status === 'ok' ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                    {item}: {status === 'ok' ? 'Funciona' : 'Não Funciona'}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          ) : (
+            <>
+              {serviceOrder.client_checklist && Object.keys(serviceOrder.client_checklist).length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><ListChecks className="h-5 w-5" /> Checklist do Cliente</h3>
+                  <ul className="list-disc list-inside ml-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4">
+                    {Object.entries(serviceOrder.client_checklist).map(([item, status], index) => (
+                      <li key={index} className={cn("flex items-center gap-1", status === 'ok' ? 'text-green-600' : 'text-red-600')}>
+                        {status === 'ok' ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                        {item}: {status === 'ok' ? 'Funciona' : 'Não Funciona'}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {serviceOrder.casing_status && (
+                <div className="mt-4">
+                  <p className="font-semibold mb-2 flex items-center gap-2"><ListChecks className="h-5 w-5" /> Carcaça:</p>
+                  <p className="ml-4">{getCasingStatusLabel(serviceOrder.casing_status)}</p>
+                </div>
+              )}
+            </>
+          )}
 
           {/* Custom Fields Display */}
           {Object.keys(groupedCustomFields).length > 0 && (

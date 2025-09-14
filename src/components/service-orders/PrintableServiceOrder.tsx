@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge'; // Import Badge for casing status
 
 // Define a more comprehensive type for the data needed
 interface PrintableData {
@@ -23,8 +24,9 @@ interface PrintableData {
     guarantee_terms?: string;
     customer_signature?: string;
     approved_at?: string;
-    client_checklist?: Record<string, 'ok' | 'not_working'>; // Updated type
-    is_untestable?: boolean; // New field
+    client_checklist?: Record<string, 'ok' | 'not_working'>;
+    is_untestable?: boolean;
+    casing_status?: 'good' | 'scratched' | 'damaged' | null; // New field
   };
   customer: {
     name: string;
@@ -169,6 +171,15 @@ export function PrintableServiceOrder() {
     );
   };
 
+  const getCasingStatusLabel = (status: 'good' | 'scratched' | 'damaged' | null | undefined) => {
+    switch (status) {
+      case 'good': return 'Bom Estado';
+      case 'scratched': return 'Arranhado';
+      case 'damaged': return 'Amassado/Quebrado';
+      default: return 'N/A';
+    }
+  };
+
   const renderClientChecklist = () => {
     if (serviceOrder.is_untestable) {
       return (
@@ -181,18 +192,28 @@ export function PrintableServiceOrder() {
         </section>
       );
     }
-    if (!serviceOrder.client_checklist || Object.keys(serviceOrder.client_checklist).length === 0) return null;
+    
+    const hasClientChecklist = serviceOrder.client_checklist && Object.keys(serviceOrder.client_checklist).length > 0;
+    const hasCasingStatus = serviceOrder.casing_status;
+
+    if (!hasClientChecklist && !hasCasingStatus) return null;
+
     return (
       <section className="mt-4">
         <h2 className="text-lg font-semibold border-b pb-1 mb-2">Checklist do Cliente</h2>
-        <ul className="list-disc list-inside ml-4 grid grid-cols-2 gap-x-4 text-sm">
-          {Object.entries(serviceOrder.client_checklist).map(([item, status], index) => (
-            <li key={index} className={cn("flex items-center gap-1", status === 'ok' ? 'text-green-600' : 'text-red-600')}>
-              {status === 'ok' ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-              {item}: {status === 'ok' ? 'Funciona' : 'Não Funciona'}
-            </li>
-          ))}
-        </ul>
+        {hasClientChecklist && (
+          <ul className="list-disc list-inside ml-4 grid grid-cols-2 gap-x-4 text-sm">
+            {Object.entries(serviceOrder.client_checklist || {}).map(([item, status], index) => (
+              <li key={index} className={cn("flex items-center gap-1", status === 'ok' ? 'text-green-600' : 'text-red-600')}>
+                {status === 'ok' ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                {item}: {status === 'ok' ? 'Funciona' : 'Não Funciona'}
+              </li>
+            ))}
+          </ul>
+        )}
+        {hasCasingStatus && (
+          <p className="mt-2"><strong>Carcaça:</strong> {getCasingStatusLabel(serviceOrder.casing_status)}</p>
+        )}
       </section>
     );
   };
@@ -243,8 +264,9 @@ export function PrintableServiceOrder() {
         </div>
       </section>
 
-      {renderClientChecklist()} {/* Render client checklist here */}
-      {renderCustomFields()} {/* Render custom fields here */}
+      {renderClientChecklist()}
+
+      {renderCustomFields()}
 
       <section>
         <h2 className="text-lg font-semibold border-b pb-1 mb-2">Serviço e Peças</h2>
@@ -327,8 +349,9 @@ export function PrintableServiceOrder() {
         <p>Defeito: {device.defect_description}</p>
       </section>
 
-      {renderClientChecklist()} {/* Render client checklist here */}
-      {renderCustomFields()} {/* Render custom fields here */}
+      {renderClientChecklist()}
+
+      {renderCustomFields()}
 
       <section>
         <h2 className="font-semibold border-b pb-1 mb-1">Serviço</h2>
@@ -414,8 +437,8 @@ export function PrintableServiceOrder() {
         </div>
       </section>
 
-      {renderClientChecklist()} {/* Render client checklist here */}
-      {renderCustomFields()} {/* Render custom fields here */}
+      {renderClientChecklist()}
+      {renderCustomFields()}
 
       <section className="text-md">
         <h3 className="text-xl font-bold border-b border-gray-500 pb-1 mb-2">Serviços e Peças Utilizadas</h3>

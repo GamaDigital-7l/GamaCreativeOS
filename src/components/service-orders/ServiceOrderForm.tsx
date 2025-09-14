@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ClientChecklistInput } from "./ClientChecklistInput"; // Import new component
 
 const clientChecklistOptions = [
-  "Tela", "Bateria", "Conector", "Carcaça", "Touch", "Câmera Frontal",
+  "Tela", "Bateria", "Conector", "Touch", "Câmera Frontal",
   "Câmera Traseira", "Face ID / Biometria", "Conector de Carga",
   "Botões Volume", "Botão Power", "Rede", "Wi-Fi", "Bluetooth",
 ];
@@ -38,8 +38,9 @@ const formSchema = z.object({
   newDeviceSerial: z.string().optional(),
   newDevicePassword: z.string().optional(),
   newDeviceChecklist: z.record(z.string()).optional(),
-  clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(), // Updated schema
-  isUntestable: z.boolean().default(false), // New field
+  clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(),
+  isUntestable: z.boolean().default(false),
+  casing_status: z.enum(['good', 'scratched', 'damaged']).optional().nullable(), // New field
   issueDescription: z.string().min(10, { message: "A descrição do problema é obrigatória." }),
   serviceDetails: z.string().optional(),
   partsCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
@@ -125,8 +126,9 @@ export function ServiceOrderForm() {
     defaultValues: { 
       deviceSelection: "existing", 
       newDeviceChecklist: {},
-      clientChecklist: {}, // Initialize new field as object
-      isUntestable: false, // Initialize new field
+      clientChecklist: {},
+      isUntestable: false,
+      casing_status: null, // Initialize new field
       serviceDetails: "",
       partsCost: 0,
       serviceCost: 0,
@@ -255,8 +257,9 @@ export function ServiceOrderForm() {
         guarantee_terms: values.guaranteeTerms,
         warranty_days: values.warranty_days,
         status: 'pending',
-        client_checklist: values.clientChecklist || {}, // Save as object
-        is_untestable: values.isUntestable, // Save new field
+        client_checklist: values.clientChecklist || {},
+        is_untestable: values.isUntestable,
+        casing_status: values.casing_status, // Save new field
       }).select('id').single();
 
       if (osError) throw osError;
@@ -398,12 +401,20 @@ export function ServiceOrderForm() {
                   control={form.control}
                   name="isUntestable"
                   render={({ field: isUntestableField }) => (
-                    <ClientChecklistInput
-                      options={clientChecklistOptions}
-                      value={field.value || {}}
-                      onChange={field.onChange}
-                      isUntestable={isUntestableField.value}
-                      onIsUntestableChange={isUntestableField.onChange}
+                    <FormField
+                      control={form.control}
+                      name="casing_status"
+                      render={({ field: casingField }) => (
+                        <ClientChecklistInput
+                          options={clientChecklistOptions}
+                          value={field.value || {}}
+                          onChange={field.onChange}
+                          isUntestable={isUntestableField.value}
+                          onIsUntestableChange={isUntestableField.onChange}
+                          casingStatus={casingField.value || null}
+                          onCasingStatusChange={casingField.onChange}
+                        />
+                      )}
                     />
                   )}
                 />

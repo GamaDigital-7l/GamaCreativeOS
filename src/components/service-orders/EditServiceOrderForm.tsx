@@ -30,7 +30,7 @@ import { ClientChecklistInput } from "./ClientChecklistInput"; // Import new com
 const serviceOrderStatuses = ["pending", "in_progress", "ready", "completed", "cancelled"];
 
 const clientChecklistOptions = [
-  "Tela", "Bateria", "Conector", "Carcaça", "Touch", "Câmera Frontal",
+  "Tela", "Bateria", "Conector", "Touch", "Câmera Frontal",
   "Câmera Traseira", "Face ID / Biometria", "Conector de Carga",
   "Botões Volume", "Botão Power", "Rede", "Wi-Fi", "Bluetooth",
 ];
@@ -51,8 +51,9 @@ const formSchema = z.object({
     cost_at_time: z.number(),
     price_at_time: z.number(),
   })).optional(),
-  clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(), // Updated schema
-  isUntestable: z.boolean().default(false), // New field
+  clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(),
+  isUntestable: z.boolean().default(false),
+  casing_status: z.enum(['good', 'scratched', 'damaged']).optional().nullable(), // New field
   customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(),
 }).superRefine((data, ctx) => {
   // Custom field validation
@@ -112,8 +113,9 @@ export function EditServiceOrderForm() {
       issueDescription: "", serviceDetails: "",
       partsCost: 0, serviceCost: 0, totalAmount: 0, guaranteeTerms: "", warranty_days: 90,
       status: "pending", inventoryItems: [],
-      clientChecklist: {}, // Initialize new field as object
-      isUntestable: false, // Initialize new field
+      clientChecklist: {},
+      isUntestable: false,
+      casing_status: null, // Initialize new field
       customFields: {},
     },
     context: { customFieldDefinitions },
@@ -190,8 +192,9 @@ export function EditServiceOrderForm() {
             price_at_time: item.price_at_time,
             quantity_used: item.quantity_used,
           })),
-          clientChecklist: data.client_checklist || {}, // Load new field as object
-          isUntestable: data.is_untestable || false, // Load new field
+          clientChecklist: data.client_checklist || {},
+          isUntestable: data.is_untestable || false,
+          casing_status: data.casing_status || null, // Load new field
           customFields: initialCustomFieldValues,
         });
       } catch (err: any) {
@@ -291,8 +294,9 @@ export function EditServiceOrderForm() {
         parts_cost: values.partsCost, service_cost: values.serviceCost, total_amount: values.totalAmount,
         guarantee_terms: values.guaranteeTerms, warranty_days: values.warranty_days,
         status: values.status, updated_at: new Date().toISOString(),
-        client_checklist: values.clientChecklist || {}, // Save new field as object
-        is_untestable: values.isUntestable, // Save new field
+        client_checklist: values.clientChecklist || {},
+        is_untestable: values.isUntestable,
+        casing_status: values.casing_status, // Save new field
       }).eq('id', id);
 
       showSuccess("Ordem de Serviço atualizada!");
@@ -343,7 +347,7 @@ export function EditServiceOrderForm() {
       }
       
       setIsPaymentDialogOpen(false);
-      navigate(`/service-orders/${id}`);
+      fetchServiceOrderDetails(id); // Refresh data
     } catch (error: any) {
       showError(`Erro ao finalizar pagamento: ${error.message}`);
     }
@@ -376,12 +380,20 @@ export function EditServiceOrderForm() {
                   control={form.control}
                   name="isUntestable"
                   render={({ field: isUntestableField }) => (
-                    <ClientChecklistInput
-                      options={clientChecklistOptions}
-                      value={field.value || {}}
-                      onChange={field.onChange}
-                      isUntestable={isUntestableField.value}
-                      onIsUntestableChange={isUntestableField.onChange}
+                    <FormField
+                      control={form.control}
+                      name="casing_status"
+                      render={({ field: casingField }) => (
+                        <ClientChecklistInput
+                          options={clientChecklistOptions}
+                          value={field.value || {}}
+                          onChange={field.onChange}
+                          isUntestable={isUntestableField.value}
+                          onIsUntestableChange={isUntestableField.onChange}
+                          casingStatus={casingField.value || null}
+                          onCasingStatusChange={casingField.onChange}
+                        />
+                      )}
                     />
                   )}
                 />
