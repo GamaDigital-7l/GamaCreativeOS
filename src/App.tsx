@@ -45,7 +45,8 @@ import ManageGamificationPage from "./pages/ManageGamificationPage";
 import OnlineCatalogPage from "./pages/OnlineCatalogPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import PublicCatalogPage from "./pages/PublicCatalogPage";
-import ManageCustomFieldsPage from "./pages/ManageCustomFieldsPage"; // New import
+import ManageCustomFieldsPage from "./pages/ManageCustomFieldsPage";
+import POSSalesListPage from "./pages/POSSalesListPage"; // New import
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
@@ -86,6 +87,7 @@ const App = () => (
               <Route path="/sales/:id" element={<SaleDetailPage />} />
               <Route path="/sales/:id/edit" element={<EditSalePage />} />
               <Route path="/pos" element={<PointOfSalePage />} />
+              <Route path="/pos/history" element={<POSSalesListPage />} /> {/* New route */}
               <Route path="/financials" element={<FinancialsPage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/new-customer" element={<NewCustomerPage />} />
@@ -110,7 +112,7 @@ const App = () => (
               <Route path="/profile" element={<UserProfilePage />} />
               <Route path="/profile/edit" element={<EditUserProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/settings/custom-fields" element={<ManageCustomFieldsPage />} /> {/* New route */}
+              <Route path="/settings/custom-fields" element={<ManageCustomFieldsPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

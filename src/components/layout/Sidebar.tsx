@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus } from "lucide-react"; // Adicionado ListPlus icon
+import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus, History } from "lucide-react"; // Adicionado History icon
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ const navItems = [
   { href: "/", label: "Início", icon: Home },
   { href: "/service-orders", label: "Ordens de Serviço", icon: Wrench },
   { href: "/sales", label: "Vendas de Aparelhos", icon: ShoppingCart },
-  { href: "/pos", label: "Ponto de Venda", icon: Receipt },
+  { href: "/pos", label: "PDV", icon: Receipt }, // Renomeado para PDV
   { href: "/financials", label: "Financeiro", icon: DollarSign },
   { href: "/customers", label: "Clientes", icon: Users },
   { href: "/devices", label: "Dispositivos", icon: Smartphone },
@@ -20,7 +20,7 @@ const navItems = [
 
 const bottomNavItems = [
   { href: "/gamification/manage", label: "Gerenciar Gamificação", icon: Trophy },
-  { href: "/settings/custom-fields", label: "Campos da OS", icon: ListPlus }, // New item
+  { href: "/settings/custom-fields", label: "Campos da OS", icon: ListPlus },
   { href: "/settings", label: "Configurações", icon: Settings },
   { href: "/profile", label: "Meu Perfil", icon: UserCircle },
 ];
@@ -54,6 +54,11 @@ export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
             {item.label}
           </NavLink>
         ))}
+        {/* Adicionar link para o histórico de vendas PDV aqui, se necessário, ou manter apenas o PDV principal */}
+        <NavLink to="/pos/history" className={navLinkClasses}>
+          <History className="h-4 w-4" />
+          Histórico PDV
+        </NavLink>
       </nav>
       <nav className={cn("mt-auto grid gap-2 text-sm font-medium", isMobile ? "px-2" : "px-2 sm:py-5")}>
         {bottomNavItems.map((item) => (

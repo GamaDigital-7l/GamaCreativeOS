@@ -28,6 +28,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 const serviceOrderStatuses = ["pending", "in_progress", "ready", "completed", "cancelled"];
 
+const clientChecklistOptions = [
+  "Tela", "Bateria", "Conector", "Carcaça", "Touch", "Câmera Frontal",
+  "Câmera Traseira", "Face ID / Biometria", "Conector de Carga",
+  "Botões Volume", "Botão Power", "Rede", "Wi-Fi", "Bluetooth",
+];
+
 const formSchema = z.object({
   issueDescription: z.string().optional(),
   serviceDetails: z.string().optional(),
@@ -44,7 +50,8 @@ const formSchema = z.object({
     cost_at_time: z.number(),
     price_at_time: z.number(),
   })).optional(),
-  customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(), // New field for custom fields
+  clientChecklist: z.array(z.string()).optional(), // New field for client checklist
+  customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(),
 }).superRefine((data, ctx) => {
   // Custom field validation
   if (data.customFields) {
@@ -93,7 +100,7 @@ export function EditServiceOrderForm() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inventoryOptions, setInventoryOptions] = useState<InventoryItemOption[]>([]);
-  const [customFieldDefinitions, setCustomFieldDefinitions] = useState<CustomFieldDefinition[]>([]); // New state for custom field definitions
+  const [customFieldDefinitions, setCustomFieldDefinitions] = useState<CustomFieldDefinition[]>([]);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [serviceOrderData, setServiceOrderData] = useState<any>(null);
 
@@ -103,9 +110,10 @@ export function EditServiceOrderForm() {
       issueDescription: "", serviceDetails: "",
       partsCost: 0, serviceCost: 0, totalAmount: 0, guaranteeTerms: "", warranty_days: 90,
       status: "pending", inventoryItems: [],
-      customFields: {}, // Initialize custom fields as an empty object
+      clientChecklist: [], // Initialize new field
+      customFields: {},
     },
-    context: { customFieldDefinitions }, // Pass custom field definitions to context for validation
+    context: { customFieldDefinitions },
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -175,10 +183,11 @@ export function EditServiceOrderForm() {
           inventoryItems: data.service_order_inventory_items.map((item: any) => ({
             inventory_item_id: item.inventory_item_id,
             name: item.inventory_items?.name || 'Item Removido',
-            quantity_used: item.quantity_used,
             cost_at_time: item.cost_at_time,
             price_at_time: item.price_at_time,
+            quantity_used: item.quantity_used,
           })),
+          clientChecklist: data.client_checklist || [], // Load new field
           customFields: initialCustomFieldValues,
         });
       } catch (err: any) {
@@ -278,6 +287,7 @@ export function EditServiceOrderForm() {
         parts_cost: values.partsCost, service_cost: values.serviceCost, total_amount: values.totalAmount,
         guarantee_terms: values.guaranteeTerms, warranty_days: values.warranty_days,
         status: values.status, updated_at: new Date().toISOString(),
+        client_checklist: values.clientChecklist || null, // Save new field
       }).eq('id', id);
 
       showSuccess("Ordem de Serviço atualizada!");
@@ -346,6 +356,44 @@ export function EditServiceOrderForm() {
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Wrench className="h-6 w-6 text-primary" /> Detalhes do Serviço</h2>
           <FormField control={form.control} name="issueDescription" render={({ field }) => (<FormItem><FormLabel>Defeito Relatado</FormLabel><FormControl><Textarea placeholder="Descreva o problema..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
           <FormField control={form.control} name="serviceDetails" render={({ field }) => (<FormItem><FormLabel>Detalhes do Serviço</FormLabel><FormControl><Textarea placeholder="Descreva o serviço a ser realizado..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
+
+          {/* Client Checklist Section */}
+          <div className="p-4 border rounded-lg space-y-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary" /> Checklist do Cliente</h2>
+            <FormField
+              control={form.control}
+              name="clientChecklist"
+              render={() => (
+                <FormItem>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {clientChecklistOptions.map((item) => (
+                      <FormField
+                        key={item}
+                        control={form.control}
+                        name="clientChecklist"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(item)}
+                                onCheckedChange={(checked) => {
+                                  return checked
+                                    ? field.onChange([...(field.value || []), item])
+                                    : field.onChange(field.value?.filter((value) => value !== item));
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal">{item}</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {/* Dynamic Custom Fields Section */}
           {customFieldDefinitions.length > 0 && (
@@ -538,7 +586,7 @@ export function EditServiceOrderForm() {
                   </TooltipContent>
                 )}
               </Tooltip>
-            </TooltipProvider>
+            </Button>
 
           </div>
         </form>

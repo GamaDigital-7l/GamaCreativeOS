@@ -32,6 +32,7 @@ interface ServiceOrderDetails {
   total_amount?: number;
   guarantee_terms?: string;
   photos?: string[];
+  client_checklist?: string[]; // New field
   customers: { id: string; name: string; phone?: string; address?: string; email?: string; };
   devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; };
   service_order_inventory_items: {
@@ -60,7 +61,7 @@ export function ServiceOrderDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false); // State for delete loading
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (user && id) {
@@ -306,6 +307,18 @@ export function ServiceOrderDetail() {
               </div>
             )}
           </div>
+
+          {/* Client Checklist Display */}
+          {serviceOrder.client_checklist && serviceOrder.client_checklist.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><ListChecks className="h-5 w-5" /> Checklist do Cliente</h3>
+              <ul className="list-disc list-inside ml-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4">
+                {serviceOrder.client_checklist.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Custom Fields Display */}
           {Object.keys(groupedCustomFields).length > 0 && (

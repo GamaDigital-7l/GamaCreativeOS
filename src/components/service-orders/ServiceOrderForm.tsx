@@ -22,6 +22,12 @@ import { VisualChecklist } from "./VisualChecklist";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const clientChecklistOptions = [
+  "Tela", "Bateria", "Conector", "Carcaça", "Touch", "Câmera Frontal",
+  "Câmera Traseira", "Face ID / Biometria", "Conector de Carga",
+  "Botões Volume", "Botão Power", "Rede", "Wi-Fi", "Bluetooth",
+];
+
 const formSchema = z.object({
   customerId: z.string({ required_error: "Selecione um cliente." }),
   deviceSelection: z.enum(["existing", "new"], { required_error: "Selecione uma opção." }),
@@ -31,6 +37,7 @@ const formSchema = z.object({
   newDeviceSerial: z.string().optional(),
   newDevicePassword: z.string().optional(),
   newDeviceChecklist: z.record(z.string()).optional(),
+  clientChecklist: z.array(z.string()).optional(), // New field for client checklist
   issueDescription: z.string().min(10, { message: "A descrição do problema é obrigatória." }),
   serviceDetails: z.string().optional(),
   partsCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
@@ -45,7 +52,7 @@ const formSchema = z.object({
     cost_at_time: z.number(),
     price_at_time: z.number(),
   })).optional(),
-  customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(), // New field for custom fields
+  customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(),
 }).superRefine((data, ctx) => {
   if (data.deviceSelection === 'existing' && !data.deviceId) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selecione um aparelho existente.", path: ["deviceId"] });
@@ -107,7 +114,7 @@ export function ServiceOrderForm() {
   const [customers, setCustomers] = useState<Entity[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const [inventoryOptions, setInventoryOptions] = useState<InventoryItemOption[]>([]);
-  const [customFieldDefinitions, setCustomFieldDefinitions] = useState<CustomFieldDefinition[]>([]); // New state for custom field definitions
+  const [customFieldDefinitions, setCustomFieldDefinitions] = useState<CustomFieldDefinition[]>([]);
   const [newServiceOrderId, setNewServiceOrderId] = useState<string | null>(null);
   const [isNewCustomerOpen, setIsNewCustomerOpen] = useState(false);
 
@@ -116,6 +123,7 @@ export function ServiceOrderForm() {
     defaultValues: { 
       deviceSelection: "existing", 
       newDeviceChecklist: {},
+      clientChecklist: [], // Initialize new field
       serviceDetails: "",
       partsCost: 0,
       serviceCost: 0,
@@ -123,9 +131,9 @@ export function ServiceOrderForm() {
       guaranteeTerms: "",
       warranty_days: 90,
       inventoryItems: [],
-      customFields: {}, // Initialize custom fields as an empty object
+      customFields: {},
     },
-    context: { customFieldDefinitions }, // Pass custom field definitions to context for validation
+    context: { customFieldDefinitions },
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -244,6 +252,7 @@ export function ServiceOrderForm() {
         guarantee_terms: values.guaranteeTerms,
         warranty_days: values.warranty_days,
         status: 'pending',
+        client_checklist: values.clientChecklist || null, // Save new field
       }).select('id').single();
 
       if (osError) throw osError;
@@ -371,10 +380,51 @@ export function ServiceOrderForm() {
             )} />
           </div>
 
+          {/* Client Checklist Section */}
+          <div className="p-4 border rounded-lg space-y-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary" /> 4. Checklist do Cliente</h2>
+            <FormDescription>
+              Marque os itens que o cliente deseja que sejam verificados ou que fazem parte do serviço.
+            </FormDescription>
+            <FormField
+              control={form.control}
+              name="clientChecklist"
+              render={() => (
+                <FormItem>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {clientChecklistOptions.map((item) => (
+                      <FormField
+                        key={item}
+                        control={form.control}
+                        name="clientChecklist"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(item)}
+                                onCheckedChange={(checked) => {
+                                  return checked
+                                    ? field.onChange([...(field.value || []), item])
+                                    : field.onChange(field.value?.filter((value) => value !== item));
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal">{item}</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           {/* Dynamic Custom Fields Section */}
           {customFieldDefinitions.length > 0 && (
             <div className="p-4 border rounded-lg space-y-4">
-              <h2 className="font-semibold text-lg flex items-center gap-2"><List className="h-5 w-5 text-primary" /> 4. Campos Personalizados</h2>
+              <h2 className="font-semibold text-lg flex items-center gap-2"><List className="h-5 w-5 text-primary" /> 5. Campos Personalizados</h2>
               {customFieldDefinitions.map(fieldDef => (
                 <FormField
                   key={fieldDef.id}
@@ -441,7 +491,7 @@ export function ServiceOrderForm() {
           )}
 
           <div className="p-4 border rounded-lg space-y-4">
-            <h2 className="font-semibold text-lg flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" /> {customFieldDefinitions.length > 0 ? "5." : "4."} Detalhes do Serviço e Orçamento</h2>
+            <h2 className="font-semibold text-lg flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" /> {customFieldDefinitions.length > 0 ? "6." : "5."} Detalhes do Serviço e Orçamento</h2>
             <FormField control={form.control} name="serviceDetails" render={({ field }) => (<FormItem><FormLabel>Detalhes do Serviço Proposto</FormLabel><FormControl><Textarea placeholder="Descreva o serviço a ser realizado..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
 
             <h3 className="text-xl font-bold mt-8 mb-4 flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Peças e Materiais Utilizados</h3>

@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, X, Plus, Minus, ShoppingCart, Loader2, DollarSign, User, CreditCard } from 'lucide-react'; // Adicionado CreditCard icon
+import { Search, X, Plus, Minus, ShoppingCart, Loader2, DollarSign, User, CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label'; // Import Label
+import { Label } from '@/components/ui/label';
 
 interface InventoryItem {
   id: string;
@@ -52,7 +52,7 @@ export function PointOfSale() {
       .from('inventory_items')
       .select('id, name, quantity, selling_price')
       .gt('quantity', 0)
-      .eq('user_id', user?.id); // Filter by user_id
+      .eq('user_id', user?.id);
     if (error) showError("Erro ao carregar estoque.");
     else setInventory(data || []);
     setIsLoading(false);
@@ -62,7 +62,7 @@ export function PointOfSale() {
     const { data, error } = await supabase
       .from('customers')
       .select('id, name')
-      .eq('user_id', user?.id) // Filter by user_id
+      .eq('user_id', user?.id)
       .order('name', { ascending: true });
     if (error) showError("Erro ao carregar clientes.");
     else setCustomers(data || []);
@@ -72,7 +72,7 @@ export function PointOfSale() {
     if (!searchTerm) return [];
     return inventory.filter(item =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !cart.some(cartItem => cartItem.id === item.id) // Don't show items already in cart
+      !cart.some(cartItem => cartItem.id === item.id)
     );
   }, [searchTerm, inventory, cart]);
 
@@ -115,7 +115,7 @@ export function PointOfSale() {
         .from('pos_sales')
         .insert({
           user_id: user.id,
-          customer_id: selectedCustomerId, // Include customer_id
+          customer_id: selectedCustomerId,
           total_amount: total,
           payment_method: paymentMethod,
         })
@@ -139,7 +139,7 @@ export function PointOfSale() {
           .from('inventory_items')
           .update({ quantity: item.quantity - item.cartQuantity })
           .eq('id', item.id)
-          .eq('user_id', user.id) // Ensure user can only update their own inventory
+          .eq('user_id', user.id)
       );
       await Promise.all(stockUpdates);
 
@@ -164,9 +164,9 @@ export function PointOfSale() {
       }
       
       setCart([]);
-      setSelectedCustomerId(undefined); // Clear selected customer
+      setSelectedCustomerId(undefined);
       setIsFinalizeDialogOpen(false);
-      fetchInventory(); // Refresh inventory
+      fetchInventory();
     } catch (error: any) {
       showError(`Erro ao finalizar venda: ${error.message}`);
     } finally {
@@ -260,7 +260,7 @@ export function PointOfSale() {
                         <div className="text-3xl font-bold text-center text-primary">Total: R$ {total.toFixed(2)}</div>
                         
                         <div>
-                          <Label htmlFor="customer-select" className="flex items-center gap-2 mb-2"><User className="h-4 w-4" /> Cliente <span className="text-red-500">*</span></Label> {/* Added mandatory indicator */}
+                          <Label htmlFor="customer-select" className="flex items-center gap-2 mb-2"><User className="h-4 w-4" /> Cliente <span className="text-red-500">*</span></Label>
                           <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                             <SelectTrigger id="customer-select">
                               <SelectValue placeholder="Selecione um cliente" />

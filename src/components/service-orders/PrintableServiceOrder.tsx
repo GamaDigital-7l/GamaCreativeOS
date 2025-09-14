@@ -22,6 +22,7 @@ interface PrintableData {
     guarantee_terms?: string;
     customer_signature?: string;
     approved_at?: string;
+    client_checklist?: string[]; // New field
   };
   customer: {
     name: string;
@@ -166,6 +167,20 @@ export function PrintableServiceOrder() {
     );
   };
 
+  const renderClientChecklist = () => {
+    if (!serviceOrder.client_checklist || serviceOrder.client_checklist.length === 0) return null;
+    return (
+      <section className="mt-4">
+        <h2 className="text-lg font-semibold border-b pb-1 mb-2">Checklist do Cliente</h2>
+        <ul className="list-disc list-inside ml-4 grid grid-cols-2 gap-x-4 text-sm">
+          {serviceOrder.client_checklist.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      </section>
+    );
+  };
+
   const renderDefaultTemplate = () => (
     <div className="max-w-4xl mx-auto p-8 space-y-6 border rounded-lg bg-white text-gray-800">
       <header className="flex justify-between items-start pb-4 border-b border-gray-300">
@@ -212,6 +227,7 @@ export function PrintableServiceOrder() {
         </div>
       </section>
 
+      {renderClientChecklist()} {/* Render client checklist here */}
       {renderCustomFields()} {/* Render custom fields here */}
 
       <section>
@@ -273,7 +289,7 @@ export function PrintableServiceOrder() {
     <div className="max-w-2xl mx-auto p-6 space-y-4 border rounded-lg bg-white text-gray-800 text-sm">
       <header className="flex justify-between items-start pb-3 border-b border-gray-300">
         <div>
-          <h1 className="text-xl font-bold">Ordem de Serviço</h1>
+          <h1 className="xl font-bold">Ordem de Serviço</h1>
           <p>ID: {serviceOrder.id.substring(0, 8)}</p>
         </div>
         <div className="text-right">
@@ -295,6 +311,7 @@ export function PrintableServiceOrder() {
         <p>Defeito: {device.defect_description}</p>
       </section>
 
+      {renderClientChecklist()} {/* Render client checklist here */}
       {renderCustomFields()} {/* Render custom fields here */}
 
       <section>
@@ -381,6 +398,7 @@ export function PrintableServiceOrder() {
         </div>
       </section>
 
+      {renderClientChecklist()} {/* Render client checklist here */}
       {renderCustomFields()} {/* Render custom fields here */}
 
       <section className="text-md">
