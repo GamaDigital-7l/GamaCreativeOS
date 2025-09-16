@@ -9,6 +9,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Loader2, PlusCircle, Building, User, Phone, Mail, MapPin } from "lucide-react"; // Adicionado User, Phone, Mail, MapPin icons
+import { useSession } from "@/integrations/supabase/SessionContext"; // Import useSession
 
 const formSchema = z.object({
   name: z.string().min(2, "Nome é obrigatório."),
@@ -20,6 +21,7 @@ const formSchema = z.object({
 
 export function NewSupplierForm() {
   const navigate = useNavigate();
+  const { user } = useSession(); // Use o hook useSession para obter o usuário
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -27,9 +29,17 @@ export function NewSupplierForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) {
+      showError("Você precisa estar logado para criar um fornecedor.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('suppliers').insert(values);
+      const { error } = await supabase.from('suppliers').insert({
+        ...values,
+        user_id: user.id, // Adiciona o user_id do usuário logado
+      });
       if (error) throw error;
       showSuccess("Fornecedor criado com sucesso!");
       navigate('/suppliers');
