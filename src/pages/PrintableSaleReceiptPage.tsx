@@ -1,11 +1,11 @@
 import { PrintableSaleReceipt } from "@/components/sales/PrintableSaleReceipt";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 
 const PrintableSaleReceiptPage = () => {
   return (
     <div className="bg-white">
       <PrintableSaleReceipt />
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

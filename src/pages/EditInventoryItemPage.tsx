@@ -1,5 +1,5 @@
 import { EditInventoryItemForm } from "@/components/inventory/EditInventoryItemForm";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, Package } from "lucide-react"; // Adicionado Settings, Package icons
@@ -24,7 +24,7 @@ const EditInventoryItemPage = () => {
           <EditInventoryItemForm />
         </CardContent>
       </Card>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

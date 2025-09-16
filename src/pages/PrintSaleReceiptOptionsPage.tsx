@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from '@/components/ui/card';
-import { GamaCreative } from '@/components/gama-creative';
+import { GamaLogo } from '@/components/GamaLogo'; // Updated import
 
 const PrintSaleReceiptOptionsPage = () => {
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ const PrintSaleReceiptOptionsPage = () => {
       <div className="hidden print:block">
         <PrintableSaleReceipt printMode={printMode} paperFormat={paperFormat} />
       </div>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

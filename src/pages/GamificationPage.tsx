@@ -1,11 +1,11 @@
 import { GamificationDashboard } from "@/components/gamification/GamificationDashboard";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 
 const GamificationPage = () => {
   return (
     <div className="p-4 sm:p-0">
       <GamificationDashboard />
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

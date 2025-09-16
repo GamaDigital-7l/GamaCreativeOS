@@ -1,5 +1,5 @@
 import { PurchaseRequestList } from "@/components/purchase-requests/PurchaseRequestList";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ClipboardList } from "lucide-react";
@@ -23,7 +23,7 @@ const PurchaseRequestsPage = () => {
           <PurchaseRequestList />
         </CardContent>
       </Card>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

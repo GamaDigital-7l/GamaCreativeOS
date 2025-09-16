@@ -1,7 +1,7 @@
 import { FinancialLedger } from "@/components/financials/FinancialLedger";
 import { CashRegisterManagement } from "@/components/financials/CashRegisterManagement"; // New import
 import { CashRegisterReports } from "@/components/financials/CashRegisterReports"; // New import
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, DollarSign } from "lucide-react";
@@ -33,7 +33,7 @@ const FinancialsPage = () => {
           <CashRegisterReports />
         </CardContent>
       </Card>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { InventoryList } from "@/components/inventory/InventoryList";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package } from "lucide-react"; // Adicionado Package icon
@@ -23,7 +23,7 @@ const InventoryPage = () => {
           <InventoryList />
         </CardContent>
       </Card>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

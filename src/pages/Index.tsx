@@ -6,7 +6,7 @@ import { SalesOverviewWidget } from "@/components/dashboard/SalesOverviewWidget"
 import { WarrantyOverviewWidget } from "@/components/dashboard/WarrantyOverviewWidget";
 import { AverageTicketWidget } from "@/components/dashboard/AverageTicketWidget";
 import { CommonServicesWidget } from "@/components/dashboard/CommonServicesWidget";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -60,7 +60,7 @@ const Index = () => {
         <ServiceOrderSummary />
       </div>
       <div className="mt-auto pt-12">
-        <GamaCreative />
+        <GamaLogo /> {/* Using the new GamaLogo component */}
       </div>
     </div>
   );

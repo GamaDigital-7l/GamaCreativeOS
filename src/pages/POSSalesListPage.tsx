@@ -1,5 +1,5 @@
 import { POSSalesList } from "@/components/pos/POSSalesList";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Receipt, PlusCircle } from "lucide-react";
@@ -26,7 +26,7 @@ const POSSalesListPage = () => {
           <POSSalesList />
         </CardContent>
       </Card>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

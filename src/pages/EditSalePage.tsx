@@ -1,5 +1,5 @@
 import { EditSaleForm } from "@/components/sales/EditSaleForm";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, ShoppingCart } from "lucide-react"; // Adicionado Settings, ShoppingCart icons
@@ -24,7 +24,7 @@ const EditSalePage = () => {
           <EditSaleForm />
         </CardContent>
       </Card>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

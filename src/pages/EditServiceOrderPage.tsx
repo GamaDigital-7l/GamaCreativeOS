@@ -1,5 +1,5 @@
 import { EditServiceOrderForm } from "@/components/service-orders/EditServiceOrderForm";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, Wrench } from "lucide-react"; // Adicionado Settings, Wrench icons
@@ -24,7 +24,7 @@ const EditServiceOrderPage = () => {
           <EditServiceOrderForm />
         </CardContent>
       </Card>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

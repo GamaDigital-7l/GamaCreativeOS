@@ -1,5 +1,5 @@
 import { CustomerList } from "@/components/customers/CustomerList";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users } from "lucide-react"; // Adicionado Users icon
@@ -23,7 +23,7 @@ const CustomersPage = () => {
           <CustomerList />
         </CardContent>
       </Card>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

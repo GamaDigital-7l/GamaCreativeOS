@@ -1,5 +1,5 @@
 import { NewCustomerForm } from "@/components/customers/NewCustomerForm";
-import { GamaCreative } from "@/components/gama-creative";
+import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserPlus } from "lucide-react"; // Adicionado UserPlus icon
@@ -23,7 +23,7 @@ const NewCustomerPage = () => {
           <NewCustomerForm />
         </CardContent>
       </Card>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

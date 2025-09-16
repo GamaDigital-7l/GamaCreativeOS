@@ -1,7 +1,7 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
-import { GamaCreative } from '@/components/gama-creative';
+import { GamaLogo } from '@/components/GamaLogo'; // Updated import
 
 const Login = () => {
   return (
@@ -32,7 +32,7 @@ const Login = () => {
           redirectTo={window.location.origin} // Redirect to home after login
         />
       </div>
-      <GamaCreative />
+      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };
