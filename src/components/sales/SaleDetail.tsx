@@ -136,7 +136,7 @@ export function SaleDetail() {
           </div>
           <div className="flex flex-wrap gap-2 justify-end">
             <Button variant="outline" size="sm" asChild>
-              <Link to={`/sales/${sale.id}/print`} target="_blank">
+              <Link to={`/sales/${sale.id}/print-options`} target="_blank"> {/* Updated link */}
                 <Printer className="h-4 w-4 mr-2" /> Imprimir Recibo
               </Link>
             </Button>
