@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import *s z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,29 +15,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
-import { Loader2, Save, PlusCircle, Package, Check, ChevronsUpDown, FileText } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2, Save, PlusCircle, ClipboardList, FileText } from "lucide-react";
 
 const formSchema = z.object({
-  inventory_item_id: z.string().uuid({ message: "Selecione um item de estoque válido." }),
+  inventory_item_id: z.string().uuid().optional().nullable(), // Agora opcional
   requested_quantity: z.preprocess(
-    (val) => Number(val),
-    z.number().int().min(1, "A quantidade deve ser pelo menos 1.")
+    (val) => (val === "" ? undefined : Number(val)),
+    z.number().int().min(1, "A quantidade deve ser pelo menos 1.").optional().nullable() // Agora opcional
   ),
   status: z.enum(["pending", "ordered", "received", "cancelled"], { required_error: "Selecione um status." }),
-  notes: z.string().optional(),
+  notes: z.string().min(1, "A descrição do pedido é obrigatória."), // Tornando notes o campo principal e obrigatório
 });
-
-interface InventoryItemOption {
-  id: string;
-  name: string;
-  quantity: number; // Current stock quantity
-}
 
 interface PurchaseRequestFormProps {
   requestId?: string; // Optional for editing existing requests
@@ -48,41 +39,16 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
   const { user } = useSession();
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [inventoryOptions, setInventoryOptions] = useState<InventoryItemOption[]>([]);
-  const [isLoadingInventory, setIsLoadingInventory] = useState(true);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      inventory_item_id: "",
-      requested_quantity: 1,
+      inventory_item_id: null, // Definir como null por padrão
+      requested_quantity: null, // Definir como null por padrão
       status: "pending",
       notes: "",
     },
   });
-
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchInventory = async () => {
-      setIsLoadingInventory(true);
-      try {
-        const { data, error } = await supabase
-          .from('inventory_items')
-          .select('id, name, quantity')
-          .eq('user_id', user.id)
-          .order('name', { ascending: true });
-        if (error) throw error;
-        setInventoryOptions(data || []);
-      } catch (error: any) {
-        showError(`Erro ao carregar itens de estoque: ${error.message}`);
-      } finally {
-        setIsLoadingInventory(false);
-      }
-    };
-
-    fetchInventory();
-  }, [user]);
 
   useEffect(() => {
     if (requestId && user) {
@@ -128,72 +94,22 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
     }
   }
 
-  if (isLoadingData || isLoadingInventory) {
+  if (isLoadingData) {
     return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><PlusCircle className="h-6 w-6 text-primary" /> {requestId ? "Editar Pedido de Compra" : "Novo Pedido de Compra"}</h2>
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><ClipboardList className="h-6 w-6 text-primary" /> {requestId ? "Editar Pedido de Compra" : "Novo Pedido de Compra"}</h2>
         
-        <FormField control={form.control} name="inventory_item_id" render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel className="flex items-center gap-2"><Package className="h-4 w-4" /> Item de Estoque</FormLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
-                  >
-                    {field.value
-                      ? inventoryOptions.find((option) => option.id === field.value)?.name
-                      : "Selecione um item"}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                <Command>
-                  <CommandInput placeholder="Buscar item..." />
-                  <CommandList>
-                    <CommandEmpty>Nenhum item encontrado.</CommandEmpty>
-                    <CommandGroup>
-                      {inventoryOptions.map((option) => (
-                        <CommandItem
-                          value={option.name}
-                          key={option.id}
-                          onSelect={() => {
-                            field.onChange(option.id);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              option.id === field.value ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {option.name} (Qtd atual: {option.quantity})
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            <FormDescription>
-              Selecione o item do seu estoque que precisa ser pedido.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <FormField control={form.control} name="requested_quantity" render={({ field }) => (
+        <FormField control={form.control} name="notes" render={({ field }) => (
           <FormItem>
-            <FormLabel>Quantidade Solicitada</FormLabel>
-            <FormControl><Input type="number" min="1" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
+            <FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Descrição do Pedido</FormLabel>
+            <FormControl><Textarea placeholder="Anote os detalhes do pedido aqui..." className="resize-y min-h-[120px]" {...field} /></FormControl>
+            <FormDescription>
+              Use este campo para registrar livremente o que precisa ser pedido.
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )} />
@@ -210,14 +126,6 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
                 <SelectItem value="cancelled">Cancelado</SelectItem>
               </SelectContent>
             </Select>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <FormField control={form.control} name="notes" render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Observações (Opcional)</FormLabel>
-            <FormControl><Textarea placeholder="Detalhes adicionais sobre o pedido..." {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />

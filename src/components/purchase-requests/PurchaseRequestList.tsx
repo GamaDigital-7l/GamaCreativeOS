@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, Plus, Loader2, Trash2, Edit, ClipboardList, Package, CalendarDays } from 'lucide-react';
+import { Search, X, Plus, Loader2, Trash2, Edit, ClipboardList, FileText, CalendarDays } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -35,9 +35,9 @@ interface PurchaseRequest {
   id: string;
   created_at: string;
   updated_at: string;
-  requested_quantity: number;
+  requested_quantity: number | null; // Pode ser nulo agora
   status: 'pending' | 'ordered' | 'received' | 'cancelled';
-  notes?: string;
+  notes?: string; // Campo principal
   inventory_items: {
     id: string;
     name: string;
@@ -74,8 +74,9 @@ export function PurchaseRequestList() {
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
+        // Buscar por notas ou nome/sku do item (se existir)
         query = query.or(
-          `inventory_items.name.ilike.%${searchTerm}%,inventory_items.sku.ilike.%${searchTerm}%,notes.ilike.%${searchTerm}%`
+          `notes.ilike.%${searchTerm}%,inventory_items.name.ilike.%${searchTerm}%,inventory_items.sku.ilike.%${searchTerm}%`
         );
       }
 
@@ -165,7 +166,7 @@ export function PurchaseRequestList() {
         <div className="relative flex-grow mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por item, SKU ou notas..."
+            placeholder="Buscar por descrição ou item..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 pr-8"
@@ -191,9 +192,8 @@ export function PurchaseRequestList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Qtd. Solicitada</TableHead>
-                  <TableHead>Estoque Atual</TableHead>
+                  <TableHead>Descrição do Pedido</TableHead>
+                  <TableHead>Item (Qtd.)</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Última Atualização</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -202,13 +202,17 @@ export function PurchaseRequestList() {
               <TableBody>
                 {requests.map((request) => (
                   <TableRow key={request.id}>
-                    <TableCell className="font-medium flex items-center gap-2">
-                      <Package className="h-4 w-4 text-muted-foreground" />
-                      {request.inventory_items?.name || 'Item Removido'}
-                      {request.inventory_items?.sku && <span className="text-xs text-muted-foreground">({request.inventory_items.sku})</span>}
+                    <TableCell className="font-medium max-w-[300px] truncate">{request.notes || 'N/A'}</TableCell>
+                    <TableCell>
+                      {request.inventory_items?.name ? (
+                        <div className="flex items-center gap-1">
+                          {request.inventory_items.name} ({request.requested_quantity ?? 'N/A'})
+                          {request.inventory_items.sku && <span className="text-xs text-muted-foreground">({request.inventory_items.sku})</span>}
+                        </div>
+                      ) : (
+                        'N/A'
+                      )}
                     </TableCell>
-                    <TableCell>{request.requested_quantity}</TableCell>
-                    <TableCell>{request.inventory_items?.quantity ?? 'N/A'}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(request.status)}>
                         {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
