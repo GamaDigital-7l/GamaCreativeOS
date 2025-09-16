@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; // Added CardDescription
 import { Loader2, ArrowUpCircle, ArrowDownCircle, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { ptBR } from 'date-fns/locale'; // Import ptBR locale
 
 export function FinancialSummary() {
   const { user } = useSession();
@@ -50,47 +51,56 @@ export function FinancialSummary() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-24">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
+      <Card className="p-6 shadow-lg">
+        <CardHeader className="p-0 mb-4">
+          <CardTitle className="text-3xl font-bold tracking-tight">Resumo Financeiro do Mês</CardTitle>
+          <CardDescription className="text-muted-foreground">Visão geral das finanças no mês atual.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center items-center h-24 p-0">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold tracking-tight mb-4">Resumo Financeiro do Mês</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
+    <Card className="p-6 shadow-lg">
+      <CardHeader className="p-0 mb-6">
+        <CardTitle className="text-3xl font-bold tracking-tight">Resumo Financeiro do Mês</CardTitle>
+        <CardDescription className="text-muted-foreground">Visão geral das finanças no mês atual.</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0 grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <Card className="border-l-4 border-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Entradas</CardTitle>
             <ArrowUpCircle className="h-5 w-5 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-500">R$ {summary.income.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Total de receitas no mês atual</p>
+            <p className="text-xs text-muted-foreground">Total de receitas em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-red-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Saídas</CardTitle>
             <ArrowDownCircle className="h-5 w-5 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-red-500">R$ {summary.expense.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Total de despesas no mês atual</p>
+            <p className="text-xs text-muted-foreground">Total de despesas em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className={`border-l-4 ${balance >= 0 ? 'border-blue-500' : 'border-red-500'}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Saldo</CardTitle>
             <DollarSign className={`h-5 w-5 ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`} />
           </CardHeader>
           <CardContent>
             <div className={`text-3xl font-bold ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`}>R$ {balance.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Saldo do mês atual</p>
+            <p className="text-xs text-muted-foreground">Saldo atual em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
           </CardContent>
         </Card>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

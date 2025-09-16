@@ -2,8 +2,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; // Added CardDescription
 import { Loader2, Clock, Wrench, CheckCircle, Ban, ListTodo } from 'lucide-react';
+import { format } from 'date-fns'; // Import format for date formatting
+import { ptBR } from 'date-fns/locale'; // Import ptBR locale
 
 interface ServiceOrderSummaryData {
   pending: number;
@@ -62,9 +64,15 @@ export function ServiceOrderSummary() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <Card className="p-6 shadow-lg">
+        <CardHeader className="p-0 mb-4">
+          <CardTitle className="text-3xl font-bold tracking-tight">Resumo de Ordens de Serviço</CardTitle>
+          <CardDescription className="text-muted-foreground">Visão geral do status das suas ordens de serviço.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center items-center h-48 p-0">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
     );
   }
 
@@ -81,9 +89,12 @@ export function ServiceOrderSummary() {
   ];
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold tracking-tight mb-4">Resumo de Ordens de Serviço</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <Card className="p-6 shadow-lg">
+      <CardHeader className="p-0 mb-6">
+        <CardTitle className="text-3xl font-bold tracking-tight">Resumo de Ordens de Serviço</CardTitle>
+        <CardDescription className="text-muted-foreground">Visão geral do status das suas ordens de serviço.</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <Card className="col-span-full sm:col-span-2 lg:col-span-3 xl:col-span-1 bg-primary/10 border-primary/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Ordens</CardTitle>
@@ -95,7 +106,7 @@ export function ServiceOrderSummary() {
           </CardContent>
         </Card>
         {summaryItems.map(item => (
-          <Card key={item.title}>
+          <Card key={item.title} className={`border-l-4 ${item.color.replace('text-', 'border-')}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
               <item.icon className={`h-5 w-5 ${item.color}`} />
@@ -106,7 +117,7 @@ export function ServiceOrderSummary() {
             </CardContent>
           </Card>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

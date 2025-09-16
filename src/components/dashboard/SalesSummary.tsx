@@ -4,6 +4,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ShoppingCart, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { ptBR } from 'date-fns/locale'; // Import ptBR locale
 
 export function SalesSummary() {
   const { user, isLoading: isSessionLoading } = useSession();
@@ -49,21 +50,21 @@ export function SalesSummary() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-24">
+      <Card className="h-full flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
+      </Card>
     );
   }
 
   return (
-    <Card>
+    <Card className="border-l-4 border-blue-500">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Vendas de Aparelhos (Mês)</CardTitle>
+        <CardTitle className="text-sm font-medium">Vendas de Aparelhos</CardTitle>
         <ShoppingCart className="h-5 w-5 text-blue-500" />
       </CardHeader>
       <CardContent>
         <div className="text-3xl font-bold text-blue-500">{totalSales}</div>
-        <p className="text-xs text-muted-foreground">Total de vendas este mês</p>
+        <p className="text-xs text-muted-foreground">Total de vendas em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
         <div className="text-xl font-bold text-blue-500 mt-2">R$ {totalAmount.toFixed(2)}</div>
         <p className="text-xs text-muted-foreground">Valor total vendido</p>
       </CardContent>

@@ -8,7 +8,7 @@ const Login = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 p-4">
       <div className="w-full max-w-md bg-card text-card-foreground p-8 rounded-lg shadow-2xl border border-border">
         <h1 className="text-4xl font-extrabold text-center text-primary mb-8 drop-shadow-md">
-          Service OS Pro
+          Gama Creative OS
         </h1>
         <Auth
           supabaseClient={supabase}

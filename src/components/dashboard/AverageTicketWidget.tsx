@@ -114,19 +114,16 @@ export function AverageTicketWidget() {
 
   if (isLoading) {
     return (
-      <Card className="h-full">
-        <CardHeader><CardTitle>Ticket Médio de Clientes</CardTitle></CardHeader>
-        <CardContent className="flex justify-center items-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </CardContent>
+      <Card className="h-full flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </Card>
     );
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col border-l-4 border-yellow-500">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium">Ticket Médio de Clientes</CardTitle>
+        <CardTitle className="text-sm font-medium">Ticket Médio de Clientes</CardTitle>
         <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
           <SelectTrigger className="w-[150px] h-8 text-sm">
             <SelectValue placeholder="Mês" />

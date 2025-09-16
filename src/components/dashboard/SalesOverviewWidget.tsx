@@ -89,19 +89,16 @@ export function SalesOverviewWidget() {
 
   if (isLoading) {
     return (
-      <Card className="h-full">
-        <CardHeader><CardTitle>Vendas de Aparelhos</CardTitle></CardHeader>
-        <CardContent className="flex justify-center items-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </CardContent>
+      <Card className="h-full flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </Card>
     );
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col border-l-4 border-indigo-500">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium">Vendas de Aparelhos</CardTitle>
+        <CardTitle className="text-sm font-medium">Visão Geral de Vendas</CardTitle>
         <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
           <SelectTrigger className="w-[150px] h-8 text-sm">
             <SelectValue placeholder="Mês" />
@@ -128,7 +125,7 @@ export function SalesOverviewWidget() {
             <p className={`text-2xl font-bold ${((summary?.totalProfit || 0) >= 0) ? 'text-blue-500' : 'text-red-500'}`}>R$ {(summary?.totalProfit || 0).toFixed(2)}</p>
           </div>
         </div>
-        {summary && summary.topModels.length > 0 && (
+        {summary && summary.topModels.length > 0 ? (
           <div>
             <p className="text-sm font-medium mb-2">Modelos Mais Vendidos:</p>
             <ul className="space-y-1 text-sm text-muted-foreground">
@@ -140,8 +137,7 @@ export function SalesOverviewWidget() {
               ))}
             </ul>
           </div>
-        )}
-        {summary?.totalSold === 0 && (
+        ) : (
           <p className="text-center text-muted-foreground text-sm mt-4">Nenhuma venda registrada neste mês.</p>
         )}
       </CardContent>

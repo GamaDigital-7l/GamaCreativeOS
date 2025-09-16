@@ -1,6 +1,6 @@
 export const GamaCreative = () => {
   return (
-    <div className="p-4 text-center">
+    <div className="p-4 text-center print:hidden">
       <a
         href="https://www.gama.com.br/"
         target="_blank"

@@ -106,19 +106,16 @@ export function WarrantyOverviewWidget() {
 
   if (isLoading) {
     return (
-      <Card className="h-full">
-        <CardHeader><CardTitle>Garantias de Aparelhos</CardTitle></CardHeader>
-        <CardContent className="flex justify-center items-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </CardContent>
+      <Card className="h-full flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </Card>
     );
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col border-l-4 border-green-600">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium">Garantias de Aparelhos</CardTitle>
+        <CardTitle className="text-sm font-medium">Garantias de Aparelhos</CardTitle>
         <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
           <SelectTrigger className="w-[150px] h-8 text-sm">
             <SelectValue placeholder="Mês" />
@@ -145,7 +142,7 @@ export function WarrantyOverviewWidget() {
             <p className="text-2xl font-bold text-red-500">{summary?.expired || 0}</p>
           </div>
         </div>
-        {summary && summary.expiringSales.length > 0 && (
+        {summary && summary.expiringSales.length > 0 ? (
           <div>
             <p className="text-sm font-medium mb-2">Próximas a Vencer:</p>
             <ul className="space-y-1 text-sm text-muted-foreground">
@@ -157,8 +154,7 @@ export function WarrantyOverviewWidget() {
               ))}
             </ul>
           </div>
-        )}
-        {summary?.totalActive === 0 && summary?.expired === 0 && (
+        ) : (
           <p className="text-center text-muted-foreground text-sm mt-4">Nenhuma garantia registrada neste mês.</p>
         )}
       </CardContent>
