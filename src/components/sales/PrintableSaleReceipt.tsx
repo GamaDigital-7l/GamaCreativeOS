@@ -115,7 +115,7 @@ export function PrintableSaleReceipt({ printMode, paperFormat }: PrintableSaleRe
   const renderReceiptContent = (copyType: 'client' | 'store' | 'single', isA5: boolean = false) => (
     <div className={cn(
       "p-6 space-y-6 bg-white text-gray-800",
-      isA5 ? "max-w-md mx-auto border rounded-lg text-sm" : "max-w-2xl mx-auto border-2 border-black text-base"
+      isA5 ? "max-w-md mx-auto border rounded-lg text-sm print-a5-container" : "max-w-2xl mx-auto border-2 border-black text-base print-a4-container"
     )}>
       {renderCompanyHeader(copyType, false)}
 

@@ -60,3 +60,95 @@
     background-size: 100px 100px;
   }
 }
+
+/* Print-specific styles */
+@media print {
+  /* General print reset */
+  body {
+    margin: 0;
+    padding: 0;
+    background: none;
+    color: black; /* Ensure text is black for printing */
+  }
+
+  /* Hide elements not meant for print */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Force page breaks for multiple copies */
+  .print\:break-after-page {
+    page-break-after: always;
+  }
+
+  /* A4 Page Definition */
+  @page {
+    size: A4;
+    margin: 1cm; /* Default margin for A4 */
+  }
+
+  .print-a4-container {
+    width: 100%; /* Take full width of the page */
+    max-width: none; /* Override max-width from screen styles */
+    margin: 0; /* Remove auto margins */
+    border: none !important; /* Remove borders for clean print */
+    box-shadow: none !important; /* Remove shadows */
+    padding: 0; /* Adjust padding as needed for print */
+    font-size: 12pt; /* Standard font size for A4 */
+  }
+
+  /* A5 Page Definition */
+  @page A5-portrait {
+    size: A5 portrait;
+    margin: 1cm;
+  }
+
+  .print-a5-container {
+    width: 100%; /* Take full width of the page */
+    max-width: none; /* Override max-width from screen styles */
+    margin: 0; /* Remove auto margins */
+    border: none !important; /* Remove borders for clean print */
+    box-shadow: none !important; /* Remove shadows */
+    padding: 0; /* Adjust padding as needed for print */
+    font-size: 10pt; /* Slightly smaller font for A5 */
+  }
+
+  /* Receipt (Thermal) Page Definition */
+  @page receipt-format {
+    size: 80mm auto; /* 80mm width, auto height */
+    margin: 0.5cm; /* Smaller margins for receipt */
+  }
+
+  /* Apply specific styles for receipt format */
+  .w-\[80mm\] { /* Target the receipt container */
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important; /* Center on the thermal paper */
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0.2cm !important;
+    font-size: 8pt !important; /* Smaller font for receipt */
+  }
+
+  /* Prevent content from breaking inside sections */
+  section, footer, header, table, tbody, tr {
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure images scale correctly */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Adjust spacing for print */
+  .space-y-6 > *:not(:first-child) {
+    margin-top: 0.5em !important; /* Reduce vertical spacing */
+  }
+  .space-y-4 > *:not(:first-child) {
+    margin-top: 0.4em !important;
+  }
+  .space-y-2 > *:not(:first-child) {
+    margin-top: 0.2em !important;
+  }
+}
