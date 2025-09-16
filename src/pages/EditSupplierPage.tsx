@@ -1,5 +1,5 @@
 import { EditSupplierForm } from "@/components/suppliers/EditSupplierForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Building, Settings } from "lucide-react";
@@ -24,7 +24,7 @@ const EditSupplierPage = () => {
           <EditSupplierForm />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };
