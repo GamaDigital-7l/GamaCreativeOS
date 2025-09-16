@@ -1,7 +1,7 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import { GamaCreative } from '@/components/gama-creative';
 
 const Login = () => {
   return (
@@ -32,7 +32,7 @@ const Login = () => {
           redirectTo={window.location.origin} // Redirect to home after login
         />
       </div>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

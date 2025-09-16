@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,15 +29,8 @@ export function WarrantyOverviewWidget() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  useEffect(() => {
-    if (!isSessionLoading && user) {
-      fetchWarrantySummary(currentMonth);
-    } else if (!isSessionLoading && !user) {
-      setIsLoading(false);
-    }
-  }, [user, isSessionLoading, currentMonth]);
-
-  const fetchWarrantySummary = async (date: Date) => {
+  const fetchWarrantySummary = useCallback(async (date: Date) => {
+    if (!user) return;
     setIsLoading(true);
     try {
       const startDate = format(startOfMonth(date), 'yyyy-MM-dd');
@@ -48,7 +41,7 @@ export function WarrantyOverviewWidget() {
         .select('id, created_at, warranty_days, device_brand, device_model')
         .gte('created_at', startDate)
         .lte('created_at', endDate)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .not('warranty_days', 'is', null)
         .gt('warranty_days', 0); // Only sales with active warranty periods
 
@@ -84,7 +77,15 @@ export function WarrantyOverviewWidget() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchWarrantySummary(currentMonth);
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+    }
+  }, [user, isSessionLoading, currentMonth, fetchWarrantySummary]);
 
   const handleMonthChange = (value: string) => {
     const [year, month] = value.split('-').map(Number);

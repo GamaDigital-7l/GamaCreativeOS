@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import * as LucideIcons from 'lucide-react'; // Para ícones de conquistas
+import { GamaCreative } from '@/components/gama-creative';
 
 interface Goal {
   id: string;
@@ -276,6 +277,7 @@ export default function ManageGamificationPage() {
           <AchievementForm achievementId={editingAchievementId} onSuccess={() => { setIsAchievementFormOpen(false); fetchGamificationData(); }} />
         </DialogContent>
       </Dialog>
+      <GamaCreative />
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import { GamaCreative } from '@/components/gama-creative';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface InventoryItem {
@@ -191,8 +191,7 @@ export default function OnlineCatalogPage() {
           )}
         </CardContent>
       </Card>
-      <MadeWithDyad />
-
+      <GamaCreative />
       <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

@@ -1,5 +1,5 @@
 import { PointOfSale } from "@/components/pos/PointOfSale";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Receipt, History } from "lucide-react";
@@ -29,7 +29,7 @@ const PointOfSalePage = () => {
           <PointOfSale />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

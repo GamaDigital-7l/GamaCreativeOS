@@ -1,5 +1,5 @@
 import { NewSupplierForm } from "@/components/suppliers/NewSupplierForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PlusCircle, Building } from "lucide-react"; // Adicionado PlusCircle, Building icons
@@ -23,7 +23,7 @@ const NewSupplierPage = () => {
           <NewSupplierForm />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { CustomerList } from "@/components/customers/CustomerList";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users } from "lucide-react"; // Adicionado Users icon
@@ -23,7 +23,7 @@ const CustomersPage = () => {
           <CustomerList />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

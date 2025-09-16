@@ -1,5 +1,5 @@
 import { ServiceOrderForm } from "@/components/service-orders/ServiceOrderForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PlusCircle, Wrench } from "lucide-react";
@@ -28,7 +28,7 @@ const NewServiceOrderPage = () => {
           <ServiceOrderForm />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

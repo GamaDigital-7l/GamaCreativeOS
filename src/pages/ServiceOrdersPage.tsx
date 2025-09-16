@@ -1,5 +1,5 @@
 import { ServiceOrderList } from "@/components/service-orders/ServiceOrderList";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Wrench } from "lucide-react"; // Adicionado Wrench icon
@@ -23,7 +23,7 @@ const ServiceOrdersPage = () => {
           <ServiceOrderList />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

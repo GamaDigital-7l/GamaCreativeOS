@@ -1,5 +1,5 @@
 import { EditSaleForm } from "@/components/sales/EditSaleForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, ShoppingCart } from "lucide-react"; // Adicionado Settings, ShoppingCart icons
@@ -24,7 +24,7 @@ const EditSalePage = () => {
           <EditSaleForm />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

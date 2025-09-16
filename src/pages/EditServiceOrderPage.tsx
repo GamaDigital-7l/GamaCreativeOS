@@ -1,5 +1,5 @@
 import { EditServiceOrderForm } from "@/components/service-orders/EditServiceOrderForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, Wrench } from "lucide-react"; // Adicionado Settings, Wrench icons
@@ -24,7 +24,7 @@ const EditServiceOrderPage = () => {
           <EditServiceOrderForm />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

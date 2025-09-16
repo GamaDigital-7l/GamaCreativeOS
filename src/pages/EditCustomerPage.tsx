@@ -1,5 +1,5 @@
 import { EditCustomerForm } from "@/components/customers/EditCustomerForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserCog } from "lucide-react"; // Adicionado UserCog icon
@@ -24,7 +24,7 @@ const EditCustomerPage = () => {
           <EditCustomerForm />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

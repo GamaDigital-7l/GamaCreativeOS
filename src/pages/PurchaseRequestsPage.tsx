@@ -1,26 +1,26 @@
-import { NewCustomerForm } from "@/components/customers/NewCustomerForm";
+import { PurchaseRequestList } from "@/components/purchase-requests/PurchaseRequestList";
 import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserPlus } from "lucide-react"; // Adicionado UserPlus icon
+import { ArrowLeft, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const NewCustomerPage = () => {
+const PurchaseRequestsPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 p-4 sm:p-6">
-      <Card className="w-full max-w-3xl">
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-background to-primary/10 p-4 sm:p-6">
+      <Card className="w-full max-w-6xl mb-6">
         <CardHeader className="flex flex-row items-center space-x-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/customers')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <CardTitle className="text-3xl text-center flex-grow flex items-center justify-center gap-2">
-            <UserPlus className="h-7 w-7 text-primary" /> Novo Cliente
+            <ClipboardList className="h-7 w-7 text-primary" /> Pedidos de Compra
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <NewCustomerForm />
+          <PurchaseRequestList />
         </CardContent>
       </Card>
       <GamaCreative />
@@ -28,4 +28,4 @@ const NewCustomerPage = () => {
   );
 };
 
-export default NewCustomerPage;
+export default PurchaseRequestsPage;

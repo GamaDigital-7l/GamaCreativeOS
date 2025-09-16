@@ -4,9 +4,9 @@ import { SalesSummary } from "@/components/dashboard/SalesSummary";
 import { POSSalesSummary } from "@/components/dashboard/POSSalesSummary";
 import { SalesOverviewWidget } from "@/components/dashboard/SalesOverviewWidget";
 import { WarrantyOverviewWidget } from "@/components/dashboard/WarrantyOverviewWidget";
-import { AverageTicketWidget } from "@/components/dashboard/AverageTicketWidget"; // New import
-import { CommonServicesWidget } from "@/components/dashboard/CommonServicesWidget"; // New import
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { AverageTicketWidget } from "@/components/dashboard/AverageTicketWidget";
+import { CommonServicesWidget } from "@/components/dashboard/CommonServicesWidget";
+import { GamaCreative } from "@/components/gama-creative"; // Updated import
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -40,13 +40,13 @@ const Index = () => {
         <h2 className="text-2xl font-semibold tracking-tight mb-4">Garantias e Serviços</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <WarrantyOverviewWidget />
-          <CommonServicesWidget /> {/* Integrated new widget */}
-          <AverageTicketWidget /> {/* Integrated new widget */}
+          <CommonServicesWidget />
+          <AverageTicketWidget />
         </div>
         <ServiceOrderSummary />
       </div>
       <div className="mt-auto pt-8">
-        <MadeWithDyad />
+        <GamaCreative />
       </div>
     </div>
   );

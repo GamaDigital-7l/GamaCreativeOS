@@ -1,5 +1,5 @@
 import { NewInventoryItemForm } from "@/components/inventory/NewInventoryItemForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PlusCircle, Package } from "lucide-react"; // Adicionado PlusCircle, Package icons
@@ -23,7 +23,7 @@ const NewInventoryItemPage = () => {
           <NewInventoryItemForm />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

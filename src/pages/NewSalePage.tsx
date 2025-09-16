@@ -1,5 +1,5 @@
 import { NewSaleForm } from "@/components/sales/NewSaleForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PlusCircle, ShoppingCart } from "lucide-react"; // Adicionado PlusCircle, ShoppingCart icons
@@ -23,7 +23,7 @@ const NewSalePage = () => {
           <NewSaleForm />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

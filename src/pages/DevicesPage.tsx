@@ -1,5 +1,5 @@
 import { DeviceList } from "@/components/devices/DeviceList";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Smartphone } from "lucide-react"; // Adicionado Smartphone icon
@@ -23,7 +23,7 @@ const DevicesPage = () => {
           <DeviceList />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

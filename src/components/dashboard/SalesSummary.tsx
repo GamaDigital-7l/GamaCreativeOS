@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,15 +11,8 @@ export function SalesSummary() {
   const [totalAmount, setTotalAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isSessionLoading && user) {
-      fetchSalesSummary();
-    } else if (!isSessionLoading && !user) {
-      setIsLoading(false);
-    }
-  }, [user, isSessionLoading]);
-
-  const fetchSalesSummary = async () => {
+  const fetchSalesSummary = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
       const today = new Date();
@@ -31,7 +24,7 @@ export function SalesSummary() {
         .select('sale_price', { count: 'exact' })
         .gte('created_at', startDate)
         .lte('created_at', endDate)
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -44,7 +37,15 @@ export function SalesSummary() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchSalesSummary();
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+    }
+  }, [user, isSessionLoading, fetchSalesSummary]);
 
   if (isLoading) {
     return (

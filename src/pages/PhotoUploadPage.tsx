@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Upload, CheckCircle, AlertCircle } from 'lucide-react';
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import { GamaCreative } from '@/components/gama-creative';
 
 export default function PhotoUploadPage() {
   const { id } = useParams<{ id: string }>();
@@ -134,7 +134,7 @@ export default function PhotoUploadPage() {
           )}
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 }

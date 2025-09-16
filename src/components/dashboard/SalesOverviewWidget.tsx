@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,15 +21,8 @@ export function SalesOverviewWidget() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  useEffect(() => {
-    if (!isSessionLoading && user) {
-      fetchSalesSummary(currentMonth);
-    } else if (!isSessionLoading && !user) {
-      setIsLoading(false);
-    }
-  }, [user, isSessionLoading, currentMonth]);
-
-  const fetchSalesSummary = async (date: Date) => {
+  const fetchSalesSummary = useCallback(async (date: Date) => {
+    if (!user) return;
     setIsLoading(true);
     try {
       const startDate = format(startOfMonth(date), 'yyyy-MM-dd');
@@ -40,7 +33,7 @@ export function SalesOverviewWidget() {
         .select('sale_price, acquisition_cost, device_model')
         .gte('created_at', startDate)
         .lte('created_at', endDate)
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -67,7 +60,15 @@ export function SalesOverviewWidget() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchSalesSummary(currentMonth);
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+    }
+  }, [user, isSessionLoading, currentMonth, fetchSalesSummary]);
 
   const handleMonthChange = (value: string) => {
     const [year, month] = value.split('-').map(Number);

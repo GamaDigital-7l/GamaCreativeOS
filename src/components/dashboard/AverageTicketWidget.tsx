@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,15 +18,8 @@ export function AverageTicketWidget() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  useEffect(() => {
-    if (!isSessionLoading && user) {
-      fetchAverageTicket(currentMonth);
-    } else if (!isSessionLoading && !user) {
-      setIsLoading(false);
-    }
-  }, [user, isSessionLoading, currentMonth]);
-
-  const fetchAverageTicket = async (date: Date) => {
+  const fetchAverageTicket = useCallback(async (date: Date) => {
+    if (!user) return;
     setIsLoading(true);
     try {
       const startDate = format(startOfMonth(date), 'yyyy-MM-dd');
@@ -37,7 +30,7 @@ export function AverageTicketWidget() {
         .select('total_amount, customer_id')
         .gte('created_at', startDate)
         .lte('created_at', endDate)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .not('total_amount', 'is', null)
         .not('customer_id', 'is', null);
 
@@ -48,7 +41,7 @@ export function AverageTicketWidget() {
         .select('sale_price, customer_id')
         .gte('created_at', startDate)
         .lte('created_at', endDate)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .not('sale_price', 'is', null)
         .not('customer_id', 'is', null);
 
@@ -59,7 +52,7 @@ export function AverageTicketWidget() {
         .select('total_amount, customer_id')
         .gte('created_at', startDate)
         .lte('created_at', endDate)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .not('total_amount', 'is', null)
         .not('customer_id', 'is', null);
 
@@ -92,7 +85,15 @@ export function AverageTicketWidget() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchAverageTicket(currentMonth);
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+    }
+  }, [user, isSessionLoading, currentMonth, fetchAverageTicket]);
 
   const handleMonthChange = (value: string) => {
     const [year, month] = value.split('-').map(Number);

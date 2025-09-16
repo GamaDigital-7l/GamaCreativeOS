@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,15 +11,8 @@ export function POSSalesSummary() {
   const [totalPOSAmount, setTotalPOSAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isSessionLoading && user) {
-      fetchPOSSalesSummary();
-    } else if (!isSessionLoading && !user) {
-      setIsLoading(false);
-    }
-  }, [user, isSessionLoading]);
-
-  const fetchPOSSalesSummary = async () => {
+  const fetchPOSSalesSummary = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
       const today = new Date();
@@ -34,7 +27,7 @@ export function POSSalesSummary() {
         .not('related_pos_sale_id', 'is', null) // Filter for POS sales
         .gte('transaction_date', startDate)
         .lte('transaction_date', endDate)
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -47,7 +40,15 @@ export function POSSalesSummary() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchPOSSalesSummary();
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+    }
+  }, [user, isSessionLoading, fetchPOSSalesSummary]);
 
   if (isLoading) {
     return (

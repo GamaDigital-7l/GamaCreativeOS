@@ -1,5 +1,5 @@
 import { SettingsForm } from "@/components/settings/SettingsForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, ListPlus } from "lucide-react"; // Added ListPlus icon
@@ -29,7 +29,7 @@ const SettingsPage = () => {
           </div>
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

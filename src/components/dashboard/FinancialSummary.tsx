@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,23 +10,33 @@ export function FinancialSummary() {
   const [transactions, setTransactions] = useState<{ amount: number; type: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      const today = new Date();
-      const startDate = format(startOfMonth(today), 'yyyy-MM-dd');
-      const endDate = format(endOfMonth(today), 'yyyy-MM-dd');
+  const fetchTransactions = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
+    const today = new Date();
+    const startDate = format(startOfMonth(today), 'yyyy-MM-dd');
+    const endDate = format(endOfMonth(today), 'yyyy-MM-dd');
 
-      supabase
+    try {
+      const { data, error } = await supabase
         .from('financial_transactions')
         .select('amount, type')
         .gte('transaction_date', startDate)
         .lte('transaction_date', endDate)
-        .then(({ data, error }) => {
-          if (!error) setTransactions(data || []);
-          setIsLoading(false);
-        });
+        .eq('user_id', user.id); // Ensure filtering by user
+
+      if (!error) setTransactions(data || []);
+      else console.error("Error fetching financial transactions:", error);
+    } catch (err) {
+      console.error("Unexpected error fetching financial transactions:", err);
+    } finally {
+      setIsLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const summary = useMemo(() => {
     return transactions.reduce((acc, t) => {

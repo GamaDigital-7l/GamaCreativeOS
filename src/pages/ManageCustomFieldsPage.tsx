@@ -22,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
+import { GamaCreative } from '@/components/gama-creative';
 
 interface CustomField {
   id: string;
@@ -188,6 +189,7 @@ export default function ManageCustomFieldsPage() {
           <CustomFieldForm fieldId={editingFieldId} onSuccess={() => { setIsFormOpen(false); fetchCustomFields(); }} />
         </DialogContent>
       </Dialog>
+      <GamaCreative />
     </div>
   );
 }

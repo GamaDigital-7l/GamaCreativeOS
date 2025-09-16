@@ -1,5 +1,5 @@
 import { NewDeviceForm } from "@/components/devices/NewDeviceForm";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { GamaCreative } from "@/components/gama-creative";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PlusCircle, Smartphone } from "lucide-react"; // Adicionado PlusCircle, Smartphone icons
@@ -23,7 +23,7 @@ const NewDevicePage = () => {
           <NewDeviceForm />
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 };

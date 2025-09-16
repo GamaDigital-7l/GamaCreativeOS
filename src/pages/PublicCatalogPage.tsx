@@ -5,7 +5,7 @@ import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Image as ImageIcon, Eye } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import { GamaCreative } from '@/components/gama-creative';
 
 interface InventoryItem {
   id: string;
@@ -118,7 +118,7 @@ export default function PublicCatalogPage() {
           )}
         </CardContent>
       </Card>
-      <MadeWithDyad />
+      <GamaCreative />
     </div>
   );
 }

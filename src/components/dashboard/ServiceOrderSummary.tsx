@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
@@ -19,20 +19,14 @@ export function ServiceOrderSummary() {
   const [summary, setSummary] = useState<ServiceOrderSummaryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isSessionLoading && user) {
-      fetchServiceOrderSummary();
-    } else if (!isSessionLoading && !user) {
-      setIsLoading(false);
-    }
-  }, [user, isSessionLoading]);
-
-  const fetchServiceOrderSummary = async () => {
+  const fetchServiceOrderSummary = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
       const { data, error, count } = await supabase
         .from('service_orders')
-        .select('status', { count: 'exact' });
+        .select('status', { count: 'exact' })
+        .eq('user_id', user.id); // Filter by current user's ID
 
       if (error) throw error;
 
@@ -56,7 +50,15 @@ export function ServiceOrderSummary() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchServiceOrderSummary();
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+    }
+  }, [user, isSessionLoading, fetchServiceOrderSummary]);
 
   if (isLoading) {
     return (

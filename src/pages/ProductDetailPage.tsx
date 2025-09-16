@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Package, Tag, DollarSign, Factory, FileText, Image as ImageIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"; // Import Carousel components
+import { GamaCreative } from '@/components/gama-creative';
 
 interface InventoryItemDetails {
   id: string;
@@ -133,6 +134,7 @@ export default function ProductDetailPage() {
           </div>
         </CardContent>
       </Card>
+      <GamaCreative />
     </div>
   );
 }
