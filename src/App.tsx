@@ -52,8 +52,9 @@ import PurchaseRequestsPage from "./pages/PurchaseRequestsPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
-import PrintSaleReceiptOptionsPage from "./pages/PrintSaleReceiptOptionsPage"; // New import
-import PrintPOSReceiptOptionsPage from "./pages/PrintPOSReceiptOptionsPage"; // New import
+import PrintSaleReceiptOptionsPage from "./pages/PrintSaleReceiptOptionsPage";
+import PrintPOSReceiptOptionsPage from "./pages/PrintPOSReceiptOptionsPage";
+import ImportServiceOrdersPage from "./pages/ImportServiceOrdersPage"; // New import
 
 const queryClient = new QueryClient();
 
@@ -73,7 +74,7 @@ const App = () => (
             <Route path="/service-orders/:id/print-warranty" element={<PrintableServiceOrderWarrantyPage />} />
             <Route path="/quote/:id" element={<QuoteApprovalPage />} />
             <Route path="/sales/:id/print-options" element={<PrintSaleReceiptOptionsPage />} />
-            <Route path="/pos-sales/:id/print-options" element={<PrintPOSReceiptOptionsPage />} /> {/* New route */}
+            <Route path="/pos-sales/:id/print-options" element={<PrintPOSReceiptOptionsPage />} />
             
             {/* Rotas do Catálogo Online (públicas) */}
             <Route path="/public-catalog" element={<PublicCatalogPage />} />
@@ -120,6 +121,7 @@ const App = () => (
               <Route path="/profile/edit" element={<EditUserProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/settings/custom-fields" element={<ManageCustomFieldsPage />} />
+              <Route path="/import-service-orders" element={<ImportServiceOrdersPage />} /> {/* New route */}
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
