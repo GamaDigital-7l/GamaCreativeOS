@@ -1,5 +1,4 @@
 import { EditSupplierForm } from "@/components/suppliers/EditSupplierForm";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Building, Settings } from "lucide-react";
@@ -24,7 +23,6 @@ const EditSupplierPage = () => {
           <EditSupplierForm />
         </CardContent>
       </Card>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

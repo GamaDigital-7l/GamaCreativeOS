@@ -21,7 +21,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import * as LucideIcons from 'lucide-react'; // Para ícones de conquistas
-import { GamaLogo } from '@/components/GamaLogo'; // Updated import
 
 interface Goal {
   id: string;
@@ -277,7 +276,6 @@ export default function ManageGamificationPage() {
           <AchievementForm achievementId={editingAchievementId} onSuccess={() => { setIsAchievementFormOpen(false); fetchGamificationData(); }} />
         </DialogContent>
       </Dialog>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 }

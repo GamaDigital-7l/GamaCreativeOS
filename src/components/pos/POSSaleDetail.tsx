@@ -5,7 +5,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Receipt, User, DollarSign, CalendarDays, CreditCard, Package } from 'lucide-react';
+import { ArrowLeft, Loader2, Receipt, User, DollarSign, CalendarDays, CreditCard, Package, Printer } from 'lucide-react'; // Added Printer icon
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -100,6 +100,11 @@ export function POSSaleDetail() {
             <CardDescription>Registrada em: {format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</CardDescription>
           </div>
         </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link to={`/pos-sales/${sale.id}/print-options`}> {/* New print button */}
+            <Printer className="h-4 w-4 mr-2" /> Imprimir Recibo
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent className="space-y-6 p-6">
         {/* Customer Details */}
@@ -114,28 +119,30 @@ export function POSSaleDetail() {
         <div>
           <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Itens Vendidos</h3>
           {sale.pos_sale_items && sale.pos_sale_items.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead className="text-right">Qtd.</TableHead>
-                  <TableHead className="text-right">Preço Unit.</TableHead>
-                  <TableHead className="text-right">Subtotal</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sale.pos_sale_items.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.inventory_items?.name || 'Item Removido'}</TableCell>
-                    <TableCell>{item.inventory_items?.sku || 'N/A'}</TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">R$ {item.price_at_time.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">R$ {(item.quantity * item.price_at_time).toFixed(2)}</TableCell>
+            <div className="overflow-x-auto"> {/* Ensure table is scrollable on mobile */}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead className="text-right">Qtd.</TableHead>
+                    <TableHead className="text-right">Preço Unit.</TableHead>
+                    <TableHead className="text-right">Subtotal</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {sale.pos_sale_items.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.inventory_items?.name || 'Item Removido'}</TableCell>
+                      <TableCell>{item.inventory_items?.sku || 'N/A'}</TableCell>
+                      <TableCell className="text-right">{item.quantity}</TableCell>
+                      <TableCell className="text-right">R$ {item.price_at_time.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">R$ {(item.quantity * item.price_at_time).toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <p className="text-muted-foreground">Nenhum item registrado para esta venda.</p>
           )}

@@ -1,6 +1,5 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 
 const NotFound = () => {
   const location = useLocation();
@@ -21,7 +20,6 @@ const NotFound = () => {
           Return to Home
         </a>
       </div>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

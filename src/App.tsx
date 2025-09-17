@@ -53,6 +53,7 @@ import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
 import PrintSaleReceiptOptionsPage from "./pages/PrintSaleReceiptOptionsPage"; // New import
+import PrintPOSReceiptOptionsPage from "./pages/PrintPOSReceiptOptionsPage"; // New import
 
 const queryClient = new QueryClient();
 
@@ -71,7 +72,8 @@ const App = () => (
             <Route path="/service-orders/:id/print-label" element={<PrintServiceOrderLabelPage />} />
             <Route path="/service-orders/:id/print-warranty" element={<PrintableServiceOrderWarrantyPage />} />
             <Route path="/quote/:id" element={<QuoteApprovalPage />} />
-            <Route path="/sales/:id/print-options" element={<PrintSaleReceiptOptionsPage />} /> {/* New route */}
+            <Route path="/sales/:id/print-options" element={<PrintSaleReceiptOptionsPage />} />
+            <Route path="/pos-sales/:id/print-options" element={<PrintPOSReceiptOptionsPage />} /> {/* New route */}
             
             {/* Rotas do Catálogo Online (públicas) */}
             <Route path="/public-catalog" element={<PublicCatalogPage />} />

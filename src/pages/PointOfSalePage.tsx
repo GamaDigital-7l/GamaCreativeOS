@@ -1,5 +1,4 @@
 import { PointOfSale } from "@/components/pos/PointOfSale";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Receipt, History } from "lucide-react";
@@ -29,7 +28,6 @@ const PointOfSalePage = () => {
           <PointOfSale />
         </CardContent>
       </Card>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

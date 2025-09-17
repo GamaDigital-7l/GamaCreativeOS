@@ -1,5 +1,4 @@
 import { EditCustomerForm } from "@/components/customers/EditCustomerForm";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserCog } from "lucide-react"; // Adicionado UserCog icon
@@ -24,7 +23,6 @@ const EditCustomerPage = () => {
           <EditCustomerForm />
         </CardContent>
       </Card>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

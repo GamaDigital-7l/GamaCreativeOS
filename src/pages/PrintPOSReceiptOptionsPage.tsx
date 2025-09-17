@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PrintableSaleReceipt } from "@/components/sales/PrintableSaleReceipt";
+import { PrintablePOSReceipt } from "@/components/pos/PrintablePOSReceipt";
 import { Button } from "@/components/ui/button";
 import { Printer, ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from '@/components/ui/card';
 
-const PrintSaleReceiptOptionsPage = () => {
+const PrintPOSReceiptOptionsPage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [printMode, setPrintMode] = useState<'client_only' | 'store_client'>('client_only');
@@ -21,10 +21,10 @@ const PrintSaleReceiptOptionsPage = () => {
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col">
       <div className="p-4 bg-background border-b flex items-center justify-between print:hidden">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/sales/${id}`)}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(`/pos-sales/${id}`)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-semibold">Opções de Impressão do Recibo</h1>
+        <h1 className="text-xl font-semibold">Opções de Impressão do Recibo PDV</h1>
         <Button onClick={handlePrint}>
           <Printer className="mr-2 h-4 w-4" /> Imprimir
         </Button>
@@ -66,10 +66,10 @@ const PrintSaleReceiptOptionsPage = () => {
 
       {/* The printable content, hidden by default and shown only for print media */}
       <div className="hidden print:block">
-        <PrintableSaleReceipt printMode={printMode} paperFormat={paperFormat} />
+        <PrintablePOSReceipt printMode={printMode} paperFormat={paperFormat} />
       </div>
     </div>
   );
 };
 
-export default PrintSaleReceiptOptionsPage;
+export default PrintPOSReceiptOptionsPage;

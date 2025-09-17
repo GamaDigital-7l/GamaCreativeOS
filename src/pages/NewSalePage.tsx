@@ -1,5 +1,4 @@
 import { NewSaleForm } from "@/components/sales/NewSaleForm";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PlusCircle, ShoppingCart } from "lucide-react"; // Adicionado PlusCircle, ShoppingCart icons
@@ -23,7 +22,6 @@ const NewSalePage = () => {
           <NewSaleForm />
         </CardContent>
       </Card>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

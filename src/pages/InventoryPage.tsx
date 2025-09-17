@@ -1,5 +1,4 @@
 import { InventoryList } from "@/components/inventory/InventoryList";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package } from "lucide-react"; // Adicionado Package icon
@@ -23,7 +22,6 @@ const InventoryPage = () => {
           <InventoryList />
         </CardContent>
       </Card>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

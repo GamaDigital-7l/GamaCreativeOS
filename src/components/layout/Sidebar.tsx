@@ -45,7 +45,7 @@ export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
       <nav className={cn("grid gap-2 text-sm font-medium", isMobile ? "px-2" : "px-2 sm:py-5")}>
         {isMobile && (
           <Link to="/" className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base mb-4">
-            <img src="/gama-logo.png" alt="Gama Creative OS Logo" className="h-full w-full p-1" />
+            {/* <img src="/gama-logo.png" alt="Gama Creative OS Logo" className="h-full w-full p-1" /> */}
             <span className="sr-only">Gama Creative OS</span>
           </Link>
         )}
@@ -82,7 +82,7 @@ export function Sidebar() {
       <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <img src="/gama-logo.png" alt="Gama Creative OS Logo" className="h-6 w-auto" />
+            {/* <img src="/gama-logo.png" alt="Gama Creative OS Logo" className="h-6 w-auto" /> */}
             <span className="">Gama Creative OS</span>
           </Link>
         </div>

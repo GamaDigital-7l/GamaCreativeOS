@@ -1,5 +1,4 @@
 import { NewSupplierForm } from "@/components/suppliers/NewSupplierForm";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PlusCircle, Building } from "lucide-react"; // Adicionado PlusCircle, Building icons
@@ -23,7 +22,6 @@ const NewSupplierPage = () => {
           <NewSupplierForm />
         </CardContent>
       </Card>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

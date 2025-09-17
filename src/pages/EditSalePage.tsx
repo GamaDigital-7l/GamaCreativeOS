@@ -1,9 +1,8 @@
 import { EditSaleForm } from "@/components/sales/EditSaleForm";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, ShoppingCart } from "lucide-react"; // Adicionado Settings, ShoppingCart icons
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } => "react-router-dom";
 
 const EditSalePage = () => {
   const navigate = useNavigate();
@@ -24,7 +23,6 @@ const EditSalePage = () => {
           <EditSaleForm />
         </CardContent>
       </Card>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 };

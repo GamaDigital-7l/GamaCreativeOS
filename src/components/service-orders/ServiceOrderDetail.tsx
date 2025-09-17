@@ -222,7 +222,7 @@ export function ServiceOrderDetail() {
               </div>
               <CardDescription>ID: {serviceOrder.id.substring(0, 8)}...</CardDescription>
             </div>
-            <div className="flex items-center gap-2 flex-wrap justify-end mt-2 sm:mt-0">
+            <div className="flex flex-wrap gap-2 justify-end mt-2 sm:mt-0"> {/* Added flex-wrap and justify-end */}
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print`} target="_blank"><Printer className="h-4 w-4 mr-2" /> Imprimir OS</Link></Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print-label`} target="_blank"><Ticket className="h-4 w-4 mr-2" /> Imprimir Etiqueta</Link></Button>
               {serviceOrder.status === 'completed' && (
@@ -266,7 +266,7 @@ export function ServiceOrderDetail() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6 p-6">
-          <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+          <div className="flex justify-between items-center p-3 bg-muted rounded-lg flex-wrap gap-2"> {/* Added flex-wrap and gap-2 */}
             <div>
               <span className="text-sm text-muted-foreground">Status da OS</span>
               <p className="font-bold text-lg">{serviceOrder.status}</p>
@@ -311,7 +311,7 @@ export function ServiceOrderDetail() {
             {serviceOrder.devices.checklist && Object.keys(serviceOrder.devices.checklist).length > 0 && (
               <div>
                 <p className="font-semibold mt-2">Checklist de Entrada:</p>
-                <ul className="list-disc list-inside ml-4 grid grid-cols-2 md:grid-cols-3 gap-x-4">
+                <ul className="list-disc list-inside ml-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4">
                   {Object.entries(serviceOrder.devices.checklist).map(([key, status], index) => (
                     <li key={index}>{key.replace(/_/g, ' ')}: {status}</li>
                   ))}
@@ -369,7 +369,7 @@ export function ServiceOrderDetail() {
             <h3 className="text-lg font-semibold mb-2">Detalhes do Serviço</h3>
             <p><strong>Descrição do Serviço:</strong> {serviceOrder.service_details || 'N/A'}</p>
             {serviceOrder.service_order_inventory_items && serviceOrder.service_order_inventory_items.length > 0 && (
-              <div className="mt-4">
+              <div className="mt-4 overflow-x-auto"> {/* Added overflow-x-auto */}
                 <h4 className="font-semibold mb-2">Peças Utilizadas:</h4>
                 <Table>
                   <TableHeader>

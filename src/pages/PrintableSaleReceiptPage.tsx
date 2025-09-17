@@ -1,11 +1,9 @@
 import { PrintableSaleReceipt } from "@/components/sales/PrintableSaleReceipt";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 
 const PrintableSaleReceiptPage = () => {
   return (
     <div className="bg-white">
-      <PrintableSaleReceipt />
-      <GamaLogo /> {/* Using the new GamaLogo component */}
+      <PrintableSaleReceipt printMode="client_only" paperFormat="a4" />
     </div>
   );
 };

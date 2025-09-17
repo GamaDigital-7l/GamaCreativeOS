@@ -5,7 +5,6 @@ import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Image as ImageIcon, Eye } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { GamaLogo } from '@/components/GamaLogo'; // Updated import
 
 interface InventoryItem {
   id: string;
@@ -118,7 +117,6 @@ export default function PublicCatalogPage() {
           )}
         </CardContent>
       </Card>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
     </div>
   );
 }

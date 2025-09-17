@@ -73,7 +73,7 @@ export function SalesList() {
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full md:max-w-sm"> {/* Adjusted width for mobile */}
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
