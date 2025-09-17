@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Upload, CheckCircle, AlertCircle, Camera } from 'lucide-react'; // Importar o ícone Camera
+import { Loader2, Upload, CheckCircle, AlertCircle, Camera, X } from 'lucide-react'; // Adicionado X para remover fotos
 
 export default function PhotoUploadPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,11 +18,23 @@ export default function PhotoUploadPage() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const selectedFiles = Array.from(event.target.files);
-      setFiles(selectedFiles);
-      const newPreviews = selectedFiles.map(file => URL.createObjectURL(file));
-      setPreviews(newPreviews);
+      const newSelectedFiles = Array.from(event.target.files);
+      setFiles(prevFiles => [...prevFiles, ...newSelectedFiles]);
+
+      const newPreviews = newSelectedFiles.map(file => URL.createObjectURL(file));
+      setPreviews(prevPreviews => [...prevPreviews, ...newPreviews]);
+      // Clear the input value to allow selecting the same file again if needed
+      event.target.value = ''; 
     }
+  };
+
+  const handleRemovePhoto = (indexToRemove: number) => {
+    setFiles(prevFiles => prevFiles.filter((_, index) => index !== indexToRemove));
+    setPreviews(prevPreviews => {
+      // Revoke the object URL to free up memory
+      URL.revokeObjectURL(prevPreviews[indexToRemove]);
+      return prevPreviews.filter((_, index) => index !== indexToRemove);
+    });
   };
 
   const handleUpload = async () => {
@@ -91,28 +103,62 @@ export default function PhotoUploadPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              <div>
-                <Label htmlFor="picture" className="text-lg flex items-center gap-2">
-                  <Camera className="h-5 w-5" /> Selecione ou Tire Fotos
-                </Label>
-                <Input 
-                  id="picture" 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  capture="environment" // Este atributo abre a câmera em dispositivos móveis
-                  onChange={handleFileChange} 
-                  className="mt-2" 
+              <Label className="text-lg flex items-center gap-2">
+                <Camera className="h-5 w-5" /> Adicionar Fotos do Aparelho
+              </Label>
+              <p className="text-sm text-muted-foreground -mt-4">
+                Tire novas fotos ou selecione da sua galeria. Você pode adicionar várias.
+              </p>
+
+              <div className="flex gap-4">
+                <input
+                  id="take-photo-input"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Você pode selecionar várias fotos da sua galeria ou usar a câmera para tirar novas fotos.
-                </p>
+                <Button 
+                  onClick={() => document.getElementById('take-photo-input')?.click()} 
+                  className="flex-1"
+                  variant="outline"
+                >
+                  <Camera className="mr-2 h-4 w-4" /> Tirar Foto
+                </Button>
+
+                <input
+                  id="select-gallery-input"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Button 
+                  onClick={() => document.getElementById('select-gallery-input')?.click()} 
+                  className="flex-1"
+                  variant="outline"
+                >
+                  <Upload className="mr-2 h-4 w-4" /> Selecionar da Galeria
+                </Button>
               </div>
 
               {previews.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
                   {previews.map((src, index) => (
-                    <img key={index} src={src} alt={`Preview ${index}`} className="rounded-md object-cover h-24 w-full" />
+                    <div key={index} className="relative">
+                      <img src={src} alt={`Preview ${index}`} className="rounded-md object-cover h-24 w-full" />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 rounded-full"
+                        onClick={() => handleRemovePhoto(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -121,7 +167,7 @@ export default function PhotoUploadPage() {
                 {isUploading ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
                 ) : (
-                  <><Upload className="mr-2 h-4 w-4" /> Enviar Fotos</>
+                  <><Upload className="mr-2 h-4 w-4" /> Enviar Todas as Fotos ({files.length})</>
                 )}
               </Button>
 
