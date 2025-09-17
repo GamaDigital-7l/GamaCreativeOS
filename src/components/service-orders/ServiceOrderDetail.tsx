@@ -6,7 +6,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText, List, PowerOff, ListChecks } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText, List, PowerOff, ListChecks, Factory } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -16,7 +16,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { QuoteShareDialog } from './QuoteShareDialog';
 import { PaymentDialog } from './PaymentDialog';
-import { cn } from '@/lib/utils'; // Import cn for conditional classes
+import { cn } from '@/lib/utils';
 
 interface ServiceOrderDetails {
   id: string;
@@ -31,20 +31,15 @@ interface ServiceOrderDetails {
   parts_cost?: number;
   service_cost?: number;
   total_amount?: number;
+  freight_cost?: number; // New field
   guarantee_terms?: string;
   photos?: string[];
   client_checklist?: Record<string, 'ok' | 'not_working'>;
   is_untestable?: boolean;
-  casing_status?: 'good' | 'scratched' | 'damaged' | null; // New field
+  casing_status?: 'good' | 'scratched' | 'damaged' | null;
   customers: { id: string; name: string; phone?: string; address?: string; email?: string; };
   devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; };
-  service_order_inventory_items: {
-    quantity_used: number;
-    price_at_time: number;
-    inventory_items: {
-      name: string;
-    } | null;
-  }[];
+  suppliers: { name: string } | null; // For part_supplier_id
   service_order_field_values: {
     value: string;
     custom_field_id: string;
@@ -81,7 +76,7 @@ export function ServiceOrderDetail() {
           *, 
           customers (*), 
           devices (*), 
-          service_order_inventory_items (*, inventory_items (name)),
+          suppliers (name), -- Join to get supplier name
           service_order_field_values (value, custom_field_id, service_order_custom_fields (field_name, field_type, order_index))
         `)
         .eq('id', orderId)
@@ -147,22 +142,11 @@ export function ServiceOrderDetail() {
     if (!id || !user || !serviceOrder) return;
     setIsDeleting(true);
     try {
-      // Revert inventory quantities first
-      if (serviceOrder.service_order_inventory_items && serviceOrder.service_order_inventory_items.length > 0) {
-        const stockRevertPromises = serviceOrder.service_order_inventory_items.map(item =>
-          supabase.rpc('increment_quantity', { item_id: item.inventory_items?.id, amount: item.quantity_used })
-        );
-        await Promise.all(stockRevertPromises);
-      }
-
       // Delete related financial transactions
-      await supabase.from('financial_transactions').delete().eq('related_service_order_id', id).eq('user.id', user.id);
+      await supabase.from('financial_transactions').delete().eq('related_service_order_id', id).eq('user_id', user.id);
 
       // Delete service order custom field values
       await supabase.from('service_order_field_values').delete().eq('service_order_id', id);
-
-      // Delete service order inventory items
-      await supabase.from('service_order_inventory_items').delete().eq('service_order_id', id);
 
       // Finally, delete the service order
       const { error } = await supabase.from('service_orders').delete().eq('id', id).eq('user_id', user.id);
@@ -222,7 +206,7 @@ export function ServiceOrderDetail() {
               </div>
               <CardDescription>ID: {serviceOrder.id.substring(0, 8)}...</CardDescription>
             </div>
-            <div className="flex flex-wrap gap-2 justify-end mt-2 sm:mt-0"> {/* Added flex-wrap and justify-end */}
+            <div className="flex flex-wrap gap-2 justify-end mt-2 sm:mt-0">
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print`} target="_blank"><Printer className="h-4 w-4 mr-2" /> Imprimir OS</Link></Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print-label`} target="_blank"><Ticket className="h-4 w-4 mr-2" /> Imprimir Etiqueta</Link></Button>
               {serviceOrder.status === 'completed' && (
@@ -251,7 +235,7 @@ export function ServiceOrderDetail() {
                     <AlertDialogTitle>Tem certeza que deseja deletar?</AlertDialogTitle>
                     <AlertDialogDescription>
                       Esta ação não pode ser desfeita. Isso excluirá permanentemente esta Ordem de Serviço,
-                      reverterá os itens de estoque utilizados e removerá os lançamentos financeiros associados.
+                      e removerá os lançamentos financeiros associados.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -266,7 +250,7 @@ export function ServiceOrderDetail() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6 p-6">
-          <div className="flex justify-between items-center p-3 bg-muted rounded-lg flex-wrap gap-2"> {/* Added flex-wrap and gap-2 */}
+          <div className="flex justify-between items-center p-3 bg-muted rounded-lg flex-wrap gap-2">
             <div>
               <span className="text-sm text-muted-foreground">Status da OS</span>
               <p className="font-bold text-lg">{serviceOrder.status}</p>
@@ -291,7 +275,6 @@ export function ServiceOrderDetail() {
             </div>
           )}
 
-          {/* Customer Details */}
           <div>
             <h3 className="text-lg font-semibold mb-2">Dados do Cliente</h3>
             <p><strong>Nome:</strong> {serviceOrder.customers.name}</p>
@@ -300,7 +283,6 @@ export function ServiceOrderDetail() {
             <p><strong>Endereço:</strong> {serviceOrder.customers.address || 'N/A'}</p>
           </div>
 
-          {/* Device Details */}
           <div>
             <h3 className="text-lg font-semibold mb-2">Dados do Aparelho</h3>
             <p><strong>Marca:</strong> {serviceOrder.devices.brand}</p>
@@ -320,7 +302,6 @@ export function ServiceOrderDetail() {
             )}
           </div>
 
-          {/* Client Checklist Display */}
           {serviceOrder.is_untestable ? (
             <div className="p-3 bg-orange-100 text-orange-800 rounded-md flex items-center gap-2">
               <PowerOff className="h-5 w-5" />
@@ -350,7 +331,6 @@ export function ServiceOrderDetail() {
             </>
           )}
 
-          {/* Custom Fields Display */}
           {Object.keys(groupedCustomFields).length > 0 && (
             <div>
               <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><List className="h-5 w-5" /> Campos Personalizados</h3>
@@ -364,61 +344,42 @@ export function ServiceOrderDetail() {
             </div>
           )}
 
-          {/* Service Details */}
           <div>
             <h3 className="text-lg font-semibold mb-2">Detalhes do Serviço</h3>
             <p><strong>Descrição do Serviço:</strong> {serviceOrder.service_details || 'N/A'}</p>
-            {serviceOrder.service_order_inventory_items && serviceOrder.service_order_inventory_items.length > 0 && (
-              <div className="mt-4 overflow-x-auto"> {/* Added overflow-x-auto */}
-                <h4 className="font-semibold mb-2">Peças Utilizadas:</h4>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead className="text-right">Quantidade</TableHead>
-                      <TableHead className="text-right">Preço Unitário</TableHead>
-                      <TableHead className="text-right">Subtotal</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {serviceOrder.service_order_inventory_items.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.inventory_items?.name || 'Item Removido'}</TableCell>
-                        <TableCell className="text-right">{item.quantity_used}</TableCell>
-                        <TableCell className="text-right">R$ {item.price_at_time.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">R$ {(item.quantity_used * item.price_at_time).toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
           </div>
 
-          {/* Costs Summary */}
-          <div className="border-t pt-4 space-y-2">
-            <h3 className="text-lg font-semibold mb-2">Resumo de Custos</h3>
+          {/* Resumo de Custos (Apenas para Controle Interno) */}
+          <div className="border-t pt-4 space-y-2 bg-muted/20 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><DollarSign className="h-5 w-5" /> Resumo Financeiro Interno</h3>
+            <p className="text-sm text-muted-foreground">Estes valores são para seu controle e não são exibidos ao cliente.</p>
             <div className="flex justify-between">
               <span>Custo das Peças:</span>
               <span>R$ {(serviceOrder.parts_cost || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Fornecedor da Peça:</span>
+              <span>{serviceOrder.suppliers?.name || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Custo do Frete:</span>
+              <span>R$ {(serviceOrder.freight_cost || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>Custo do Serviço (Mão de Obra):</span>
               <span>R$ {(serviceOrder.service_cost || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-bold text-xl border-t pt-2">
-              <span>Total:</span>
+              <span>Valor Final para o Cliente:</span>
               <span>R$ {(serviceOrder.total_amount || 0).toFixed(2)}</span>
             </div>
           </div>
 
-          {/* Guarantee Terms */}
           <div className="border-t pt-4">
             <h3 className="text-lg font-semibold mb-2">Termos de Garantia</h3>
             <p className="text-sm text-gray-600">{serviceOrder.guarantee_terms || 'N/A'}</p>
           </div>
 
-          {/* Photos */}
           {serviceOrder.photos && serviceOrder.photos.length > 0 && (
             <div className="border-t pt-4">
               <h3 className="text-lg font-semibold mb-2">Fotos do Aparelho</h3>

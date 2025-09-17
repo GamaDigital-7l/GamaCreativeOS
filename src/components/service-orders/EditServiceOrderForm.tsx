@@ -10,7 +10,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription, // Adicionado FormDescription
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,12 +21,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Check, ChevronsUpDown, PlusCircle, Trash2, DollarSign, Wrench, Package, CalendarDays, Save, List, Type, ListChecks } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle, Trash2, DollarSign, Wrench, Package, CalendarDays, Save, List, Type, ListChecks, Factory } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentDialog } from "./PaymentDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ClientChecklistInput } from "./ClientChecklistInput"; // Import new component
+import { ClientChecklistInput } from "./ClientChecklistInput";
 
 const serviceOrderStatuses = ["pending", "in_progress", "ready", "completed", "cancelled"];
 
@@ -39,22 +39,20 @@ const clientChecklistOptions = [
 const formSchema = z.object({
   issueDescription: z.string().optional(),
   serviceDetails: z.string().optional(),
-  partsCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
-  serviceCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
-  totalAmount: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
+  
+  // Campos financeiros internos
+  totalAmount: z.preprocess((val) => Number(String(val || 0).replace(",", ".")), z.number().min(0, "Valor final não pode ser negativo.")),
+  partsCost: z.preprocess((val) => Number(String(val || 0).replace(",", ".")), z.number().min(0, "Custo das peças não pode ser negativo.")).optional(),
+  partSupplierId: z.string().uuid().optional().nullable(),
+  freightCost: z.preprocess((val) => Number(String(val || 0).replace(",", ".")), z.number().min(0, "Custo do frete não pode ser negativo.")).optional(),
+  serviceCost: z.preprocess((val) => Number(String(val || 0).replace(",", ".")), z.number().min(0, "Custo da mão de obra não pode ser negativo.")).optional(),
+
   guaranteeTerms: z.string().optional(),
   warranty_days: z.preprocess((val) => Number(val || 0), z.number().int().min(0).optional()),
   status: z.enum(["pending", "in_progress", "ready", "completed", "cancelled"]),
-  inventoryItems: z.array(z.object({
-    inventory_item_id: z.string(),
-    name: z.string(),
-    quantity_used: z.preprocess((val) => Number(val || 1), z.number().int().min(1)),
-    cost_at_time: z.number(),
-    price_at_time: z.number(),
-  })).optional(),
   clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(),
   isUntestable: z.boolean().default(false),
-  casing_status: z.enum(['good', 'scratched', 'damaged']).optional().nullable(), // New field
+  casing_status: z.enum(['good', 'scratched', 'damaged']).optional().nullable(),
   customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(),
 }).superRefine((data, ctx) => {
   // Custom field validation
@@ -80,13 +78,7 @@ const formSchema = z.object({
   }
 });
 
-type InventoryItemOption = {
-  id: string;
-  name: string;
-  quantity: number;
-  cost_price: number;
-  selling_price: number;
-};
+interface SupplierOption { id: string; name: string; }
 
 interface CustomFieldDefinition {
   id: string;
@@ -103,7 +95,7 @@ export function EditServiceOrderForm() {
   const { user } = useSession();
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [inventoryOptions, setInventoryOptions] = useState<InventoryItemOption[]>([]);
+  const [suppliers, setSuppliers] = useState<SupplierOption[]>([]); // New state for suppliers
   const [customFieldDefinitions, setCustomFieldDefinitions] = useState<CustomFieldDefinition[]>([]);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [serviceOrderData, setServiceOrderData] = useState<any>(null);
@@ -112,31 +104,20 @@ export function EditServiceOrderForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       issueDescription: "", serviceDetails: "",
-      partsCost: 0, serviceCost: 0, totalAmount: 0, guaranteeTerms: "", warranty_days: 90,
-      status: "pending", inventoryItems: [],
+      totalAmount: 0, 
+      partsCost: 0, partSupplierId: null, freightCost: 0, serviceCost: 0, // Initialize new fields
+      guaranteeTerms: "", warranty_days: 90,
+      status: "pending",
       clientChecklist: {},
       isUntestable: false,
-      casing_status: null, // Initialize new field
+      casing_status: null,
       customFields: {},
     },
     context: { customFieldDefinitions },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "inventoryItems",
-  });
-
-  const watchedItems = form.watch("inventoryItems");
-  const watchedServiceCost = form.watch("serviceCost");
   const watchedStatus = form.watch("status");
   const watchedTotalAmount = form.watch("totalAmount");
-
-  useEffect(() => {
-    const newPartsCost = watchedItems?.reduce((total, item) => total + (item.price_at_time * item.quantity_used), 0) || 0;
-    form.setValue("partsCost", newPartsCost);
-    form.setValue("totalAmount", newPartsCost + (watchedServiceCost || 0));
-  }, [watchedItems, watchedServiceCost, form]);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -145,8 +126,10 @@ export function EditServiceOrderForm() {
       setIsLoadingData(true);
       try {
         const { data: settingsData } = await supabase.from("user_settings").select("default_guarantee_terms").eq("id", user.id).single();
-        const { data: inventoryData } = await supabase.from('inventory_items').select('id, name, quantity, cost_price, selling_price').eq('user_id', user.id);
-        setInventoryOptions(inventoryData || []);
+        
+        // Fetch suppliers
+        const { data: suppliersData } = await supabase.from('suppliers').select('id, name').eq('user_id', user.id);
+        setSuppliers(suppliersData || []);
 
         // Fetch custom field definitions
         const { data: customFieldsDefData, error: customFieldsDefError } = await supabase
@@ -160,7 +143,7 @@ export function EditServiceOrderForm() {
           setCustomFieldDefinitions(customFieldsDefData || []);
         }
 
-        const { data, error } = await supabase.from('service_orders').select(`*, customers(name), service_order_inventory_items (*, inventory_items(name)), service_order_field_values(*)`).eq('id', id).single();
+        const { data, error } = await supabase.from('service_orders').select(`*, customers(name), service_order_field_values(*)`).eq('id', id).single();
         if (error) throw error;
         
         setServiceOrderData(data);
@@ -181,21 +164,17 @@ export function EditServiceOrderForm() {
 
         form.reset({
           issueDescription: data.issue_description || "", serviceDetails: data.service_details || "",
-          partsCost: data.parts_cost || 0, serviceCost: data.service_cost || 0,
           totalAmount: data.total_amount || 0, 
+          partsCost: data.parts_cost || 0,
+          partSupplierId: data.part_supplier_id || null,
+          freightCost: data.freight_cost || 0,
+          serviceCost: data.service_cost || 0,
           guaranteeTerms: data.guarantee_terms || settingsData?.default_guarantee_terms || "",
           warranty_days: data.warranty_days || 90,
           status: data.status as any,
-          inventoryItems: data.service_order_inventory_items.map((item: any) => ({
-            inventory_item_id: item.inventory_item_id,
-            name: item.inventory_items?.name || 'Item Removido',
-            cost_at_time: item.cost_at_time,
-            price_at_time: item.price_at_time,
-            quantity_used: item.quantity_used,
-          })),
           clientChecklist: data.client_checklist || {},
           isUntestable: data.is_untestable || false,
-          casing_status: data.casing_status || null, // Load new field
+          casing_status: data.casing_status || null,
           customFields: initialCustomFieldValues,
         });
       } catch (err: any) {
@@ -207,63 +186,10 @@ export function EditServiceOrderForm() {
     fetchData();
   }, [id, user, form]);
 
-  const handleAddInventoryItem = (itemId: string) => {
-    const item = inventoryOptions.find(i => i.id === itemId);
-    if (item) {
-      append({
-        inventory_item_id: item.id, name: item.name, quantity_used: 1,
-        cost_at_time: item.cost_price, price_at_time: item.selling_price,
-      });
-    }
-  };
-
   async function onSubmit(values: z.infer<typeof formSchema>, shouldNavigate = true) {
     if (!user || !id) return;
     setIsSubmitting(true);
     try {
-      // Fetch current items to determine stock changes
-      const { data: existingItemsData, error: existingItemsError } = await supabase
-        .from('service_order_inventory_items')
-        .select('inventory_item_id, quantity_used')
-        .eq('service_order_id', id);
-
-      if (existingItemsError) throw existingItemsError;
-
-      const existingItemsMap = new Map(existingItemsData.map(item => [item.inventory_item_id, item.quantity_used]));
-      const newItemsMap = new Map((values.inventoryItems || []).map(item => [item.inventory_item_id, item.quantity_used]));
-
-      // Revert stock for removed/reduced items
-      const stockRevertPromises = Array.from(existingItemsMap.entries()).map(([itemId, oldQuantity]) => {
-        const newQuantity = newItemsMap.get(itemId) || 0;
-        if (oldQuantity > newQuantity) {
-          const diff = oldQuantity - newQuantity;
-          return supabase.rpc('increment_quantity', { item_id: itemId, amount: diff });
-        }
-        return null;
-      }).filter(Boolean);
-      await Promise.all(stockRevertPromises);
-
-      // Deduct stock for new/increased items
-      const stockDeductPromises = (values.inventoryItems || []).map(item => {
-        const oldQuantity = existingItemsMap.get(item.inventory_item_id) || 0;
-        if (item.quantity_used > oldQuantity) {
-          const diff = item.quantity_used - oldQuantity;
-          return supabase.rpc('decrement_quantity', { item_id: item.inventory_item_id, amount: diff });
-        }
-        return null;
-      }).filter(Boolean);
-      await Promise.all(stockDeductPromises);
-
-      // Delete all existing service order items and re-insert
-      await supabase.from('service_order_inventory_items').delete().eq('service_order_id', id);
-      if (values.inventoryItems && values.inventoryItems.length > 0) {
-        const itemsToInsert = values.inventoryItems.map(item => ({
-          service_order_id: id, inventory_item_id: item.inventory_item_id, user_id: user.id,
-          quantity_used: item.quantity_used, cost_at_time: item.cost_at_time, price_at_time: item.price_at_time,
-        }));
-        await supabase.from('service_order_inventory_items').insert(itemsToInsert);
-      }
-
       // Update custom field values
       await supabase.from('service_order_field_values').delete().eq('service_order_id', id); // Delete existing values
       if (values.customFields) {
@@ -293,11 +219,12 @@ export function EditServiceOrderForm() {
       await supabase.from('service_orders').update({
         issue_description: values.issueDescription, service_details: values.serviceDetails,
         parts_cost: values.partsCost, service_cost: values.serviceCost, total_amount: values.totalAmount,
+        freight_cost: values.freightCost, part_supplier_id: values.partSupplierId, // Save new fields
         guarantee_terms: values.guaranteeTerms, warranty_days: values.warranty_days,
         status: values.status, updated_at: new Date().toISOString(),
         client_checklist: values.clientChecklist || {},
         is_untestable: values.isUntestable,
-        casing_status: values.casing_status, // Save new field
+        casing_status: values.casing_status,
       }).eq('id', id);
 
       showSuccess("Ordem de Serviço atualizada!");
@@ -348,7 +275,22 @@ export function EditServiceOrderForm() {
       }
       
       setIsPaymentDialogOpen(false);
-      fetchServiceOrderDetails(id); // Refresh data
+      // Re-fetch service order details to update the UI with new status and payment info
+      const { data: updatedOsData, error: updatedOsError } = await supabase.from('service_orders').select(`*, customers(name), service_order_field_values(*)`).eq('id', id).single();
+      if (updatedOsError) throw updatedOsError;
+      setServiceOrderData(updatedOsData);
+      form.reset({
+        ...updatedOsData,
+        totalAmount: updatedOsData.total_amount || 0,
+        partsCost: updatedOsData.parts_cost || 0,
+        partSupplierId: updatedOsData.part_supplier_id || null,
+        freightCost: updatedOsData.freight_cost || 0,
+        serviceCost: updatedOsData.service_cost || 0,
+        clientChecklist: updatedOsData.client_checklist || {},
+        isUntestable: updatedOsData.is_untestable || false,
+        casing_status: updatedOsData.casing_status || null,
+        customFields: form.getValues('customFields'), // Keep custom fields as they are
+      });
     } catch (error: any) {
       showError(`Erro ao finalizar pagamento: ${error.message}`);
     }
@@ -367,7 +309,6 @@ export function EditServiceOrderForm() {
           <FormField control={form.control} name="issueDescription" render={({ field }) => (<FormItem><FormLabel>Defeito Relatado</FormLabel><FormControl><Textarea placeholder="Descreva o problema..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
           <FormField control={form.control} name="serviceDetails" render={({ field }) => (<FormItem><FormLabel>Detalhes do Serviço</FormLabel><FormControl><Textarea placeholder="Descreva o serviço a ser realizado..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
 
-          {/* Client Checklist Section */}
           <div className="p-4 border rounded-lg space-y-4">
             <h2 className="font-semibold text-lg flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary" /> Checklist do Cliente</h2>
             <FormDescription>
@@ -402,7 +343,6 @@ export function EditServiceOrderForm() {
             />
           </div>
 
-          {/* Dynamic Custom Fields Section */}
           {customFieldDefinitions.length > 0 && (
             <div className="p-4 border rounded-lg space-y-4">
               <h2 className="font-semibold text-lg flex items-center gap-2"><List className="h-5 w-5 text-primary" /> Campos Personalizados</h2>
@@ -471,104 +411,39 @@ export function EditServiceOrderForm() {
             </div>
           )}
 
-          <h2 className="text-2xl font-bold mt-8 mb-4 flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Peças e Materiais Utilizados</h2>
-          <div className="space-y-4">
-            {fields.map((item, index) => (
-              <div key={item.id} className="flex flex-col sm:flex-row items-center gap-2 p-2 border rounded-md">
-                <FormField
-                  control={form.control}
-                  name={`inventoryItems.${index}.inventory_item_id`}
-                  render={({ field }) => (
-                    <FormItem className="flex-grow w-full sm:w-auto">
-                        <FormLabel className="sr-only">Item</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
-                              >
-                                {field.value
-                                  ? inventoryOptions.find((option) => option.id === field.value)?.name
-                                  : "Selecione um item"}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                            <Command>
-                              <CommandInput placeholder="Buscar item..." />
-                              <CommandList>
-                                <CommandEmpty>Nenhum item encontrado.</CommandEmpty>
-                                <CommandGroup>
-                                  {inventoryOptions.map((option) => (
-                                    <CommandItem
-                                      value={option.name}
-                                      key={option.id}
-                                      onSelect={() => {
-                                        field.onChange(option.id);
-                                        form.setValue(`inventoryItems.${index}.name`, option.name);
-                                        form.setValue(`inventoryItems.${index}.cost_at_time`, option.cost_price);
-                                        form.setValue(`inventoryItems.${index}.price_at_time`, option.selling_price);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          option.id === field.value ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                    {option.name} (Qtd: {option.quantity})
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`inventoryItems.${index}.quantity_used`}
-                  render={({ field }) => (
-                    <FormItem className="w-24">
-                      <FormLabel className="sr-only">Quantidade</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="font-semibold w-24 text-right">
-                  R$ {(watchedItems?.[index]?.price_at_time * watchedItems?.[index]?.quantity_used || 0).toFixed(2)}
-                </div>
-                <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <Button type="button" variant="outline" onClick={() => handleAddInventoryItem(inventoryOptions[0]?.id || '')} className="w-full" disabled={inventoryOptions.length === 0}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
-            </Button>
-          </div>
-
-          <h2 className="text-2xl font-bold mt-8 mb-4 flex items-center gap-2"><DollarSign className="h-6 w-6 text-primary" /> Detalhes e Custos do Serviço</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField control={form.control} name="serviceCost" render={({ field }) => (<FormItem><FormLabel>Custo da Mão de Obra (R$)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="partsCost" render={({ field }) => (<FormItem><FormLabel>Custo das Peças (R$)</FormLabel><FormControl><Input type="number" readOnly disabled {...field} /></FormControl><FormMessage /></FormItem>)} />
-          </div>
-          <div className="text-right font-bold text-xl">Total: R$ {form.watch("totalAmount")?.toFixed(2)}</div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField control={form.control} name="warranty_days" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><CalendarDays className="h-4 w-4" /> Garantia (dias)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="status" render={({ field }) => (<FormItem><FormLabel>Status da OS</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{serviceOrderStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
           </div>
           <FormField control={form.control} name="guaranteeTerms" render={({ field }) => (<FormItem><FormLabel>Termos de Garantia</FormLabel><FormControl><Textarea className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
+
+          {/* Nova Seção: Detalhes Financeiros Internos */}
+          <div className="p-4 border rounded-lg space-y-4 bg-muted/20">
+            <h2 className="font-semibold text-lg flex items-center gap-2"><DollarSign className="h-5 w-5 text-primary" /> Detalhes Financeiros Internos (Apenas para Controle)</h2>
+            <FormDescription>
+              Estes campos são para seu controle interno e não serão exibidos ao cliente.
+            </FormDescription>
+            <FormField control={form.control} name="totalAmount" render={({ field }) => (<FormItem><FormLabel>Valor Final para o Cliente (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="partsCost" render={({ field }) => (<FormItem><FormLabel>Custo das Peças (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="partSupplierId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2"><Factory className="h-4 w-4" /> Fornecedor da Peça (Opcional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Selecione um fornecedor" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {suppliers.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="freightCost" render={({ field }) => (<FormItem><FormLabel>Custo do Frete (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="serviceCost" render={({ field }) => (<FormItem><FormLabel>Custo da Mão de Obra (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            </div>
+          </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center pt-4 border-t gap-4">
             <Button type="submit" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Alterações</>}</Button>

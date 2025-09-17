@@ -11,17 +11,16 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, ListChecks, Tag, Hash, Lock, UserPlus, Package, Trash2, DollarSign, List, Type } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, PlusCircle, User, Smartphone, Wrench, ListChecks, Tag, Hash, Lock, UserPlus, Package, Trash2, DollarSign, List, Type, Factory } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { PhotoUploadDialog } from "./PhotoUploadDialog";
 import { NewCustomerForm } from "../customers/NewCustomerForm";
-// import { VisualChecklist } from "./VisualChecklist"; // Removido
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClientChecklistInput } from "./ClientChecklistInput"; // Import new component
+import { ClientChecklistInput } from "./ClientChecklistInput";
 
 const clientChecklistOptions = [
   "Tela", "Bateria", "Conector", "Touch", "Câmera Frontal",
@@ -31,30 +30,26 @@ const clientChecklistOptions = [
 
 const formSchema = z.object({
   customerId: z.string({ required_error: "Selecione um cliente." }),
-  // Device fields are now direct and always required for new OS
   deviceBrand: z.string().min(2, { message: "Marca do aparelho é obrigatória." }),
-  deviceModel: z.string().min(2, { message: "Modelo do aparelho é obrigatório." }),
+  deviceModel: z.string().min(2, { message: "Modelo do aparelho é obrigatória." }),
   deviceSerial: z.string().optional(),
   devicePassword: z.string().optional(),
-  // deviceChecklist: z.record(z.string()).optional(), // Removido
   
   clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(),
   isUntestable: z.boolean().default(false),
   casing_status: z.enum(['good', 'scratched', 'damaged']).optional().nullable(),
   issueDescription: z.string().min(10, { message: "A descrição do problema é obrigatória." }),
   serviceDetails: z.string().optional(),
-  partsCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
-  serviceCost: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
-  totalAmount: z.preprocess((val) => Number(val || 0), z.number().min(0).optional()),
+  
+  // Campos financeiros internos
+  totalAmount: z.preprocess((val) => Number(String(val || 0).replace(",", ".")), z.number().min(0, "Valor final não pode ser negativo.")),
+  partsCost: z.preprocess((val) => Number(String(val || 0).replace(",", ".")), z.number().min(0, "Custo das peças não pode ser negativo.")).optional(),
+  partSupplierId: z.string().uuid().optional().nullable(),
+  freightCost: z.preprocess((val) => Number(String(val || 0).replace(",", ".")), z.number().min(0, "Custo do frete não pode ser negativo.")).optional(),
+  serviceCost: z.preprocess((val) => Number(String(val || 0).replace(",", ".")), z.number().min(0, "Custo da mão de obra não pode ser negativo.")).optional(),
+
   guaranteeTerms: z.string().optional(),
   warranty_days: z.preprocess((val) => Number(val || 0), z.number().int().min(0).optional()),
-  inventoryItems: z.array(z.object({
-    inventory_item_id: z.string(),
-    name: z.string(),
-    quantity_used: z.preprocess((val) => Number(val || 1), z.number().int().min(1)),
-    cost_at_time: z.number(),
-    price_at_time: z.number(),
-  })).optional(),
   customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(),
 }).superRefine((data, ctx) => {
   // Custom field validation
@@ -81,13 +76,7 @@ const formSchema = z.object({
 });
 
 interface Entity { id: string; name: string; }
-type InventoryItemOption = {
-  id: string;
-  name: string;
-  quantity: number;
-  cost_price: number;
-  selling_price: number;
-};
+interface SupplierOption { id: string; name: string; }
 
 interface CustomFieldDefinition {
   id: string;
@@ -103,7 +92,7 @@ export function ServiceOrderForm() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState<Entity[]>([]);
-  const [inventoryOptions, setInventoryOptions] = useState<InventoryItemOption[]>([]);
+  const [suppliers, setSuppliers] = useState<SupplierOption[]>([]); // New state for suppliers
   const [customFieldDefinitions, setCustomFieldDefinitions] = useState<CustomFieldDefinition[]>([]);
   const [newServiceOrderId, setNewServiceOrderId] = useState<string | null>(null);
   const [isNewCustomerOpen, setIsNewCustomerOpen] = useState(false);
@@ -111,36 +100,30 @@ export function ServiceOrderForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { 
-      // Default values for device fields (now direct)
       deviceBrand: "",
       deviceModel: "",
       deviceSerial: "",
       devicePassword: "",
-      // deviceChecklist: {}, // Removido
-
       clientChecklist: {},
       isUntestable: false,
       casing_status: null,
       serviceDetails: "",
-      partsCost: 0,
-      serviceCost: 0,
+      issueDescription: "",
+      
       totalAmount: 0,
+      partsCost: 0,
+      partSupplierId: null,
+      freightCost: 0,
+      serviceCost: 0,
+
       guaranteeTerms: "",
       warranty_days: 90,
-      inventoryItems: [],
       customFields: {},
     },
     context: { customFieldDefinitions },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "inventoryItems",
-  });
-
   const customerId = form.watch("customerId");
-  const watchedItems = form.watch("inventoryItems");
-  const watchedServiceCost = form.watch("serviceCost");
 
   useEffect(() => {
     if (!user) return;
@@ -149,9 +132,9 @@ export function ServiceOrderForm() {
       const { data: customersData } = await supabase.from('customers').select('id, name').eq('user_id', user.id).order('name');
       setCustomers(customersData || []);
 
-      // Fetch inventory items
-      const { data: inventoryData } = await supabase.from('inventory_items').select('id, name, quantity, cost_price, selling_price').eq('user_id', user.id);
-      setInventoryOptions(inventoryData || []);
+      // Fetch suppliers
+      const { data: suppliersData } = await supabase.from('suppliers').select('id, name').eq('user_id', user.id).order('name');
+      setSuppliers(suppliersData || []);
 
       // Fetch default guarantee terms from user settings
       const { data: settingsData } = await supabase.from("user_settings").select("default_guarantee_terms").eq("id", user.id).single();
@@ -182,26 +165,10 @@ export function ServiceOrderForm() {
     fetchInitialData();
   }, [user, form]);
 
-  useEffect(() => {
-    const newPartsCost = watchedItems?.reduce((total, item) => total + (item.price_at_time * item.quantity_used), 0) || 0;
-    form.setValue("partsCost", newPartsCost);
-    form.setValue("totalAmount", newPartsCost + (watchedServiceCost || 0));
-  }, [watchedItems, watchedServiceCost, form]);
-
   const handleNewCustomerSuccess = (newCustomer: { id: string; name: string }) => {
     setCustomers(prev => [...prev, newCustomer].sort((a, b) => a.name.localeCompare(b.name)));
     form.setValue("customerId", newCustomer.id);
     setIsNewCustomerOpen(false);
-  };
-
-  const handleAddInventoryItem = (itemId: string) => {
-    const item = inventoryOptions.find(i => i.id === itemId);
-    if (item) {
-      append({
-        inventory_item_id: item.id, name: item.name, quantity_used: 1,
-        cost_at_time: item.cost_price, price_at_time: item.selling_price,
-      });
-    }
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -218,8 +185,7 @@ export function ServiceOrderForm() {
         model: values.deviceModel,
         serial_number: values.deviceSerial,
         password_info: values.devicePassword,
-        // checklist: values.deviceChecklist || {}, // Removido
-        defect_description: values.issueDescription, // Use issueDescription as defect_description for new device
+        defect_description: values.issueDescription,
       }).select('id').single();
 
       if (deviceError) throw deviceError;
@@ -231,9 +197,14 @@ export function ServiceOrderForm() {
         user_id: user.id,
         issue_description: values.issueDescription,
         service_details: values.serviceDetails,
+        
+        // Campos financeiros internos
         parts_cost: values.partsCost,
         service_cost: values.serviceCost,
-        total_amount: values.totalAmount,
+        total_amount: values.totalAmount, // Valor final para o cliente
+        freight_cost: values.freightCost,
+        part_supplier_id: values.partSupplierId,
+
         guarantee_terms: values.guaranteeTerms,
         warranty_days: values.warranty_days,
         status: 'pending',
@@ -244,27 +215,10 @@ export function ServiceOrderForm() {
 
       if (osError) throw osError;
 
-      // Insert service order inventory items
-      if (values.inventoryItems && values.inventoryItems.length > 0) {
-        const itemsToInsert = values.inventoryItems.map(item => ({
-          service_order_id: osData.id, inventory_item_id: item.inventory_item_id, user_id: user.id,
-          quantity_used: item.quantity_used, cost_at_time: item.cost_at_time, price_at_time: item.price_at_time,
-        }));
-        const { error: itemsError } = await supabase.from('service_order_inventory_items').insert(itemsToInsert);
-        if (itemsError) throw itemsError;
-
-        // Deduct from inventory
-        const stockDeductPromises = values.inventoryItems.map(item =>
-          supabase.rpc('decrement_quantity', { item_id: item.inventory_item_id, amount: item.quantity_used })
-        );
-        await Promise.all(stockDeductPromises);
-      }
-
       // Insert custom field values
       if (values.customFields) {
         const customFieldValuesToInsert = Object.entries(values.customFields)
           .map(([fieldId, value]) => {
-            // Handle checkbox arrays
             if (Array.isArray(value)) {
               return value.map(singleValue => ({
                 service_order_id: osData.id,
@@ -272,15 +226,14 @@ export function ServiceOrderForm() {
                 value: singleValue,
               }));
             }
-            // Handle other types
             return {
               service_order_id: osData.id,
               custom_field_id: fieldId,
-              value: typeof value === 'string' ? value : String(value), // Ensure value is string
+              value: typeof value === 'string' ? value : String(value),
             };
           })
-          .flat() // Flatten array of arrays for checkbox values
-          .filter(item => item.value !== '' && item.value !== null); // Only insert non-empty values
+          .flat()
+          .filter(item => item.value !== '' && item.value !== null);
 
         if (customFieldValuesToInsert.length > 0) {
           const { error: customValuesError } = await supabase.from('service_order_field_values').insert(customFieldValuesToInsert);
@@ -320,7 +273,6 @@ export function ServiceOrderForm() {
             )} />
           </div>
 
-          {/* Device fields - always visible */}
           <div className="p-4 border rounded-lg space-y-4">
             <h2 className="font-semibold text-lg flex items-center gap-2"><Smartphone className="h-5 w-5 text-primary" /> 2. Aparelho</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
@@ -330,7 +282,6 @@ export function ServiceOrderForm() {
                 <FormField control={form.control} name="deviceSerial" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Hash className="h-4 w-4" /> Série/IMEI (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="devicePassword" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Lock className="h-4 w-4" /> Senha/Padrão (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
               </div>
-              {/* Removed VisualChecklist here */}
             </div>
           </div>
 
@@ -344,7 +295,6 @@ export function ServiceOrderForm() {
             )} />
           </div>
 
-          {/* Client Checklist Section */}
           <div className="p-4 border rounded-lg space-y-4">
             <h2 className="font-semibold text-lg flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary" /> 4. Checklist do Cliente</h2>
             <FormDescription>
@@ -379,7 +329,6 @@ export function ServiceOrderForm() {
             />
           </div>
 
-          {/* Dynamic Custom Fields Section */}
           {customFieldDefinitions.length > 0 && (
             <div className="p-4 border rounded-lg space-y-4">
               <h2 className="font-semibold text-lg flex items-center gap-2"><List className="h-5 w-5 text-primary" /> 5. Campos Personalizados</h2>
@@ -449,103 +398,39 @@ export function ServiceOrderForm() {
           )}
 
           <div className="p-4 border rounded-lg space-y-4">
-            <h2 className="font-semibold text-lg flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" /> {customFieldDefinitions.length > 0 ? "6." : "5."} Detalhes do Serviço e Orçamento</h2>
+            <h2 className="font-semibold text-lg flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" /> {customFieldDefinitions.length > 0 ? "6." : "5."} Detalhes do Serviço</h2>
             <FormField control={form.control} name="serviceDetails" render={({ field }) => (<FormItem><FormLabel>Detalhes do Serviço Proposto</FormLabel><FormControl><Textarea placeholder="Descreva o serviço a ser realizado..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
-
-            <h3 className="text-xl font-bold mt-8 mb-4 flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Peças e Materiais Utilizados</h3>
-            <div className="space-y-4">
-              {fields.map((item, index) => (
-                <div key={item.id} className="flex flex-col sm:flex-row items-center gap-2 p-2 border rounded-md">
-                  <FormField
-                    control={form.control}
-                    name={`inventoryItems.${index}.inventory_item_id`}
-                    render={({ field }) => (
-                      <FormItem className="flex-grow w-full sm:w-auto">
-                        <FormLabel className="sr-only">Item</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
-                              >
-                                {field.value
-                                  ? inventoryOptions.find((option) => option.id === field.value)?.name
-                                  : "Selecione um item"}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                            <Command>
-                              <CommandInput placeholder="Buscar item..." />
-                              <CommandList>
-                                <CommandEmpty>Nenhum item encontrado.</CommandEmpty>
-                                <CommandGroup>
-                                  {inventoryOptions.map((option) => (
-                                    <CommandItem
-                                      value={option.name}
-                                      key={option.id}
-                                      onSelect={() => {
-                                        field.onChange(option.id);
-                                        form.setValue(`inventoryItems.${index}.name`, option.name);
-                                        form.setValue(`inventoryItems.${index}.cost_at_time`, option.cost_price);
-                                        form.setValue(`inventoryItems.${index}.price_at_time`, option.selling_price);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          option.id === field.value ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                    {option.name} (Qtd: {option.quantity})
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`inventoryItems.${index}.quantity_used`}
-                    render={({ field }) => (
-                      <FormItem className="w-24">
-                        <FormLabel className="sr-only">Quantidade</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="font-semibold w-24 text-right">
-                    R$ {(watchedItems?.[index]?.price_at_time * watchedItems?.[index]?.quantity_used || 0).toFixed(2)}
-                  </div>
-                  <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" variant="outline" onClick={() => handleAddInventoryItem(inventoryOptions[0]?.id || '')} className="w-full" disabled={inventoryOptions.length === 0}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <FormField control={form.control} name="serviceCost" render={({ field }) => (<FormItem><FormLabel>Custo da Mão de Obra (R$)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={form.control} name="partsCost" render={({ field }) => (<FormItem><FormLabel>Custo das Peças (R$)</FormLabel><FormControl><Input type="number" readOnly disabled {...field} /></FormControl><FormMessage /></FormItem>)} />
-            </div>
-            <div className="text-right font-bold text-xl mt-4">Total: R$ {form.watch("totalAmount")?.toFixed(2)}</div>
             
             <FormField control={form.control} name="warranty_days" render={({ field }) => (<FormItem><FormLabel>Garantia (dias)</FormLabel><FormControl><Input type="number" min="0" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="guaranteeTerms" render={({ field }) => (<FormItem><FormLabel>Termos de Garantia</FormLabel><FormControl><Textarea placeholder="Termos de garantia específicos..." className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
+          </div>
+
+          {/* Nova Seção: Detalhes Financeiros Internos */}
+          <div className="p-4 border rounded-lg space-y-4 bg-muted/20">
+            <h2 className="font-semibold text-lg flex items-center gap-2"><DollarSign className="h-5 w-5 text-primary" /> Detalhes Financeiros Internos (Apenas para Controle)</h2>
+            <FormDescription>
+              Estes campos são para seu controle interno e não serão exibidos ao cliente.
+            </FormDescription>
+            <FormField control={form.control} name="totalAmount" render={({ field }) => (<FormItem><FormLabel>Valor Final para o Cliente (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="partsCost" render={({ field }) => (<FormItem><FormLabel>Custo das Peças (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="partSupplierId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2"><Factory className="h-4 w-4" /> Fornecedor da Peça (Opcional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Selecione um fornecedor" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {suppliers.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="freightCost" render={({ field }) => (<FormItem><FormLabel>Custo do Frete (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="serviceCost" render={({ field }) => (<FormItem><FormLabel>Custo da Mão de Obra (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando OS...</> : <><PlusCircle className="mr-2 h-4 w-4" /> Criar Ordem de Serviço</>}</Button>

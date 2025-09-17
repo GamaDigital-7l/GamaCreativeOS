@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge'; // Import Badge for casing status
+import { Badge } from '@/components/ui/badge';
 
 // Define a more comprehensive type for the data needed
 interface PrintableData {
@@ -18,15 +18,13 @@ interface PrintableData {
     status: string;
     issue_description?: string;
     service_details?: string;
-    parts_cost?: number;
-    service_cost?: number;
-    total_amount?: number;
+    total_amount?: number; // Only total_amount for customer view
     guarantee_terms?: string;
     customer_signature?: string;
     approved_at?: string;
     client_checklist?: Record<string, 'ok' | 'not_working'>;
     is_untestable?: boolean;
-    casing_status?: 'good' | 'scratched' | 'damaged' | null; // New field
+    casing_status?: 'good' | 'scratched' | 'damaged' | null;
   };
   customer: {
     name: string;
@@ -43,17 +41,9 @@ interface PrintableData {
     password_info?: string;
     checklist?: Record<string, string>;
   };
-  items: {
-    quantity_used: number;
-    price_at_time: number;
-    inventory_items: {
-      name: string;
-    } | null;
-  }[];
   settings: {
     service_order_template: string;
     default_guarantee_terms?: string;
-    // New company fields
     company_logo_url?: string;
     company_name?: string;
     company_phone?: string;
@@ -92,10 +82,10 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
         const { data: serviceOrderData, error } = await supabase
           .from('service_orders')
           .select(`
-            *, 
+            id, created_at, status, issue_description, service_details, total_amount,
+            guarantee_terms, customer_signature, approved_at, client_checklist, is_untestable, casing_status,
             customers(*), 
             devices(*), 
-            service_order_inventory_items(*, inventory_items(name)),
             service_order_field_values (value, custom_field_id, service_order_custom_fields (field_name, field_type, order_index))
           `)
           .eq('id', id)
@@ -112,7 +102,6 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
           serviceOrder: serviceOrderData,
           customer: serviceOrderData.customers,
           device: serviceOrderData.devices,
-          items: serviceOrderData.service_order_inventory_items,
           settings: settingsData || { service_order_template: 'default', default_guarantee_terms: "Não há termos de garantia padrão definidos." },
           customFieldValues: serviceOrderData.service_order_field_values || [],
         });
@@ -134,7 +123,7 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
     return <div className="p-8 text-center text-red-500">Não foi possível carregar os dados da Ordem de Serviço.</div>;
   }
 
-  const { serviceOrder, customer, device, items, settings, customFieldValues } = data;
+  const { serviceOrder, customer, device, settings, customFieldValues } = data;
 
   const renderPasswordPattern = () => (
     <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
@@ -289,28 +278,8 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
       {renderCustomFields()}
 
       <section>
-        <h2 className="text-lg font-semibold border-b pb-1 mb-2">Serviço e Peças</h2>
-        <p className="mb-2"><strong>Serviço Realizado:</strong> {serviceOrder.service_details || 'N/A'}</p>
-        {items.length > 0 && (
-          <table className="w-full text-sm mt-4">
-            <thead>
-              <tr className="border-b border-gray-300">
-                <th className="text-left py-1 pr-2">Peça/Material</th>
-                <th className="text-center py-1 px-2">Qtd.</th>
-                <th className="text-right py-1 pl-2">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item: any, index: number) => (
-                <tr key={index} className="border-b border-gray-200 last:border-b-0">
-                  <td className="py-1 pr-2">{item.inventory_items?.name || 'Item'}</td>
-                  <td className="text-center py-1 px-2">{item.quantity_used}</td>
-                  <td className="text-right py-1 pl-2">R$ {(item.price_at_time * item.quantity_used).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <h2 className="text-lg font-semibold border-b pb-1 mb-2">Serviço Proposto</h2>
+        <p className="mb-2">{serviceOrder.service_details || 'N/A'}</p>
       </section>
 
       <section className="flex justify-end">
@@ -365,18 +334,8 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
       {renderCustomFields()}
 
       <section>
-        <h2 className="font-semibold border-b pb-1 mb-1">Serviço</h2>
+        <h2 className="font-semibold border-b pb-1 mb-1">Serviço Proposto</h2>
         <p>{serviceOrder.service_details || 'N/A'}</p>
-        {items.length > 0 && (
-          <div className="mt-2">
-            <p className="font-semibold">Peças:</p>
-            <ul className="list-disc list-inside ml-2">
-              {items.map((item: any, index: number) => (
-                <li key={index}>{item.inventory_items?.name || 'Item'} (x{item.quantity_used})</li>
-              ))}
-            </ul>
-          </div>
-        )}
       </section>
 
       <section className="flex justify-end pt-2 border-t border-gray-300">
@@ -461,36 +420,12 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
       {renderCustomFields()}
 
       <section className="text-md">
-        <h3 className="text-xl font-bold border-b border-gray-500 pb-1 mb-2">Serviços e Peças Utilizadas</h3>
+        <h3 className="text-xl font-bold border-b border-gray-500 pb-1 mb-2">Serviço Proposto</h3>
         <p className="mb-3"><strong>Descrição do Serviço:</strong> {serviceOrder.service_details || 'N/A'}</p>
-        {items.length > 0 && (
-          <table className="w-full text-md border-collapse">
-            <thead>
-              <tr className="bg-gray-100 border-b border-gray-300">
-                <th className="text-left py-2 px-3">Item/Peça</th>
-                <th className="text-center py-2 px-3">Qtd.</th>
-                <th className="text-right py-2 px-3">Preço Unit.</th>
-                <th className="text-right py-2 px-3">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item: any, index: number) => (
-                <tr key={index} className="border-b border-gray-200">
-                  <td className="py-2 px-3">{item.inventory_items?.name || 'Item Removido'}</td>
-                  <td className="text-center py-2 px-3">{item.quantity_used}</td>
-                  <td className="text-right py-2 px-3">R$ {item.price_at_time.toFixed(2)}</td>
-                  <td className="text-right py-2 px-3">R$ {(item.price_at_time * item.quantity_used).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
       </section>
 
       <section className="flex justify-end text-md">
         <div className="w-1/2 space-y-2 text-right">
-          <p><strong>Custo das Peças:</strong> R$ {(serviceOrder.parts_cost || 0).toFixed(2)}</p>
-          <p><strong>Custo do Serviço:</strong> R$ {(serviceOrder.service_cost || 0).toFixed(2)}</p>
           <p className="font-bold text-2xl border-t border-black pt-2 mt-2"><strong>TOTAL GERAL:</strong> R$ {(serviceOrder.total_amount || 0).toFixed(2)}</p>
         </div>
       </section>
@@ -549,15 +484,6 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
         <p><strong>Serviço:</strong> {serviceOrder.service_details || 'N/A'}</p>
       </section>
 
-      {items.length > 0 && (
-        <section className="mb-2 border-t border-dashed border-gray-500 pt-2">
-          <p className="font-bold">Peças Utilizadas:</p>
-          {items.map((item: any, index: number) => (
-            <p key={index}>- {item.inventory_items?.name || 'Item'} (x{item.quantity_used})</p>
-          ))}
-        </section>
-      )}
-
       <section className="mb-2 border-t border-dashed border-gray-500 pt-2 text-right">
         <p><strong>Total:</strong> R$ {(serviceOrder.total_amount || 0).toFixed(2)}</p>
       </section>
@@ -591,7 +517,7 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
           {printMode === 'store_client' && (
             <>
               {renderContent('client')}
-              <div className="border-b-4 border-dashed border-gray-400 my-8 print:my-4 print:border-b-2 print:h-0.5 print:break-after-page"></div> {/* Separator for two copies */}
+              <div className="border-b-4 border-dashed border-gray-400 my-8 print:my-4 print:border-b-2 print:h-0.5 print:break-after-page"></div>
               {renderContent('store')}
             </>
           )}
