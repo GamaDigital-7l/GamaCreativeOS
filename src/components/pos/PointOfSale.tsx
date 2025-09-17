@@ -10,6 +10,7 @@ import { Search, X, Plus, Minus, ShoppingCart, Loader2, DollarSign, User, Credit
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 interface InventoryItem {
   id: string;
@@ -29,6 +30,7 @@ interface CustomerOption {
 
 export function PointOfSale() {
   const { user } = useSession();
+  const navigate = useNavigate(); // Initialize useNavigate
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -167,6 +169,7 @@ export function PointOfSale() {
       setSelectedCustomerId(undefined);
       setIsFinalizeDialogOpen(false);
       fetchInventory();
+      navigate(`/pos-sales/${saleData.id}/print-options`); // Navigate to print options page
     } catch (error: any) {
       showError(`Erro ao finalizar venda: ${error.message}`);
     } finally {
