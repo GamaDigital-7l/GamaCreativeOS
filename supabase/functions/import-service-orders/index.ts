@@ -3,6 +3,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { parse as parseCsv } from "https://deno.land/std@0.190.0/csv/mod.ts";
 import * as XLSX from "https://esm.sh/xlsx@0.18.5"; // For Excel parsing
 
+// Import Google Cloud Vision client for Deno (example, actual client might vary)
+// In a real Deno project, you might use a specific Deno-compatible client or direct fetch to the API.
+// For simplicity, this is a conceptual import.
+// const { ImageAnnotatorClient } = await import('https://esm.sh/@google-cloud/vision@3.1.4'); // This is a Node.js client, won't work directly in Deno without polyfills.
+// A direct fetch to the Google Cloud Vision REST API would be more appropriate for Deno.
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -89,37 +95,66 @@ function parseParts(partsString?: string): Array<{ description: string; qty: num
   return parts.length > 0 ? parts : null;
 }
 
-// --- OCR Placeholder for PDF ---
-async function extractTextFromPdf(file: File): Promise<string> {
-  console.warn("OCR Placeholder: In a real scenario, an external OCR service (e.g., Google Cloud Vision, AWS Textract) would be used here to extract text from the PDF.");
-  // For demonstration, we'll assume a simple text content for a mock PDF
-  // In a real implementation, you'd send the PDF to an OCR service and get text back.
-  // For now, let's return a mock string that can be parsed by regex.
-  const mockPdfContent = `
-    Nº OS: 12345-SH
-    Data de abertura: 01/08/2023 10:30
-    Data de fechamento: 05/08/2023 15:00
-    Status: Concluída
-    Cliente: João da Silva
-    Telefone: (11) 98765-4321
-    CPF/CNPJ: 123.456.789-00
-    Endereço: Rua das Flores, 100, Centro, São Paulo
-    Veículo/Equipamento (marca): Apple
-    Modelo: iPhone 12
-    Placa / IMEI / Série: ABC123DEF456GHI789
-    Defeito relatado: Tela trincada e bateria viciada.
-    Diagnóstico: Necessária troca de tela e bateria.
-    Serviço executado: Troca de tela e bateria.
-    Peças (lista): 1x Tela iPhone 12 - R$500.00; 1x Bateria iPhone 12 - R$150.00
-    Mão de obra: 200.00
-    Descontos: 50.00
-    Total: 800.00
-    Forma de pagamento: PIX - 800.00 - 05/08/2023 15:00
-    Observações: Cliente urgente.
-    Responsável/técnico: Maria Tech
-    Gerado no SHOficina
-  `;
-  return Promise.resolve(mockPdfContent);
+// --- OCR Integration (Conceptual) ---
+async function extractTextFromPdfWithAI(file: File): Promise<string> {
+  const GOOGLE_CLOUD_VISION_API_KEY = Deno.env.get('GOOGLE_CLOUD_VISION_API_KEY');
+  if (!GOOGLE_CLOUD_VISION_API_KEY) {
+    throw new Error('GOOGLE_CLOUD_VISION_API_KEY is not set in Supabase Secrets.');
+  }
+
+  // Convert File to Base64 for Google Cloud Vision API
+  const arrayBuffer = await file.arrayBuffer();
+  const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+  const requestBody = {
+    requests: [{
+      inputConfig: {
+        mimeType: 'application/pdf',
+        content: base64Pdf,
+      },
+      features: [{
+        type: 'DOCUMENT_TEXT_DETECTION',
+      }],
+      // Optional: Add pages for specific processing
+      // pages: [1], 
+    }],
+  };
+
+  try {
+    const response = await fetch(
+      `https://vision.googleapis.com/v1/files:annotate?key=${GOOGLE_CLOUD_VISION_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Google Cloud Vision API Error:", errorData);
+      throw new Error(`Google Cloud Vision API failed: ${errorData.error?.message || response.statusText}`);
+    }
+
+    const result = await response.json();
+    // Google Cloud Vision for PDF returns a list of page responses
+    // We'll concatenate all text for simplicity
+    const fullText = result.responses
+      .map((res: any) => res.fullTextAnnotation?.text)
+      .filter(Boolean)
+      .join('\n');
+
+    if (!fullText) {
+      throw new Error('No text extracted from PDF by Google Cloud Vision.');
+    }
+    return fullText;
+
+  } catch (e) {
+    console.error("Error calling Google Cloud Vision API:", e);
+    throw new Error(`Failed to process PDF with AI: ${e.message}`);
+  }
 }
 
 // Parses text content (from PDF OCR or other text files) using regex
@@ -230,10 +265,8 @@ serve(async (req) => {
       const sheetName = workbook.SheetNames[0];
       rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
     } else if (fileName.endsWith('.pdf')) {
-      const textContent = await extractTextFromPdf(file); // OCR placeholder
-      // For PDF, we assume one OS per file for now, or a single large text block
-      // If multiple OS per PDF, this logic would need to split the text content
-      rawData = [parseTextContent(textContent)];
+      const textContent = await extractTextFromPdfWithAI(file); // Use AI for PDF OCR
+      rawData = [parseTextContent(textContent)]; // Assume one OS per PDF for now
     } else {
       return new Response(JSON.stringify({ error: 'Unsupported file type' }), {
         status: 400,
@@ -242,18 +275,20 @@ serve(async (req) => {
     }
 
     for (const item of rawData) {
-      const entry: ImportReportEntry = { os_number: item['Nº OS'] || item['Número'] || item['Protocolo'] || 'UNKNOWN', status: 'failed', messages: [] };
+      const osNumberFromSource = String(item['Nº OS'] || item['Número'] || item['Protocolo'] || '').trim();
+      const entry: ImportReportEntry = { os_number: osNumberFromSource || 'UNKNOWN', status: 'failed', messages: [] };
       
-      if (!entry.os_number || entry.os_number === 'UNKNOWN') {
+      if (!osNumberFromSource) {
         entry.messages.push('Error: Número da OS é obrigatório e não foi encontrado.');
         importReport.push(entry);
         continue;
       }
+      entry.os_number = osNumberFromSource; // Update os_number in report entry
 
       try {
         // Normalize and map fields
         const normalizedData = {
-          os_number: String(entry.os_number),
+          os_number: osNumberFromSource,
           opened_at: normalizeDate(item['Data de abertura']),
           closed_at: normalizeDate(item['Data de fechamento']),
           status: mapStatus(item['Status']),
@@ -391,7 +426,7 @@ serve(async (req) => {
           user_id: userId,
           customer_id: customerId,
           device_id: deviceId,
-          os_number: normalizedData.os_number, // Custom field for ShoFicina OS number
+          os_number: normalizedData.os_number, // Use the new os_number column
           created_at: normalizedData.opened_at,
           updated_at: normalizedData.closed_at || new Date().toISOString(),
           status: normalizedData.status,
@@ -411,7 +446,7 @@ serve(async (req) => {
           .from('service_orders')
           .select('id, issue_description, service_details, total_amount') // Select fields for content hash
           .eq('user_id', userId)
-          .eq('os_number', normalizedData.os_number)
+          .eq('os_number', normalizedData.os_number) // Use os_number for deduplication
           .single();
 
         if (fetchOSError && fetchOSError.code !== 'PGRST116') {
