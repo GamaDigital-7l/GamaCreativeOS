@@ -7,7 +7,7 @@ interface Achievement {
   id: string;
   name: string;
   description: string;
-  icon: keyof typeof LucideIcons;
+  icon: React.ElementType; // Alterado para React.ElementType
   earned: boolean; // Para indicar se o usuário a conquistou
 }
 
@@ -28,7 +28,7 @@ export function UserAchievements({ achievements }: UserAchievementsProps) {
           ) : (
             <div className="flex gap-4 flex-wrap">
               {achievements.map((ach) => {
-                const Icon = LucideIcons[ach.icon] as React.ElementType;
+                const Icon = ach.icon; // Icon já é o componente
                 return (
                   <Tooltip key={ach.id}>
                     <TooltipTrigger asChild>

@@ -31,7 +31,7 @@ interface Achievement {
   id: string;
   name: string;
   description: string;
-  icon: keyof typeof LucideIcons;
+  icon: React.ElementType; // Alterado para React.ElementType
   earned: boolean;
 }
 
@@ -114,13 +114,16 @@ export function GamificationDashboard() {
 
       const earnedAchievementIds = new Set(userAchievementsData.map(ua => ua.achievement_id));
 
-      const processedAchievements: Achievement[] = achievementsData.map(ach => ({
-        id: ach.id,
-        name: ach.name,
-        description: ach.description,
-        icon: (ach.icon_name as keyof typeof LucideIcons) || 'Award', // Ícone padrão se não especificado
-        earned: earnedAchievementIds.has(ach.id),
-      }));
+      const processedAchievements: Achievement[] = achievementsData.map(ach => {
+        const IconComponent = LucideIcons[ach.icon_name as keyof typeof LucideIcons] || LucideIcons.Award;
+        return {
+          id: ach.id,
+          name: ach.name,
+          description: ach.description,
+          icon: IconComponent, // Atribui o componente diretamente
+          earned: earnedAchievementIds.has(ach.id),
+        };
+      });
       setAchievements(processedAchievements);
 
     } catch (error: any) {
