@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Upload, CheckCircle, AlertCircle, Camera } from 'lucide-react'; // Importar o ícone Camera
 
 export default function PhotoUploadPage() {
   const { id } = useParams<{ id: string }>();
@@ -92,18 +92,20 @@ export default function PhotoUploadPage() {
           ) : (
             <div className="space-y-6">
               <div>
-                <Label htmlFor="picture" className="text-lg">Selecione as fotos</Label>
+                <Label htmlFor="picture" className="text-lg flex items-center gap-2">
+                  <Camera className="h-5 w-5" /> Selecione ou Tire Fotos
+                </Label>
                 <Input 
                   id="picture" 
                   type="file" 
                   multiple 
                   accept="image/*" 
-                  capture="environment" // This attribute opens the camera on mobile devices
+                  capture="environment" // Este atributo abre a câmera em dispositivos móveis
                   onChange={handleFileChange} 
                   className="mt-2" 
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Em dispositivos móveis, isso pode abrir a câmera diretamente.
+                  Você pode selecionar várias fotos da sua galeria ou usar a câmera para tirar novas fotos.
                 </p>
               </div>
 
