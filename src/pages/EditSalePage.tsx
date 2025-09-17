@@ -2,7 +2,7 @@ import { EditSaleForm } from "@/components/sales/EditSaleForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, ShoppingCart } from "lucide-react"; // Adicionado Settings, ShoppingCart icons
-import { useNavigate, useParams } => "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const EditSalePage = () => {
   const navigate = useNavigate();
