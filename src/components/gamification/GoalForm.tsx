@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Loader2, Save, PlusCircle, Goal as GoalIcon, Scale, Clock, DollarSign } from "lucide-react";
+import { CalendarIcon, Loader2, Save, PlusCircle, Goal as GoalIcon, Scale, Clock, DollarSign, User } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showSuccess, showError } from '@/utils/toast';
@@ -30,7 +30,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   metric: z.string().min(1, "Métrica é obrigatória."),
   target_value: z.preprocess(
-    (val) => Number(String(val).replace(",", ".")),
+    (val) => (String(val).replace(",", ".")),
     z.number().positive("Valor alvo deve ser positivo.")
   ),
   period: z.enum(["daily", "weekly", "monthly", "yearly", "total"], { required_error: "Período é obrigatório." }),
