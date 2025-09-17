@@ -17,8 +17,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
-import { Loader2, Building, Phone, Mail, MapPin, FileText, Image as ImageIcon } from "lucide-react"; // Adicionado novos ícones
-import { Input } from "@/components/ui/input"; // Importar Input
+import { Loader2, Building, Phone, Mail, MapPin, FileText, Image as ImageIcon, XCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 const warrantyTemplates = {
   "90dias": "Garantia de 90 dias para o serviço prestado e peças substituídas, cobrindo defeitos de fabricação e de instalação. Não cobre danos por mau uso, quedas ou contato com líquidos.",
@@ -29,8 +29,7 @@ const warrantyTemplates = {
 const formSchema = z.object({
   service_order_template: z.string().default("default"),
   default_guarantee_terms: z.string().optional(),
-  // New company fields
-  company_logo_url: z.string().url({ message: "URL de logo inválida." }).optional().or(z.literal('')),
+  company_logo_file: z.any().optional(), // Para o arquivo de upload
   company_name: z.string().min(2, { message: "Nome da empresa é obrigatório." }).optional(),
   company_phone: z.string().optional(),
   company_address: z.string().optional(),
@@ -42,13 +41,15 @@ export function SettingsForm() {
   const { user } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       service_order_template: "default",
       default_guarantee_terms: warrantyTemplates["90dias"],
-      company_logo_url: "",
+      company_logo_file: undefined,
       company_name: "",
       company_phone: "",
       company_address: "",
@@ -70,13 +71,17 @@ export function SettingsForm() {
         if (data) {
           form.reset({
             ...data,
-            company_logo_url: data.company_logo_url || "",
+            company_logo_file: undefined, // Reset file input
             company_name: data.company_name || "",
             company_phone: data.company_phone || "",
             company_address: data.company_address || "",
             company_cnpj: data.company_cnpj || "",
             company_slogan: data.company_slogan || "",
           });
+          if (data.company_logo_url) {
+            setLogoPreview(data.company_logo_url);
+            setCurrentLogoUrl(data.company_logo_url);
+          }
         } else if (error && error.code !== 'PGRST116') {
           throw error;
         }
@@ -93,17 +98,92 @@ export function SettingsForm() {
     form.setValue("default_guarantee_terms", warrantyTemplates[key]);
   };
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      form.setValue("company_logo_file", file);
+      setLogoPreview(URL.createObjectURL(file));
+    } else {
+      form.setValue("company_logo_file", undefined);
+      setLogoPreview(currentLogoUrl); // Revert to current URL if no new file selected
+    }
+  };
+
+  const handleClearLogo = async () => {
     if (!user) return;
     setIsSubmitting(true);
     try {
+      // Delete from storage if it's a Supabase URL
+      if (currentLogoUrl && currentLogoUrl.includes(supabase.storage.from('service_order_photos').getPublicUrl('').data.publicUrl)) {
+        const path = currentLogoUrl.split('service_order_photos/')[1];
+        await supabase.storage.from('service_order_photos').remove([path]);
+      }
+
       const { error } = await supabase.from("user_settings").upsert({
         id: user.id,
-        ...values,
+        company_logo_url: null,
         updated_at: new Date().toISOString(),
-      });
+      }, { onConflict: 'id' });
+      if (error) throw error;
+      showSuccess("Logo removido com sucesso!");
+      setLogoPreview(null);
+      setCurrentLogoUrl(null);
+      form.setValue("company_logo_file", undefined);
+    } catch (error: any) {
+      showError(`Erro ao remover logo: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) return;
+    setIsSubmitting(true);
+    let finalLogoUrl = currentLogoUrl; // Start with existing URL
+
+    try {
+      if (values.company_logo_file instanceof File) {
+        // If there's an old logo URL from Supabase, delete it first
+        if (currentLogoUrl && currentLogoUrl.includes(supabase.storage.from('service_order_photos').getPublicUrl('').data.publicUrl)) {
+          const oldPath = currentLogoUrl.split('service_order_photos/')[1];
+          await supabase.storage.from('service_order_photos').remove([oldPath]);
+        }
+
+        const file = values.company_logo_file;
+        const filePath = `company_logos/${user.id}/logo-${Date.now()}.${file.name.split('.').pop()}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('service_order_photos')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('service_order_photos')
+          .getPublicUrl(filePath);
+        
+        finalLogoUrl = publicUrl;
+      }
+
+      const { error } = await supabase.from("user_settings").upsert({
+        id: user.id,
+        service_order_template: values.service_order_template,
+        default_guarantee_terms: values.default_guarantee_terms,
+        company_logo_url: finalLogoUrl, // Use the new or existing URL
+        company_name: values.company_name,
+        company_phone: values.company_phone,
+        company_address: values.company_address,
+        company_cnpj: values.company_cnpj,
+        company_slogan: values.company_slogan,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' });
       if (error) throw error;
       showSuccess("Configurações salvas com sucesso!");
+      setCurrentLogoUrl(finalLogoUrl); // Update current URL after successful save
+      setLogoPreview(finalLogoUrl);
+      form.setValue("company_logo_file", undefined); // Clear file input
     } catch (error: any) {
       showError(`Erro ao salvar: ${error.message}`);
     } finally {
@@ -121,14 +201,36 @@ export function SettingsForm() {
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Building className="h-6 w-6 text-primary" /> Dados da Empresa</h2>
         <FormField
           control={form.control}
-          name="company_logo_url"
+          name="company_logo_file"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> URL do Logo da Empresa</FormLabel>
-              <FormControl><Input placeholder="https://suaempresa.com/logo.png" {...field} /></FormControl>
+              <FormLabel className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Logo da Empresa</FormLabel>
+              <FormControl>
+                <Input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleFileChange} 
+                  className="file:text-primary file:font-semibold"
+                />
+              </FormControl>
               <FormDescription>
-                Insira a URL do logo da sua empresa para aparecer nas impressões.
+                Faça upload do logo da sua empresa para aparecer nas impressões.
               </FormDescription>
+              {logoPreview && (
+                <div className="relative w-32 h-32 mt-4 border rounded-md overflow-hidden">
+                  <img src={logoPreview} alt="Pré-visualização do Logo" className="w-full h-full object-contain" />
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-1 right-1 h-6 w-6 text-red-500 hover:bg-red-100"
+                    onClick={handleClearLogo}
+                    disabled={isSubmitting}
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               <FormMessage />
             </FormItem>
           )}

@@ -110,7 +110,7 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
             <FormDescription>
               Use este campo para registrar livremente o que precisa ser pedido.
             </FormDescription>
-            <FormMessage />
+            <FormMessage className="text-red-500 font-bold" /> {/* Adicionado estilo para visibilidade */}
           </FormItem>
         )} />
 
