@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus, History, ClipboardList } from "lucide-react"; // Adicionado History e ClipboardList icon
+import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus, History, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -8,12 +8,12 @@ const navItems = [
   { href: "/", label: "Início", icon: Home },
   { href: "/service-orders", label: "Ordens de Serviço", icon: Wrench },
   { href: "/sales", label: "Vendas de Aparelhos", icon: ShoppingCart },
-  { href: "/pos", label: "PDV", icon: Receipt }, // Renomeado para PDV
+  { href: "/pos", label: "PDV", icon: Receipt },
   { href: "/financials", label: "Financeiro", icon: DollarSign },
   { href: "/customers", label: "Clientes", icon: Users },
   { href: "/devices", label: "Dispositivos", icon: Smartphone },
   { href: "/inventory", label: "Estoque", icon: Package },
-  { href: "/purchase-requests", label: "Pedidos de Compra", icon: ClipboardList }, // New item
+  { href: "/purchase-requests", label: "Pedidos de Compra", icon: ClipboardList },
   { href: "/suppliers", label: "Fornecedores", icon: Building },
   { href: "/catalog", label: "Catálogo Online", icon: Store },
   { href: "/gamification", label: "Gamificação", icon: Trophy },
@@ -45,7 +45,7 @@ export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
       <nav className={cn("grid gap-2 text-sm font-medium", isMobile ? "px-2" : "px-2 sm:py-5")}>
         {isMobile && (
           <Link to="/" className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base mb-4">
-            <Wrench className="h-5 w-5 transition-all group-hover:scale-110" />
+            <img src="/gama-logo.png" alt="Gama Creative OS Logo" className="h-full w-full p-1" />
             <span className="sr-only">Gama Creative OS</span>
           </Link>
         )}
@@ -55,7 +55,6 @@ export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
             {item.label}
           </NavLink>
         ))}
-        {/* Adicionar link para o histórico de vendas PDV aqui, se necessário, ou manter apenas o PDV principal */}
         <NavLink to="/pos/history" className={navLinkClasses}>
           <History className="h-4 w-4" />
           Histórico PDV
@@ -83,7 +82,7 @@ export function Sidebar() {
       <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <Wrench className="h-6 w-6 text-primary" />
+            <img src="/gama-logo.png" alt="Gama Creative OS Logo" className="h-6 w-auto" />
             <span className="">Gama Creative OS</span>
           </Link>
         </div>

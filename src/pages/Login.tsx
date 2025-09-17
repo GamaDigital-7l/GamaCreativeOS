@@ -1,15 +1,15 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
-import { GamaLogo } from '@/components/GamaLogo'; // Updated import
+import { GamaLogo } from '@/components/GamaLogo';
 
 const Login = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 p-4">
       <div className="w-full max-w-md bg-card text-card-foreground p-8 rounded-lg shadow-2xl border border-border">
-        <h1 className="text-4xl font-extrabold text-center text-primary mb-8 drop-shadow-md">
-          Gama Creative OS
-        </h1>
+        <div className="flex justify-center mb-8">
+          <img src="/gama-logo.png" alt="Gama Creative OS Logo" className="h-20 w-auto" />
+        </div>
         <Auth
           supabaseClient={supabase}
           providers={[]} // No third-party providers for now
@@ -32,7 +32,7 @@ const Login = () => {
           redirectTo={window.location.origin} // Redirect to home after login
         />
       </div>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
+      <GamaLogo />
     </div>
   );
 };

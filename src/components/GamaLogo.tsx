@@ -1,9 +1,7 @@
 export const GamaLogo = () => {
   return (
     <div className="p-4 text-center print:hidden">
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        Gama Creative OS
-      </p>
+      <img src="/gama-logo.png" alt="Gama Creative OS Logo" className="mx-auto h-10 w-auto" />
     </div>
   );
 };
