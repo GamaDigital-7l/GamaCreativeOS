@@ -1,16 +1,15 @@
 import { ServiceOrderForm } from "@/components/service-orders/ServiceOrderForm";
-import { GamaLogo } from "@/components/GamaLogo"; // Updated import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PlusCircle, Wrench } from "lucide-react";
-import React, { useEffect } from "react"; // Import useEffect
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const NewServiceOrderPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("NewServiceOrderPage rendered."); // Debug log
+    console.log("NewServiceOrderPage rendered.");
   }, []);
 
   return (
@@ -28,7 +27,7 @@ const NewServiceOrderPage = () => {
           <ServiceOrderForm />
         </CardContent>
       </Card>
-      <GamaLogo /> {/* Using the new GamaLogo component */}
+      {/* <GamaLogo /> Removido */}
     </div>
   );
 };
