@@ -76,7 +76,7 @@ export function ServiceOrderDetail() {
           *, 
           customers (*), 
           devices (*), 
-          suppliers (name), -- Join to get supplier name
+          suppliers (name), 
           service_order_field_values (value, custom_field_id, service_order_custom_fields (field_name, field_type, order_index))
         `)
         .eq('id', orderId)
