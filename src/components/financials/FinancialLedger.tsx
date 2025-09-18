@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowDownCircle, ArrowUpCircle, DollarSign, Plus, Wallet, Loader2 } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, DollarSign, Plus, Minus, Wallet, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Transaction {
