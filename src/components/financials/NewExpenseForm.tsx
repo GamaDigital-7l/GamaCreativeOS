@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/integrations/supabase/SessionContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
 
 const formSchema = z.object({
   transaction_date: z.date({ required_error: "A data é obrigatória." }),
@@ -24,6 +25,21 @@ const formSchema = z.object({
   ),
   category: z.string().optional(),
 });
+
+const predefinedDescriptions = [
+  "Lanche",
+  "Pagamento de Frete",
+  "Pagamento de Peças",
+  "Compra de Aparelhos",
+  "Vale",
+  "Aluguel",
+  "Salário",
+  "Contas de Consumo (Água, Luz, Internet)",
+  "Material de Escritório",
+  "Marketing/Publicidade",
+  "Impostos",
+  "Manutenção de Equipamentos",
+];
 
 export function NewExpenseForm({ onSuccess, currentCashRegisterId }: { onSuccess: () => void; currentCashRegisterId?: string }) {
   const { user } = useSession();
@@ -65,7 +81,20 @@ export function NewExpenseForm({ onSuccess, currentCashRegisterId }: { onSuccess
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-        <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Descrição da Despesa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <FormItem>
+          <FormLabel>Sugestões de Descrição</FormLabel>
+          <Select onValueChange={(value) => form.setValue("description", value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Escolha uma descrição comum (opcional)" />
+            </SelectTrigger>
+            <SelectContent>
+              {predefinedDescriptions.map((desc) => (
+                <SelectItem key={desc} value={desc}>{desc}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormItem>
+        <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><FileText className="h-4 w-4" /> Descrição da Despesa</FormLabel><FormControl><Input placeholder="Descreva a despesa..." {...field} /></FormControl><FormMessage /></FormItem>)} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField control={form.control} name="amount" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Valor (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
           <FormField control={form.control} name="transaction_date" render={({ field }) => (
