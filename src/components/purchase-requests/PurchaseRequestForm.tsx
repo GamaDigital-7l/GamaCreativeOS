@@ -51,6 +51,7 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
   });
 
   useEffect(() => {
+    console.log("PurchaseRequestForm loaded/re-rendered. User:", user?.id); // Added log
     if (requestId && user) {
       setIsLoadingData(true);
       supabase.from('purchase_requests').select('*').eq('id', requestId).eq('user_id', user.id).single()
@@ -67,13 +68,14 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
   }, [requestId, user, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("onSubmit triggered with values:", values); // Existing log
     if (!user) {
       showError("Você precisa estar logado para gerenciar pedidos de compra.");
       console.error("User not logged in for purchase request submission.");
       return;
     }
     setIsSubmitting(true);
-    console.log("Submitting purchase request with values:", values);
+    console.log("Submitting purchase request with values:", values); // Existing log
     try {
       const payload = {
         ...values,
@@ -105,13 +107,18 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
     }
   }
 
+  const handleFormSubmit = (event: React.FormEvent) => {
+    console.log("Attempting form submission..."); // New log
+    form.handleSubmit(onSubmit)(event);
+  };
+
   if (isLoadingData) {
     return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
+      <form onSubmit={handleFormSubmit} className="space-y-6 p-4">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><ClipboardList className="h-6 w-6 text-primary" /> {requestId ? "Editar Pedido de Compra" : "Novo Pedido de Compra"}</h2>
         
         <FormField control={form.control} name="notes" render={({ field }) => (
@@ -121,7 +128,7 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
             <FormDescription>
               Use este campo para registrar livremente o que precisa ser pedido.
             </FormDescription>
-            <FormMessage className="text-red-500 font-bold" /> {/* Adicionado estilo para visibilidade */}
+            <FormMessage className="text-red-500 font-bold" /> {/* Made more visible */}
           </FormItem>
         )} />
 
