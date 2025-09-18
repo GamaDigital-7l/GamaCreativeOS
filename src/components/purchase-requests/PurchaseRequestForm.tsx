@@ -57,6 +57,7 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
         .then(({ data, error }) => {
           if (error) {
             showError(`Erro ao carregar pedido de compra: ${error.message}`);
+            console.error("Erro ao carregar pedido de compra:", error);
           } else if (data) {
             form.reset(data);
           }
@@ -68,29 +69,39 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       showError("Você precisa estar logado para gerenciar pedidos de compra.");
+      console.error("User not logged in for purchase request submission.");
       return;
     }
     setIsSubmitting(true);
+    console.log("Submitting purchase request with values:", values);
     try {
       const payload = {
         ...values,
         user_id: user.id,
+        // Garantir que campos opcionais sejam explicitamente null se vazios/indefinidos
+        inventory_item_id: values.inventory_item_id || null,
+        requested_quantity: values.requested_quantity || null,
       };
+      console.log("Payload for Supabase:", payload);
 
       if (requestId) {
         const { error } = await supabase.from('purchase_requests').update(payload).eq('id', requestId).eq('user_id', user.id);
         if (error) throw error;
         showSuccess("Pedido de compra atualizado com sucesso!");
+        console.log("Purchase request updated successfully.");
       } else {
         const { error } = await supabase.from('purchase_requests').insert(payload);
         if (error) throw error;
         showSuccess("Pedido de compra criado com sucesso!");
+        console.log("Purchase request created successfully.");
       }
       onSuccess();
     } catch (error: any) {
+      console.error("Erro ao salvar pedido de compra:", error);
       showError(`Erro ao salvar pedido de compra: ${error.message}`);
     } finally {
       setIsSubmitting(false);
+      console.log("Submission finished. isSubmitting set to false.");
     }
   }
 
