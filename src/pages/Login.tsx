@@ -40,18 +40,30 @@ const Login = () => {
                 password_input_placeholder: 'Digite sua senha',
                 button_label: 'Entrar',
                 social_provider_text: 'Ou continue com',
-                // Estas duas linhas são a chave para remover o link de cadastro
+                // Estas linhas são a chave para remover o link de cadastro
                 no_account_text: '', // Esconde "Não tem uma conta?"
                 sign_up_link_text: '', // Esconde "Cadastre-se"
-                link_text: 'Já tem uma conta? Faça login', // Este é para "Já tem uma conta? Faça login"
+                link_text: '', // Esconde qualquer outro link que possa aparecer na tela de sign_in
               },
               forgotten_password: {
                 email_label: 'Seu e-mail',
                 password_label: 'Sua nova senha',
                 email_input_placeholder: 'Digite seu e-mail para redefinir a senha',
                 button_label: 'Enviar instruções de redefinição',
-                link_text: 'Esqueceu sua senha?',
+                link_text: 'Lembrou sua senha? Faça login', // Garante que este link leve de volta ao login
                 confirmation_text: 'Verifique seu e-mail para o link de redefinição de senha.',
+              },
+              // Explicitamente definindo a view 'sign_up' como vazia para garantir que não seja renderizada
+              sign_up: {
+                email_label: '',
+                password_label: '',
+                email_input_placeholder: '',
+                password_input_placeholder: '',
+                button_label: '',
+                social_provider_text: '',
+                link_text: '',
+                no_account_text: '',
+                sign_up_link_text: '',
               },
               update_password: {
                 password_label: 'Sua nova senha',
