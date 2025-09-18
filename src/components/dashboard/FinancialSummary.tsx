@@ -1,15 +1,20 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; // Added CardDescription
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, ArrowUpCircle, ArrowDownCircle, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { ptBR } from 'date-fns/locale'; // Import ptBR locale
+import { ptBR } from 'date-fns/locale';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // Import Dialog and DialogTrigger
+import { IncomeReportDialog } from './IncomeReportDialog'; // Import new dialog
+import { ExpenseReportDialog } from './ExpenseReportDialog'; // Import new dialog
 
 export function FinancialSummary() {
   const { user } = useSession();
   const [transactions, setTransactions] = useState<{ amount: number; type: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isIncomeDialogOpen, setIsIncomeDialogOpen] = useState(false); // State for income dialog
+  const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false); // State for expense dialog
 
   const fetchTransactions = useCallback(async () => {
     if (!user) return;
@@ -24,7 +29,7 @@ export function FinancialSummary() {
         .select('amount, type')
         .gte('transaction_date', startDate)
         .lte('transaction_date', endDate)
-        .eq('user_id', user.id); // Ensure filtering by user
+        .eq('user_id', user.id);
 
       if (!error) setTransactions(data || []);
       else console.error("Error fetching financial transactions:", error);
@@ -64,43 +69,57 @@ export function FinancialSummary() {
   }
 
   return (
-    <Card className="p-6 shadow-lg">
-      <CardHeader className="p-0 mb-6">
-        <CardTitle className="text-3xl font-bold tracking-tight">Resumo Financeiro do Mês</CardTitle>
-        <CardDescription className="text-muted-foreground">Visão geral das finanças no mês atual.</CardDescription>
-      </CardHeader>
-      <CardContent className="p-0 grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="border-l-4 border-green-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Entradas</CardTitle>
-            <ArrowUpCircle className="h-5 w-5 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-500">R$ {summary.income.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Total de receitas em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-red-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saídas</CardTitle>
-            <ArrowDownCircle className="h-5 w-5 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-red-500">R$ {summary.expense.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Total de despesas em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
-          </CardContent>
-        </Card>
-        <Card className={`border-l-4 ${balance >= 0 ? 'border-blue-500' : 'border-red-500'}`}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-            <DollarSign className={`h-5 w-5 ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-3xl font-bold ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`}>R$ {balance.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Saldo atual em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
-          </CardContent>
-        </Card>
-      </CardContent>
-    </Card>
+    <>
+      <Card className="p-6 shadow-lg">
+        <CardHeader className="p-0 mb-6">
+          <CardTitle className="text-3xl font-bold tracking-tight">Resumo Financeiro do Mês</CardTitle>
+          <CardDescription className="text-muted-foreground">Visão geral das finanças no mês atual.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <Dialog open={isIncomeDialogOpen} onOpenChange={setIsIncomeDialogOpen}>
+            <DialogTrigger asChild>
+              <Card className="border-l-4 border-green-500 cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Entradas</CardTitle>
+                  <ArrowUpCircle className="h-5 w-5 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-green-500">R$ {summary.income.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">Total de receitas em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
+                </CardContent>
+              </Card>
+            </DialogTrigger>
+            <IncomeReportDialog isOpen={isIncomeDialogOpen} onClose={() => setIsIncomeDialogOpen(false)} />
+          </Dialog>
+
+          <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
+            <DialogTrigger asChild>
+              <Card className="border-l-4 border-red-500 cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Saídas</CardTitle>
+                  <ArrowDownCircle className="h-5 w-5 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-red-500">R$ {summary.expense.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">Total de despesas em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
+                </CardContent>
+              </Card>
+            </DialogTrigger>
+            <ExpenseReportDialog isOpen={isExpenseDialogOpen} onClose={() => setIsExpenseDialogOpen(false)} />
+          </Dialog>
+
+          <Card className={`border-l-4 ${balance >= 0 ? 'border-blue-500' : 'border-red-500'}`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Saldo</CardTitle>
+              <DollarSign className={`h-5 w-5 ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-3xl font-bold ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`}>R$ {balance.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">Saldo atual em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+    </>
   );
 }

@@ -4,13 +4,16 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ShoppingCart, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { ptBR } from 'date-fns/locale'; // Import ptBR locale
+import { ptBR } from 'date-fns/locale';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // Import Dialog and DialogTrigger
+import { SalesReportDialog } from './SalesReportDialog'; // Import new dialog
 
 export function SalesSummary() {
   const { user, isLoading: isSessionLoading } = useSession();
   const [totalSales, setTotalSales] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSalesDialogOpen, setIsSalesDialogOpen] = useState(false); // State for sales dialog
 
   const fetchSalesSummary = useCallback(async () => {
     if (!user) return;
@@ -57,17 +60,22 @@ export function SalesSummary() {
   }
 
   return (
-    <Card className="border-l-4 border-blue-500">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Vendas de Aparelhos</CardTitle>
-        <ShoppingCart className="h-5 w-5 text-blue-500" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold text-blue-500">{totalSales}</div>
-        <p className="text-xs text-muted-foreground">Total de vendas em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
-        <div className="text-xl font-bold text-blue-500 mt-2">R$ {totalAmount.toFixed(2)}</div>
-        <p className="text-xs text-muted-foreground">Valor total vendido</p>
-      </CardContent>
-    </Card>
+    <Dialog open={isSalesDialogOpen} onOpenChange={setIsSalesDialogOpen}>
+      <DialogTrigger asChild>
+        <Card className="border-l-4 border-blue-500 cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Vendas de Aparelhos</CardTitle>
+            <ShoppingCart className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-blue-500">{totalSales}</div>
+            <p className="text-xs text-muted-foreground">Total de vendas em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
+            <div className="text-xl font-bold text-blue-500 mt-2">R$ {totalAmount.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">Valor total vendido</p>
+          </CardContent>
+        </Card>
+      </DialogTrigger>
+      <SalesReportDialog isOpen={isSalesDialogOpen} onClose={() => setIsSalesDialogOpen(false)} />
+    </Dialog>
   );
 }
