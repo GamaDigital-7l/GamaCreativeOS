@@ -49,6 +49,7 @@ import ManageCustomFieldsPage from "./pages/ManageCustomFieldsPage";
 import POSSalesListPage from "./pages/POSSalesListPage";
 import POSSaleDetailPage from "./pages/POSSaleDetailPage";
 import PurchaseRequestsPage from "./pages/PurchaseRequestsPage";
+import ImeiConsultationPage from "./pages/ImeiConsultationPage"; // New import
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
 import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
@@ -121,7 +122,8 @@ const App = () => (
               <Route path="/profile/edit" element={<EditUserProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/settings/custom-fields" element={<ManageCustomFieldsPage />} />
-              <Route path="/import-service-orders" element={<ImportServiceOrdersPage />} /> {/* New route */}
+              <Route path="/import-service-orders" element={<ImportServiceOrdersPage />} />
+              <Route path="/imei-consultation" element={<ImeiConsultationPage />} /> {/* New route */}
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

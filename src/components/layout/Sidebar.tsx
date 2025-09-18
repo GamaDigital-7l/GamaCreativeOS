@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus, History, ClipboardList, FileUp } from "lucide-react"; // Adicionado FileUp
+import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus, History, ClipboardList, FileUp, Search } from "lucide-react"; // Adicionado Search para IMEI
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,8 @@ const navItems = [
 ];
 
 const bottomNavItems = [
-  { href: "/import-service-orders", label: "Importar OS", icon: FileUp }, // Novo item
+  { href: "/imei-consultation", label: "Consulta IMEI", icon: Search }, // Novo item
+  { href: "/import-service-orders", label: "Importar OS", icon: FileUp },
   { href: "/gamification/manage", label: "Gerenciar Gamificação", icon: Trophy },
   { href: "/settings/custom-fields", label: "Campos da OS", icon: ListPlus },
   { href: "/settings", label: "Configurações", icon: Settings },
