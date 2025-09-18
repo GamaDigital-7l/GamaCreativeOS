@@ -1,8 +1,9 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus, History, ClipboardList, FileUp } from "lucide-react"; // Removido Search para IMEI
+import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus, History, ClipboardList, FileUp, ShieldCheck } from "lucide-react"; // Adicionado ShieldCheck
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/integrations/supabase/SessionContext"; // Importar useSession
 
 const navItems = [
   { href: "/", label: "Início", icon: Home },
@@ -20,12 +21,12 @@ const navItems = [
 ];
 
 const bottomNavItems = [
-  // O item 'Meu Perfil' será movido para dentro de /settings
-  { href: "/settings", label: "Configurações", icon: Settings }, // Configurações agora é o item pai
+  { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
 export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
   const navigate = useNavigate();
+  const { user, isLoading } = useSession(); // Usar useSession para obter o usuário e seu papel
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -53,7 +54,13 @@ export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
             {item.label}
           </NavLink>
         ))}
-        {/* O Histórico PDV agora será acessado pela página /pos */}
+        {/* Link para o Painel de Administração, visível apenas para admins */}
+        {!isLoading && user?.role === 'admin' && (
+          <NavLink to="/admin-dashboard" className={navLinkClasses}>
+            <ShieldCheck className="h-4 w-4" />
+            Painel Admin
+          </NavLink>
+        )}
       </nav>
       <nav className={cn("mt-auto grid gap-2 text-sm font-medium", isMobile ? "px-2" : "px-2 sm:py-5")}>
         {bottomNavItems.map((item) => (
