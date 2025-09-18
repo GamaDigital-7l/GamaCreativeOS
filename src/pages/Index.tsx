@@ -12,21 +12,6 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useSession } from "@/integrations/supabase/SessionContext"; // Importar useSession
 
-// Componente de depuração temporário
-const DebugUserRole = () => {
-  const { user, isLoading } = useSession();
-  if (isLoading) return <p>Carregando informações do usuário...</p>;
-  if (!user) return <p>Nenhum usuário logado.</p>;
-  return (
-    <Card className="mt-4 p-4 bg-blue-100 border-blue-400 text-blue-800">
-      <CardTitle className="text-lg">Informações do Usuário Logado (DEBUG)</CardTitle>
-      <p>Email: {user.email}</p>
-      <p>Role: <span className="font-bold">{user.role}</span></p>
-      <p>ID: {user.id}</p>
-    </Card>
-  );
-};
-
 const Index = () => {
   const navigate = useNavigate();
 
@@ -45,7 +30,6 @@ const Index = () => {
           </Button>
         </div>
       </div>
-      <DebugUserRole /> {/* Adicionado o componente de depuração aqui */}
       <div className="space-y-10">
         <FinancialSummary />
         
