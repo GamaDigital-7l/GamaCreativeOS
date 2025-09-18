@@ -17,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { QuoteShareDialog } from './QuoteShareDialog';
 import { PaymentDialog } from './PaymentDialog';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select components
 
 interface ServiceOrderDetails {
   id: string;
@@ -71,6 +72,7 @@ export function ServiceOrderDetail() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false); // New state for status update loading
 
   useEffect(() => {
     if (user && id) {
@@ -133,6 +135,32 @@ export function ServiceOrderDetail() {
         return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" /> Aguardando Aprovação</Badge>;
       default:
         return null;
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!user || !id || !serviceOrder) return;
+    setIsUpdatingStatus(true);
+    try {
+      const { error } = await supabase
+        .from('service_orders')
+        .update({ 
+          status: newStatus, 
+          updated_at: new Date().toISOString(),
+          // Adjust approval_status based on new status
+          approval_status: newStatus === 'orcamento' ? 'pending_approval' : 
+                           (newStatus === 'cancelado_pelo_cliente' || newStatus === 'nao_teve_reparo' ? 'rejected' : null),
+        })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      showSuccess(`Status da OS ${id.substring(0, 8)}... atualizado para ${serviceOrderUiStatuses.find(s => s.value === newStatus)?.label || newStatus}!`);
+      fetchServiceOrderDetails(id); // Refresh data
+    } catch (error: any) {
+      showError(`Erro ao atualizar status: ${error.message}`);
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -257,6 +285,25 @@ export function ServiceOrderDetail() {
               )}
               <Button variant="outline" size="sm" onClick={() => setIsShareDialogOpen(true)}><Share2 className="h-4 w-4 mr-2" /> Compartilhar Orçamento</Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/edit`}><Edit className="h-4 w-4 mr-2" /> Editar</Link></Button>
+              
+              {/* Status Selector */}
+              <Select value={serviceOrder.status} onValueChange={handleStatusChange} disabled={isUpdatingStatus}>
+                <SelectTrigger className="w-[180px] h-9">
+                  {isUpdatingStatus ? (
+                    <span className="flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Atualizando...</span>
+                  ) : (
+                    <SelectValue placeholder="Mudar Status" />
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  {serviceOrderUiStatuses.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               {canFinalize && (
                 <Button variant="default" size="sm" onClick={() => setIsPaymentDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
                   <DollarSign className="h-4 w-4 mr-2" /> Finalizar OS

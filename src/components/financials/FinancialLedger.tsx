@@ -5,6 +5,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { NewTransactionForm } from './NewTransactionForm';
+import { NewExpenseForm } from './NewExpenseForm'; // Import NewExpenseForm
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
@@ -38,7 +39,8 @@ export function FinancialLedger() {
   const { user } = useSession();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isIncomeFormOpen, setIsIncomeFormOpen] = useState(false); // Renamed for clarity
+  const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false); // New state for expense form
   const [transactionTypeFilter, setTransactionTypeFilter] = useState('all');
   const [currentCashRegister, setCurrentCashRegister] = useState<CashRegister | null>(null);
 
@@ -99,11 +101,22 @@ export function FinancialLedger() {
       query = query.not('related_sale_id', 'is', null);
     } else if (transactionTypeFilter === 'pos_sale') {
       query = query.not('related_pos_sale_id', 'is', null);
-    } else if (transactionTypeFilter === 'manual') {
+    } else if (transactionTypeFilter === 'manual_income') {
       query = query
         .is('related_service_order_id', null)
         .is('related_sale_id', null)
-        .is('related_pos_sale_id', null);
+        .is('related_pos_sale_id', null)
+        .eq('type', 'income');
+    } else if (transactionTypeFilter === 'manual_expense') { // New filter for manual expenses
+      query = query
+        .is('related_service_order_id', null)
+        .is('related_sale_id', null)
+        .is('related_pos_sale_id', null)
+        .eq('type', 'expense');
+    } else if (transactionTypeFilter === 'income') { // Filter for all income
+      query = query.eq('type', 'income');
+    } else if (transactionTypeFilter === 'expense') { // Filter for all expenses
+      query = query.eq('type', 'expense');
     }
 
     const { data, error } = await query;
@@ -162,25 +175,44 @@ export function FinancialLedger() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os Lançamentos</SelectItem>
-            <SelectItem value="manual">Lançamentos Manuais</SelectItem>
+            <SelectItem value="income">Todas as Entradas</SelectItem>
+            <SelectItem value="expense">Todas as Saídas</SelectItem>
+            <SelectItem value="manual_income">Entradas Manuais</SelectItem>
+            <SelectItem value="manual_expense">Saídas Manuais</SelectItem> {/* New filter option */}
             <SelectItem value="service_order">Ordens de Serviço</SelectItem>
             <SelectItem value="device_sale">Vendas de Aparelhos</SelectItem>
             <SelectItem value="pos_sale">Vendas PDV</SelectItem>
           </SelectContent>
         </Select>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto" disabled={!currentCashRegister || currentCashRegister.status !== 'open'}>
-              <Plus className="mr-2 h-4 w-4" /> Adicionar Lançamento
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><DollarSign className="h-6 w-6 text-primary" /> Novo Lançamento Financeiro</DialogTitle>
-            </DialogHeader>
-            <NewTransactionForm onSuccess={() => { fetchTransactions(); setIsFormOpen(false); }} currentCashRegisterId={currentCashRegister?.id} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Dialog open={isIncomeFormOpen} onOpenChange={setIsIncomeFormOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto" disabled={!currentCashRegister || currentCashRegister.status !== 'open'}>
+                <Plus className="mr-2 h-4 w-4" /> Adicionar Entrada
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2"><DollarSign className="h-6 w-6 text-primary" /> Nova Entrada Financeira</DialogTitle>
+              </DialogHeader>
+              <NewTransactionForm onSuccess={() => { fetchTransactions(); setIsIncomeFormOpen(false); }} currentCashRegisterId={currentCashRegister?.id} />
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isExpenseFormOpen} onOpenChange={setIsExpenseFormOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto bg-red-600 hover:bg-red-700" disabled={!currentCashRegister || currentCashRegister.status !== 'open'}>
+                <Minus className="mr-2 h-4 w-4" /> Adicionar Despesa
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2"><DollarSign className="h-6 w-6 text-primary" /> Nova Despesa (Contas a Pagar)</DialogTitle>
+              </DialogHeader>
+              <NewExpenseForm onSuccess={() => { fetchTransactions(); setIsExpenseFormOpen(false); }} currentCashRegisterId={currentCashRegister?.id} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {(!currentCashRegister || currentCashRegister.status !== 'open') && (
