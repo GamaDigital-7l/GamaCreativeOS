@@ -20,10 +20,8 @@ const navItems = [
 ];
 
 const bottomNavItems = [
-  // Os itens 'Importar OS', 'Gerenciar Gamificação' e 'Campos da OS' serão movidos para dentro de /settings
-  // O 'Histórico PDV' será acessado pela página /pos
+  // O item 'Meu Perfil' será movido para dentro de /settings
   { href: "/settings", label: "Configurações", icon: Settings }, // Configurações agora é o item pai
-  { href: "/profile", label: "Meu Perfil", icon: UserCircle },
 ];
 
 export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
