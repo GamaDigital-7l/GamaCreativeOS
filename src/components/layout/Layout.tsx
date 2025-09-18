@@ -2,9 +2,13 @@ import { Outlet } from "react-router-dom";
 import { Sidebar, SidebarNav } from "./Sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { PanelLeft } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { PanelLeft, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes"; // Importar useTheme
 
 export function Layout() {
+  const { setTheme } = useTheme(); // Usar o hook useTheme
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Sidebar />
@@ -21,7 +25,28 @@ export function Layout() {
               <SidebarNav isMobile={true} />
             </SheetContent>
           </Sheet>
-          {/* Futuramente, podemos adicionar um breadcrumb ou barra de busca aqui */}
+          <div className="ml-auto flex items-center gap-2"> {/* Adicionado div para alinhar à direita */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Alternar tema</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme("light")}>
+                  Claro
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                  Escuro
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("system")}>
+                  Sistema
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
         <main className="flex-1 p-4 sm:px-6 sm:pb-4 md:gap-8"> {/* Ajustado p-4 para mobile */}
           <Outlet />
