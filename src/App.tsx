@@ -59,13 +59,12 @@ const PrintableSaleReceiptPage = lazy(() => import("./pages/PrintableSaleReceipt
 const PrintSaleReceiptOptionsPage = lazy(() => import("./pages/PrintSaleReceiptOptionsPage"));
 const PrintPOSReceiptOptionsPage = lazy(() => import("./pages/PrintPOSReceiptOptionsPage"));
 const ImportServiceOrdersPage = lazy(() => import("./pages/ImportServiceOrdersPage"));
-// const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage")); // Removido temporariamente
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme" attribute="class"> {/* Adicionado ThemeProvider e attribute="class" */}
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme" attribute="class">
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -133,7 +132,6 @@ const App = () => (
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="/settings/custom-fields" element={<ManageCustomFieldsPage />} />
                         <Route path="/import-service-orders" element={<ImportServiceOrdersPage />} />
-                        {/* <Route path="/admin-dashboard" element={<AdminDashboardPage />} /> Removido temporariamente */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
@@ -144,7 +142,7 @@ const App = () => (
           </SessionContextProvider>
         </BrowserRouter>
       </TooltipProvider>
-    </ThemeProvider> {/* Fechado ThemeProvider */}
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

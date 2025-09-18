@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus, History, ClipboardList, FileUp, ShieldCheck } from "lucide-react"; // Adicionado ShieldCheck
+import { Home, Wrench, Users, Smartphone, Package, Settings, UserCircle, LogOut, ShoppingCart, Building, Receipt, DollarSign, Trophy, Store, ListPlus, History, ClipboardList, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -54,13 +54,6 @@ export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
             {item.label}
           </NavLink>
         ))}
-        {/* Link para o Painel de Administração, visível apenas para admins */}
-        {/* {!isLoading && user?.role === 'admin' && (
-          <NavLink to="/admin-dashboard" className={navLinkClasses}>
-            <ShieldCheck className="h-4 w-4" />
-            Painel Admin
-          </NavLink>
-        )} */}
       </nav>
       <nav className={cn("mt-auto grid gap-2 text-sm font-medium", isMobile ? "px-2" : "px-2 sm:py-5")}>
         {bottomNavItems.map((item) => (
