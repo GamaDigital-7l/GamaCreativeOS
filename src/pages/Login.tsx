@@ -40,7 +40,10 @@ const Login = () => {
                 password_input_placeholder: 'Digite sua senha',
                 button_label: 'Entrar',
                 social_provider_text: 'Ou continue com',
-                link_text: 'Já tem uma conta? Faça login',
+                // Estas duas linhas são a chave para remover o link de cadastro
+                no_account_text: '', // Esconde "Não tem uma conta?"
+                sign_up_link_text: '', // Esconde "Cadastre-se"
+                link_text: 'Já tem uma conta? Faça login', // Este é para "Já tem uma conta? Faça login"
               },
               forgotten_password: {
                 email_label: 'Seu e-mail',
@@ -62,7 +65,6 @@ const Login = () => {
                 link_text: 'Entrar com link mágico',
                 confirmation_text: 'Verifique seu e-mail para o link mágico.',
               },
-              // Removido 'sign_up' e 'verify_otp' para focar apenas no login
             },
           }}
         />
