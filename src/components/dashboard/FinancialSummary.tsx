@@ -8,6 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // Import Dialog and DialogTrigger
 import { IncomeReportDialog } from './IncomeReportDialog'; // Import new dialog
 import { ExpenseReportDialog } from './ExpenseReportDialog'; // Import new dialog
+import { BalanceReportDialog } from './BalanceReportDialog'; // Import new dialog
 
 export function FinancialSummary() {
   const { user } = useSession();
@@ -15,6 +16,7 @@ export function FinancialSummary() {
   const [isLoading, setIsLoading] = useState(true);
   const [isIncomeDialogOpen, setIsIncomeDialogOpen] = useState(false); // State for income dialog
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false); // State for expense dialog
+  const [isBalanceDialogOpen, setIsBalanceDialogOpen] = useState(false); // State for balance dialog
 
   const fetchTransactions = useCallback(async () => {
     if (!user) return;
@@ -108,16 +110,21 @@ export function FinancialSummary() {
             <ExpenseReportDialog isOpen={isExpenseDialogOpen} onClose={() => setIsExpenseDialogOpen(false)} />
           </Dialog>
 
-          <Card className={`border-l-4 ${balance >= 0 ? 'border-blue-500' : 'border-red-500'}`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-              <DollarSign className={`h-5 w-5 ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`} />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`}>R$ {balance.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Saldo atual em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
-            </CardContent>
-          </Card>
+          <Dialog open={isBalanceDialogOpen} onOpenChange={setIsBalanceDialogOpen}>
+            <DialogTrigger asChild>
+              <Card className={`border-l-4 ${balance >= 0 ? 'border-blue-500' : 'border-red-500'} cursor-pointer hover:bg-muted/50 transition-colors`}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Saldo</CardTitle>
+                  <DollarSign className={`h-5 w-5 ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`} />
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-3xl font-bold ${balance >= 0 ? 'text-blue-500' : 'text-red-500'}`}>R$ {balance.toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">Saldo atual em {format(new Date(), 'MMMM', { locale: ptBR })}</p>
+                </CardContent>
+              </Card>
+            </DialogTrigger>
+            <BalanceReportDialog isOpen={isBalanceDialogOpen} onClose={() => setIsBalanceDialogOpen(false)} />
+          </Dialog>
         </CardContent>
       </Card>
     </>

@@ -6,6 +6,8 @@ import { Loader2, Wrench, TrendingUp } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, getMonth, getYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // Import Dialog and DialogTrigger
+import { CommonServicesReportDialog } from './CommonServicesReportDialog'; // Import new dialog
 
 interface CommonServicesData {
   service: string;
@@ -17,6 +19,7 @@ export function CommonServicesWidget() {
   const [commonServices, setCommonServices] = useState<CommonServicesData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isCommonServicesDialogOpen, setIsCommonServicesDialogOpen] = useState(false); // State for common services dialog
 
   const fetchCommonServices = useCallback(async (date: Date) => {
     if (!user) return;
@@ -91,34 +94,39 @@ export function CommonServicesWidget() {
   }
 
   return (
-    <Card className="h-full flex flex-col border-l-4 border-orange-500">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Serviços Mais Comuns</CardTitle>
-        <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
-          <SelectTrigger className="w-[150px] h-8 text-sm">
-            <SelectValue placeholder="Mês" />
-          </SelectTrigger>
-          <SelectContent>
-            {generateMonthOptions().map(option => (
-              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </CardHeader>
-      <CardContent className="flex-grow flex flex-col justify-between">
-        {commonServices.length > 0 ? (
-          <ul className="space-y-2">
-            {commonServices.map((item, index) => (
-              <li key={index} className="flex justify-between items-center text-sm">
-                <span className="font-medium">{item.service}</span>
-                <span className="text-muted-foreground">{item.count} vezes</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-center text-muted-foreground text-sm mt-4">Nenhum serviço registrado neste mês.</p>
-        )}
-      </CardContent>
-    </Card>
+    <Dialog open={isCommonServicesDialogOpen} onOpenChange={setIsCommonServicesDialogOpen}>
+      <DialogTrigger asChild>
+        <Card className="h-full flex flex-col border-l-4 border-orange-500 cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Serviços Mais Comuns</CardTitle>
+            <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
+              <SelectTrigger className="w-[150px] h-8 text-sm">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {generateMonthOptions().map(option => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="flex-grow flex flex-col justify-between">
+            {commonServices.length > 0 ? (
+              <ul className="space-y-2">
+                {commonServices.map((item, index) => (
+                  <li key={index} className="flex justify-between items-center text-sm">
+                    <span className="font-medium">{item.service}</span>
+                    <span className="text-muted-foreground">{item.count} vezes</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center text-muted-foreground text-sm mt-4">Nenhum serviço registrado neste mês.</p>
+            )}
+          </CardContent>
+        </Card>
+      </DialogTrigger>
+      <CommonServicesReportDialog isOpen={isCommonServicesDialogOpen} onClose={() => setIsCommonServicesDialogOpen(false)} />
+    </Dialog>
   );
 }

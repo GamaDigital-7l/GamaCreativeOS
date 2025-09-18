@@ -6,6 +6,8 @@ import { Loader2, ShieldCheck, Clock, XCircle, CalendarDays } from 'lucide-react
 import { format, addDays, differenceInDays, startOfMonth, endOfMonth, getMonth, getYear, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // Import Dialog and DialogTrigger
+import { WarrantyReportDialog } from './WarrantyReportDialog'; // Import new dialog
 
 interface SaleWithWarranty {
   id: string;
@@ -28,6 +30,7 @@ export function WarrantyOverviewWidget() {
   const [summary, setSummary] = useState<WarrantySummaryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isWarrantyDialogOpen, setIsWarrantyDialogOpen] = useState(false); // State for warranty dialog
 
   const fetchWarrantySummary = useCallback(async (date: Date) => {
     if (!user) return;
@@ -113,51 +116,56 @@ export function WarrantyOverviewWidget() {
   }
 
   return (
-    <Card className="h-full flex flex-col border-l-4 border-green-600">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Garantias de Aparelhos</CardTitle>
-        <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
-          <SelectTrigger className="w-[150px] h-8 text-sm">
-            <SelectValue placeholder="Mês" />
-          </SelectTrigger>
-          <SelectContent>
-            {generateMonthOptions().map(option => (
-              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </CardHeader>
-      <CardContent className="flex-grow flex flex-col justify-between">
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Garantias Ativas</p>
-            <p className="text-2xl font-bold text-green-500">{summary?.totalActive || 0}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Vencendo em 30 dias</p>
-            <p className="text-2xl font-bold text-yellow-500">{summary?.expiringSoon || 0}</p>
-          </div>
-          <div className="col-span-2">
-            <p className="text-sm text-muted-foreground">Garantias Expiradas</p>
-            <p className="text-2xl font-bold text-red-500">{summary?.expired || 0}</p>
-          </div>
-        </div>
-        {summary && summary.expiringSales.length > 0 ? (
-          <div>
-            <p className="text-sm font-medium mb-2">Próximas a Vencer:</p>
-            <ul className="space-y-1 text-sm text-muted-foreground">
-              {summary.expiringSales.map((sale, index) => (
-                <li key={index} className="flex justify-between">
-                  <span>{sale.device_brand} {sale.device_model}</span>
-                  <span>ID: {sale.id.substring(0, 4)}...</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground text-sm mt-4">Nenhuma garantia registrada neste mês.</p>
-        )}
-      </CardContent>
-    </Card>
+    <Dialog open={isWarrantyDialogOpen} onOpenChange={setIsWarrantyDialogOpen}>
+      <DialogTrigger asChild>
+        <Card className="h-full flex flex-col border-l-4 border-green-600 cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Garantias de Aparelhos</CardTitle>
+            <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
+              <SelectTrigger className="w-[150px] h-8 text-sm">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {generateMonthOptions().map(option => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="flex-grow flex flex-col justify-between">
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Garantias Ativas</p>
+                <p className="text-2xl font-bold text-green-500">{summary?.totalActive || 0}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Vencendo em 30 dias</p>
+                <p className="text-2xl font-bold text-yellow-500">{summary?.expiringSoon || 0}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-sm text-muted-foreground">Garantias Expiradas</p>
+                <p className="text-2xl font-bold text-red-500">{summary?.expired || 0}</p>
+              </div>
+            </div>
+            {summary && summary.expiringSales.length > 0 ? (
+              <div>
+                <p className="text-sm font-medium mb-2">Próximas a Vencer:</p>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  {summary.expiringSales.map((sale, index) => (
+                    <li key={index} className="flex justify-between">
+                      <span>{sale.device_brand} {sale.device_model}</span>
+                      <span>ID: {sale.id.substring(0, 4)}...</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground text-sm mt-4">Nenhuma garantia registrada neste mês.</p>
+            )}
+          </CardContent>
+        </Card>
+      </DialogTrigger>
+      <WarrantyReportDialog isOpen={isWarrantyDialogOpen} onClose={() => setIsWarrantyDialogOpen(false)} />
+    </Dialog>
   );
 }

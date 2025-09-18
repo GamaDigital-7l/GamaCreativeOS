@@ -7,6 +7,8 @@ import { format, startOfMonth, endOfMonth, subMonths, addMonths, getMonth, getYe
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // Import Dialog and DialogTrigger
+import { SalesOverviewReportDialog } from './SalesOverviewReportDialog'; // Import new dialog
 
 interface SaleSummaryData {
   totalSold: number;
@@ -20,6 +22,7 @@ export function SalesOverviewWidget() {
   const [summary, setSummary] = useState<SaleSummaryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isSalesOverviewDialogOpen, setIsSalesOverviewDialogOpen] = useState(false); // State for sales overview dialog
 
   const fetchSalesSummary = useCallback(async (date: Date) => {
     if (!user) return;
@@ -96,51 +99,56 @@ export function SalesOverviewWidget() {
   }
 
   return (
-    <Card className="h-full flex flex-col border-l-4 border-indigo-500">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Visão Geral de Vendas</CardTitle>
-        <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
-          <SelectTrigger className="w-[150px] h-8 text-sm">
-            <SelectValue placeholder="Mês" />
-          </SelectTrigger>
-          <SelectContent>
-            {generateMonthOptions().map(option => (
-              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </CardHeader>
-      <CardContent className="flex-grow flex flex-col justify-between">
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Aparelhos Vendidos</p>
-            <p className="text-2xl font-bold">{summary?.totalSold || 0}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Total Vendido</p>
-            <p className="text-2xl font-bold text-green-500">R$ {(summary?.totalRevenue || 0).toFixed(2)}</p>
-          </div>
-          <div className="col-span-2">
-            <p className="text-sm text-muted-foreground">Lucro Total</p>
-            <p className={`text-2xl font-bold ${((summary?.totalProfit || 0) >= 0) ? 'text-blue-500' : 'text-red-500'}`}>R$ {(summary?.totalProfit || 0).toFixed(2)}</p>
-          </div>
-        </div>
-        {summary && summary.topModels.length > 0 ? (
-          <div>
-            <p className="text-sm font-medium mb-2">Modelos Mais Vendidos:</p>
-            <ul className="space-y-1 text-sm text-muted-foreground">
-              {summary.topModels.map((item, index) => (
-                <li key={index} className="flex justify-between">
-                  <span>{item.model}</span>
-                  <span>{item.count} unidades</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground text-sm mt-4">Nenhuma venda registrada neste mês.</p>
-        )}
-      </CardContent>
-    </Card>
+    <Dialog open={isSalesOverviewDialogOpen} onOpenChange={setIsSalesOverviewDialogOpen}>
+      <DialogTrigger asChild>
+        <Card className="h-full flex flex-col border-l-4 border-indigo-500 cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Visão Geral de Vendas</CardTitle>
+            <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
+              <SelectTrigger className="w-[150px] h-8 text-sm">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {generateMonthOptions().map(option => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="flex-grow flex flex-col justify-between">
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Aparelhos Vendidos</p>
+                <p className="text-2xl font-bold">{summary?.totalSold || 0}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Vendido</p>
+                <p className="text-2xl font-bold text-green-500">R$ {(summary?.totalRevenue || 0).toFixed(2)}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-sm text-muted-foreground">Lucro Total</p>
+                <p className={`text-2xl font-bold ${((summary?.totalProfit || 0) >= 0) ? 'text-blue-500' : 'text-red-500'}`}>R$ {(summary?.totalProfit || 0).toFixed(2)}</p>
+              </div>
+            </div>
+            {summary && summary.topModels.length > 0 ? (
+              <div>
+                <p className="text-sm font-medium mb-2">Modelos Mais Vendidos:</p>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  {summary.topModels.map((item, index) => (
+                    <li key={index} className="flex justify-between">
+                      <span>{item.model}</span>
+                      <span>{item.count} unidades</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground text-sm mt-4">Nenhuma venda registrada neste mês.</p>
+            )}
+          </CardContent>
+        </Card>
+      </DialogTrigger>
+      <SalesOverviewReportDialog isOpen={isSalesOverviewDialogOpen} onClose={() => setIsSalesOverviewDialogOpen(false)} />
+    </Dialog>
   );
 }

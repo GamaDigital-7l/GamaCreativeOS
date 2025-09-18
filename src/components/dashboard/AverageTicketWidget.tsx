@@ -6,6 +6,8 @@ import { Loader2, DollarSign, Users } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, getMonth, getYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // Import Dialog and DialogTrigger
+import { AverageTicketReportDialog } from './AverageTicketReportDialog'; // Import new dialog
 
 interface AverageTicketData {
   averageTicket: number;
@@ -17,6 +19,7 @@ export function AverageTicketWidget() {
   const [summary, setSummary] = useState<AverageTicketData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isAverageTicketDialogOpen, setIsAverageTicketDialogOpen] = useState(false); // State for average ticket dialog
 
   const fetchAverageTicket = useCallback(async (date: Date) => {
     if (!user) return;
@@ -121,35 +124,40 @@ export function AverageTicketWidget() {
   }
 
   return (
-    <Card className="h-full flex flex-col border-l-4 border-yellow-500">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Ticket Médio de Clientes</CardTitle>
-        <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
-          <SelectTrigger className="w-[150px] h-8 text-sm">
-            <SelectValue placeholder="Mês" />
-          </SelectTrigger>
-          <SelectContent>
-            {generateMonthOptions().map(option => (
-              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </CardHeader>
-      <CardContent className="flex-grow flex flex-col justify-between">
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Ticket Médio</p>
-            <p className="text-2xl font-bold text-blue-500">R$ {(summary?.averageTicket || 0).toFixed(2)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Clientes Atendidos</p>
-            <p className="text-2xl font-bold">{summary?.totalCustomers || 0}</p>
-          </div>
-        </div>
-        {summary?.totalCustomers === 0 && (
-          <p className="text-center text-muted-foreground text-sm mt-4">Nenhum cliente atendido neste mês.</p>
-        )}
-      </CardContent>
-    </Card>
+    <Dialog open={isAverageTicketDialogOpen} onOpenChange={setIsAverageTicketDialogOpen}>
+      <DialogTrigger asChild>
+        <Card className="h-full flex flex-col border-l-4 border-yellow-500 cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ticket Médio de Clientes</CardTitle>
+            <Select value={`${getYear(currentMonth)}-${getMonth(currentMonth) + 1}`} onValueChange={handleMonthChange}>
+              <SelectTrigger className="w-[150px] h-8 text-sm">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {generateMonthOptions().map(option => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="flex-grow flex flex-col justify-between">
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Ticket Médio</p>
+                <p className="text-2xl font-bold text-blue-500">R$ {(summary?.averageTicket || 0).toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Clientes Atendidos</p>
+                <p className="text-2xl font-bold">{summary?.totalCustomers || 0}</p>
+              </div>
+            </div>
+            {summary?.totalCustomers === 0 && (
+              <p className="text-center text-muted-foreground text-sm mt-4">Nenhum cliente atendido neste mês.</p>
+            )}
+          </CardContent>
+        </Card>
+      </DialogTrigger>
+      <AverageTicketReportDialog isOpen={isAverageTicketDialogOpen} onClose={() => setIsAverageTicketDialogOpen(false)} />
+    </Dialog>
   );
 }
