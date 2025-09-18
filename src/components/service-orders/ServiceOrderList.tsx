@@ -35,13 +35,16 @@ interface ServiceOrder {
   };
 }
 
+// Definindo os novos status para a UI e para o banco de dados
 const serviceOrderStatuses = [
   { value: 'all', label: 'Todos os Status' },
-  { value: 'pending', label: 'Pendente' },
-  { value: 'in_progress', label: 'Em Progresso' },
-  { value: 'ready', label: 'Pronto' },
-  { value: 'completed', label: 'Concluído' },
-  { value: 'cancelled', label: 'Cancelado' },
+  { value: 'orcamento', label: 'Orçamento' },
+  { value: 'aguardando_pecas', label: 'Aguardando Peças' },
+  { value: 'em_manutencao', label: 'Em Manutenção' },
+  { value: 'pronto_para_retirada', label: 'Pronto para Retirada' },
+  { value: 'finalizado', label: 'Finalizado' },
+  { value: 'nao_teve_reparo', label: 'Não Teve Reparo' },
+  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente' },
 ];
 
 export function ServiceOrderList() {
@@ -102,15 +105,18 @@ export function ServiceOrderList() {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'orcamento':
         return 'secondary';
-      case 'in_progress':
+      case 'aguardando_pecas':
+        return 'warning'; // Usando 'warning' para aguardando peças
+      case 'em_manutencao':
         return 'default';
-      case 'ready':
-        return 'success'; // Assuming a 'success' variant exists or can be styled
-      case 'completed':
+      case 'pronto_para_retirada':
+        return 'success'; // Usando 'success' para pronto
+      case 'finalizado':
         return 'outline';
-      case 'cancelled':
+      case 'nao_teve_reparo':
+      case 'cancelado_pelo_cliente':
         return 'destructive';
       default:
         return 'secondary';

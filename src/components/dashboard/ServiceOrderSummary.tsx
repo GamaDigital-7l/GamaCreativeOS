@@ -3,16 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; // Added CardDescription
-import { Loader2, Clock, Wrench, CheckCircle, Ban, ListTodo } from 'lucide-react';
+import { Loader2, Clock, Wrench, CheckCircle, Ban, ListTodo, Package, XCircle } from 'lucide-react'; // Adicionado Package, XCircle
 import { format } from 'date-fns'; // Import format for date formatting
 import { ptBR } from 'date-fns/locale'; // Import ptBR locale
 
 interface ServiceOrderSummaryData {
-  pending: number;
-  in_progress: number;
-  ready: number;
-  completed: number;
-  cancelled: number;
+  orcamento: number;
+  aguardando_aprovacao: number; // Para orcamento com pending_approval
+  aguardando_pecas: number;
+  em_manutencao: number;
+  pronto_para_retirada: number;
+  finalizado: number;
+  nao_teve_reparo: number;
+  cancelado_pelo_cliente: number;
   total: number;
 }
 
@@ -27,22 +30,40 @@ export function ServiceOrderSummary() {
     try {
       const { data, error, count } = await supabase
         .from('service_orders')
-        .select('status', { count: 'exact' })
+        .select('status, approval_status', { count: 'exact' }) // Selecionar approval_status também
         .eq('user_id', user.id); // Filter by current user's ID
 
       if (error) throw error;
 
-      const counts = data.reduce((acc, { status }) => {
-        if (status in acc) {
-          acc[status]++;
+      const counts = data.reduce((acc, { status, approval_status }) => {
+        // Mapear status do DB para categorias de resumo
+        if (status === 'orcamento' && approval_status === 'pending_approval') {
+          acc.aguardando_aprovacao++;
+        } else if (status === 'orcamento') {
+          acc.orcamento++;
+        } else if (status === 'aguardando_pecas') {
+          acc.aguardando_pecas++;
+        } else if (status === 'em_manutencao') {
+          acc.em_manutencao++;
+        } else if (status === 'pronto_para_retirada') {
+          acc.pronto_para_retirada++;
+        } else if (status === 'finalizado') {
+          acc.finalizado++;
+        } else if (status === 'nao_teve_reparo') {
+          acc.nao_teve_reparo++;
+        } else if (status === 'cancelado_pelo_cliente') {
+          acc.cancelado_pelo_cliente++;
         }
         return acc;
       }, {
-        pending: 0,
-        in_progress: 0,
-        ready: 0,
-        completed: 0,
-        cancelled: 0,
+        orcamento: 0,
+        aguardando_aprovacao: 0,
+        aguardando_pecas: 0,
+        em_manutencao: 0,
+        pronto_para_retirada: 0,
+        finalizado: 0,
+        nao_teve_reparo: 0,
+        cancelado_pelo_cliente: 0,
       });
 
       setSummary({ ...counts, total: count || 0 });
@@ -81,11 +102,14 @@ export function ServiceOrderSummary() {
   }
 
   const summaryItems = [
-    { title: 'Pendentes', value: summary.pending, icon: Clock, color: 'text-yellow-500' },
-    { title: 'Em Progresso', value: summary.in_progress, icon: Wrench, color: 'text-blue-500' },
-    { title: 'Prontas', value: summary.ready, icon: CheckCircle, color: 'text-green-500' },
-    { title: 'Concluídas', value: summary.completed, icon: CheckCircle, color: 'text-gray-500' },
-    { title: 'Canceladas', value: summary.cancelled, icon: Ban, color: 'text-red-500' },
+    { title: 'Orçamentos', value: summary.orcamento, icon: Clock, color: 'text-yellow-500' },
+    { title: 'Aguardando Aprovação', value: summary.aguardando_aprovacao, icon: Clock, color: 'text-orange-500' },
+    { title: 'Aguardando Peças', value: summary.aguardando_pecas, icon: Package, color: 'text-indigo-500' },
+    { title: 'Em Manutenção', value: summary.em_manutencao, icon: Wrench, color: 'text-blue-500' },
+    { title: 'Prontas', value: summary.pronto_para_retirada, icon: CheckCircle, color: 'text-green-500' },
+    { title: 'Finalizadas', value: summary.finalizado, icon: CheckCircle, color: 'text-gray-500' },
+    { title: 'Não Teve Reparo', value: summary.nao_teve_reparo, icon: Ban, color: 'text-red-500' },
+    { title: 'Canceladas pelo Cliente', value: summary.cancelado_pelo_cliente, icon: XCircle, color: 'text-red-700' },
   ];
 
   return (

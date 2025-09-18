@@ -28,7 +28,16 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Checkbox } from "@/components/ui/checkbox";
 import { ClientChecklistInput } from "./ClientChecklistInput";
 
-const serviceOrderStatuses = ["pending", "in_progress", "ready", "completed", "cancelled"];
+// Definindo os novos status para a UI e para o banco de dados
+const serviceOrderStatuses = [
+  { value: 'orcamento', label: 'Orçamento' },
+  { value: 'aguardando_pecas', label: 'Aguardando Peças' },
+  { value: 'em_manutencao', label: 'Em Manutenção' },
+  { value: 'pronto_para_retirada', label: 'Pronto para Retirada' },
+  { value: 'finalizado', label: 'Finalizado' },
+  { value: 'nao_teve_reparo', label: 'Não Teve Reparo' },
+  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente' },
+];
 
 const clientChecklistOptions = [
   "Tela", "Bateria", "Conector", "Touch", "Câmera Frontal",
@@ -49,7 +58,7 @@ const formSchema = z.object({
 
   guaranteeTerms: z.string().optional(),
   warranty_days: z.preprocess((val) => Number(val || 0), z.number().int().min(0).optional()),
-  status: z.enum(["pending", "in_progress", "ready", "completed", "cancelled"]),
+  status: z.enum(serviceOrderStatuses.map(s => s.value) as [string, ...string[]]), // Usar os novos status
   clientChecklist: z.record(z.enum(['ok', 'not_working'])).optional(),
   isUntestable: z.boolean().default(false),
   casing_status: z.enum(['good', 'scratched', 'damaged']).optional().nullable(),
@@ -107,7 +116,7 @@ export function EditServiceOrderForm() {
       totalAmount: 0, 
       partsCost: 0, partSupplierId: null, freightCost: 0, serviceCost: 0, // Initialize new fields
       guaranteeTerms: "", warranty_days: 90,
-      status: "pending",
+      status: "orcamento", // Default para 'orcamento' ao carregar
       clientChecklist: {},
       isUntestable: false,
       casing_status: null,
@@ -128,7 +137,7 @@ export function EditServiceOrderForm() {
         const { data: settingsData } = await supabase.from("user_settings").select("default_guarantee_terms").eq("id", user.id).single();
         
         // Fetch suppliers
-        const { data: suppliersData } = await supabase.from('suppliers').select('id, name').eq('user_id', user.id);
+        const { data: suppliersData } = await supabase.from('suppliers').select('id, name').eq('user.id', user.id);
         setSuppliers(suppliersData || []);
 
         // Fetch custom field definitions
@@ -171,7 +180,7 @@ export function EditServiceOrderForm() {
           serviceCost: data.service_cost || 0,
           guaranteeTerms: data.guarantee_terms || settingsData?.default_guarantee_terms || "",
           warranty_days: data.warranty_days || 90,
-          status: data.status as any,
+          status: data.status as any, // Usar o status do DB diretamente
           clientChecklist: data.client_checklist || {},
           isUntestable: data.is_untestable || false,
           casing_status: data.casing_status || null,
@@ -221,7 +230,11 @@ export function EditServiceOrderForm() {
         parts_cost: values.partsCost, service_cost: values.serviceCost, total_amount: values.totalAmount,
         freight_cost: values.freightCost, part_supplier_id: values.partSupplierId, // Save new fields
         guarantee_terms: values.guaranteeTerms, warranty_days: values.warranty_days,
-        status: values.status, updated_at: new Date().toISOString(),
+        status: values.status, // Usar o status selecionado no formulário
+        // Ajustar approval_status com base no novo status
+        approval_status: values.status === 'orcamento' ? 'pending_approval' : 
+                         (values.status === 'cancelado_pelo_cliente' || values.status === 'nao_teve_reparo' ? 'rejected' : null),
+        updated_at: new Date().toISOString(),
         client_checklist: values.clientChecklist || {},
         is_untestable: values.isUntestable,
         casing_status: values.casing_status,
@@ -250,7 +263,8 @@ export function EditServiceOrderForm() {
 
     try {
       const { error: osError } = await supabase.from('service_orders').update({
-        status: 'completed', payment_method: paymentMethod, payment_status: 'paid',
+        status: 'finalizado', // Mudar para 'finalizado' ao concluir pagamento
+        payment_method: paymentMethod, payment_status: 'paid',
         finalized_at: new Date().toISOString(),
       }).eq('id', id);
       if (osError) throw osError;
@@ -413,7 +427,7 @@ export function EditServiceOrderForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField control={form.control} name="warranty_days" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><CalendarDays className="h-4 w-4" /> Garantia (dias)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="status" render={({ field }) => (<FormItem><FormLabel>Status da OS</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{serviceOrderStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="status" render={({ field }) => (<FormItem><FormLabel>Status da OS</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{serviceOrderStatuses.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
           </div>
           <FormField control={form.control} name="guaranteeTerms" render={({ field }) => (<FormItem><FormLabel>Termos de Garantia</FormLabel><FormControl><Textarea className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
 
@@ -456,15 +470,15 @@ export function EditServiceOrderForm() {
                       type="button" 
                       onClick={() => setIsPaymentDialogOpen(true)} 
                       className="bg-green-600 hover:bg-green-700"
-                      disabled={watchedStatus !== 'ready'}
+                      disabled={watchedStatus !== 'pronto_para_retirada'} // Habilitar apenas se status for 'pronto_para_retirada'
                     >
                       <DollarSign className="h-4 w-4 mr-2" /> Finalizar e Registrar Pagamento
                     </Button>
                   </div>
                 </TooltipTrigger>
-                {watchedStatus !== 'ready' && (
+                {watchedStatus !== 'pronto_para_retirada' && (
                   <TooltipContent>
-                    <p>Mude o status para "Pronto" para habilitar a finalização.</p>
+                    <p>Mude o status para "Pronto para Retirada" para habilitar a finalização.</p>
                   </TooltipContent>
                 )}
               </Tooltip>

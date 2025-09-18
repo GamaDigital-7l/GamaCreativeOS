@@ -51,6 +51,17 @@ interface ServiceOrderDetails {
   }[];
 }
 
+// Definindo os novos status para a UI e para o banco de dados
+const serviceOrderUiStatuses = [
+  { value: 'orcamento', label: 'Orçamento' },
+  { value: 'aguardando_pecas', label: 'Aguardando Peças' },
+  { value: 'em_manutencao', label: 'Em Manutenção' },
+  { value: 'pronto_para_retirada', label: 'Pronto para Retirada' },
+  { value: 'finalizado', label: 'Finalizado' },
+  { value: 'nao_teve_reparo', label: 'Não Teve Reparo' },
+  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente' },
+];
+
 export function ServiceOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -90,6 +101,27 @@ export function ServiceOrderDetail() {
     }
   };
 
+  // Helper function to get badge variant for the main status
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'orcamento':
+        return 'secondary';
+      case 'aguardando_pecas':
+        return 'warning';
+      case 'em_manutencao':
+        return 'default';
+      case 'pronto_para_retirada':
+        return 'success';
+      case 'finalizado':
+        return 'outline';
+      case 'nao_teve_reparo':
+      case 'cancelado_pelo_cliente':
+        return 'destructive';
+      default:
+        return 'secondary';
+    }
+  };
+
   const ApprovalStatusBadge = () => {
     if (!serviceOrder?.approval_status) return null;
     switch (serviceOrder.approval_status) {
@@ -97,8 +129,10 @@ export function ServiceOrderDetail() {
         return <Badge variant="success" className="gap-1"><CheckCircle className="h-3 w-3" /> Aprovado em {serviceOrder.approved_at ? format(new Date(serviceOrder.approved_at), 'dd/MM/yy') : 'N/A'}</Badge>;
       case 'rejected':
         return <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" /> Recusado</Badge>;
-      default:
+      case 'pending_approval': // Explicitly handle pending_approval
         return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" /> Aguardando Aprovação</Badge>;
+      default:
+        return null;
     }
   };
 
@@ -107,7 +141,8 @@ export function ServiceOrderDetail() {
 
     try {
       const { error: osError } = await supabase.from('service_orders').update({
-        status: 'completed', payment_method: paymentMethod, payment_status: 'paid',
+        status: 'finalizado', // Mudar para 'finalizado' ao concluir pagamento
+        payment_method: paymentMethod, payment_status: 'paid',
         finalized_at: new Date().toISOString(),
       }).eq('id', id);
       if (osError) throw osError;
@@ -168,7 +203,11 @@ export function ServiceOrderDetail() {
     return <p className="text-center text-red-500">Ordem de Serviço não encontrada.</p>;
   }
 
-  const canFinalize = serviceOrder.status !== 'completed' && serviceOrder.status !== 'cancelled' && (serviceOrder.status === 'ready' || serviceOrder.approval_status === 'approved');
+  // Lógica para habilitar o botão de finalização
+  const canFinalize = serviceOrder.status !== 'finalizado' && 
+                      serviceOrder.status !== 'cancelado_pelo_cliente' && 
+                      serviceOrder.status !== 'nao_teve_reparo' && 
+                      (serviceOrder.status === 'pronto_para_retirada' || serviceOrder.approval_status === 'approved');
 
   // Group custom field values by field_name
   const groupedCustomFields = serviceOrder.service_order_field_values.reduce((acc, fieldValue) => {
@@ -209,7 +248,7 @@ export function ServiceOrderDetail() {
             <div className="flex flex-wrap gap-2 justify-end mt-2 sm:mt-0">
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print`} target="_blank"><Printer className="h-4 w-4 mr-2" /> Imprimir OS</Link></Button>
               <Button variant="outline" size="sm" asChild><Link to={`/service-orders/${serviceOrder.id}/print-label`} target="_blank"><Ticket className="h-4 w-4 mr-2" /> Imprimir Etiqueta</Link></Button>
-              {serviceOrder.status === 'completed' && (
+              {serviceOrder.status === 'finalizado' && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/service-orders/${serviceOrder.id}/print-warranty`} target="_blank">
                     <FileText className="h-4 w-4 mr-2" /> Imprimir Garantia
@@ -253,7 +292,11 @@ export function ServiceOrderDetail() {
           <div className="flex justify-between items-center p-3 bg-muted rounded-lg flex-wrap gap-2">
             <div>
               <span className="text-sm text-muted-foreground">Status da OS</span>
-              <p className="font-bold text-lg">{serviceOrder.status}</p>
+              <p className="font-bold text-lg">
+                <Badge variant={getStatusBadgeVariant(serviceOrder.status)}>
+                  {serviceOrderUiStatuses.find(s => s.value === serviceOrder.status)?.label || serviceOrder.status}
+                </Badge>
+              </p>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Status do Orçamento</span>

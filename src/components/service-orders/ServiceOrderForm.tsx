@@ -28,6 +28,17 @@ const clientChecklistOptions = [
   "Botões Volume", "Botão Power", "Rede", "Wi-Fi", "Bluetooth",
 ];
 
+// Definindo os novos status para a UI e para o banco de dados
+const serviceOrderStatuses = [
+  { value: 'orcamento', label: 'Orçamento' },
+  { value: 'aguardando_pecas', label: 'Aguardando Peças' },
+  { value: 'em_manutencao', label: 'Em Manutenção' },
+  { value: 'pronto_para_retirada', label: 'Pronto para Retirada' },
+  { value: 'finalizado', label: 'Finalizado' },
+  { value: 'nao_teve_reparo', label: 'Não Teve Reparo' },
+  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente' },
+];
+
 const formSchema = z.object({
   customerId: z.string({ required_error: "Selecione um cliente." }),
   deviceBrand: z.string().min(2, { message: "Marca do aparelho é obrigatória." }),
@@ -51,6 +62,7 @@ const formSchema = z.object({
   guaranteeTerms: z.string().optional(),
   warranty_days: z.preprocess((val) => Number(val || 0), z.number().int().min(0).optional()),
   customFields: z.record(z.union([z.string(), z.array(z.string())])).optional(),
+  status: z.enum(serviceOrderStatuses.map(s => s.value) as [string, ...string[]]), // Adicionado status ao schema
 }).superRefine((data, ctx) => {
   // Custom field validation
   if (data.customFields) {
@@ -119,6 +131,7 @@ export function ServiceOrderForm() {
       guaranteeTerms: "",
       warranty_days: 90,
       customFields: {},
+      status: 'orcamento', // Default status for new OS
     },
     context: { customFieldDefinitions },
   });
@@ -207,7 +220,8 @@ export function ServiceOrderForm() {
 
         guarantee_terms: values.guaranteeTerms,
         warranty_days: values.warranty_days,
-        status: 'pending',
+        status: values.status, // Usar o status selecionado no formulário
+        approval_status: values.status === 'orcamento' ? 'pending_approval' : null, // Definir approval_status se for 'orcamento'
         client_checklist: values.clientChecklist || {},
         is_untestable: values.isUntestable,
         casing_status: values.casing_status,
@@ -431,6 +445,28 @@ export function ServiceOrderForm() {
               <FormField control={form.control} name="freightCost" render={({ field }) => (<FormItem><FormLabel>Custo do Frete (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="serviceCost" render={({ field }) => (<FormItem><FormLabel>Custo da Mão de Obra (R$)</FormLabel><FormControl><Input type="text" inputMode="decimal" placeholder="0,00" {...field} /></FormControl><FormMessage /></FormItem>)} />
             </div>
+          </div>
+
+          {/* Campo de Status da OS */}
+          <div className="p-4 border rounded-lg">
+            <FormField control={form.control} name="status" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-semibold text-lg flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" /> 7. Status da Ordem de Serviço</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {serviceOrderStatuses.map(s => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando OS...</> : <><PlusCircle className="mr-2 h-4 w-4" /> Criar Ordem de Serviço</>}</Button>
