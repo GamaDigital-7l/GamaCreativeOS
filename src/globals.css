@@ -38,35 +38,35 @@
   }
 
   .dark {
-    /* Dark Mode Colors (adjusted for better contrast) */
-    --background: 222 47.4% 11.2%; /* Darker blue-gray background */
-    --foreground: 210 20% 98%;
-    --card: 217.2 32.6% 17.5%; /* Darker card background */
-    --card-foreground: 210 20% 98%;
-    --popover: 222 47.4% 11.2%; /* Match background */
-    --popover-foreground: 210 20% 98%;
+    /* Dark Mode Colors (adjusted for stronger contrast) */
+    --background: 240 10% 3.9%; /* Very dark gray */
+    --foreground: 0 0% 98%; /* White text */
+    --card: 240 10% 5.9%; /* Slightly lighter dark gray for cards */
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%; /* Match background */
+    --popover-foreground: 0 0% 98%;
     --primary: 210 80% 50%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 217.2 32.6% 20%; /* Softer secondary, slightly lighter than card */
+    --secondary: 240 10% 12%; /* Darker secondary */
     --secondary-foreground: 0 0% 98%;
-    --muted: 217.2 32.6% 17.5%; /* Match card */
-    --muted-foreground: 215 14.3% 56.9%;
-    --accent: 217.2 32.6% 17.5%; /* Match card */
+    --muted: 240 10% 12%; /* Darker muted */
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 10% 12%; /* Darker accent */
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 217.2 32.6% 25%; /* Slightly darker border */
-    --input: 217.2 32.6% 17.5%; /* Match card */
+    --border: 240 10% 16.9%; /* Darker border */
+    --input: 240 10% 12%; /* Darker input */
     --ring: 210 80% 50%;
 
     /* Sidebar specific colors for Dark Mode */
-    --sidebar-background: 222 47.4% 11.2%; /* Match main background */
-    --sidebar-foreground: 210 20% 98%;
+    --sidebar-background: 240 10% 3.9%; /* Match main background */
+    --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 210 80% 50%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 210 80% 50%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 217.2 32.6% 25%; /* Match main border */
+    --sidebar-border: 240 10% 16.9%; /* Match main border */
     --sidebar-ring: 210 80% 50%;
   }
 }
