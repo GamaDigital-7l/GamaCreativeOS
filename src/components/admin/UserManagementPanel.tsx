@@ -213,35 +213,6 @@ export function UserManagementPanel() {
     }
   };
 
-  // Temporary function to update current user's role to admin
-  const forceSetAdminRole = async () => {
-    if (!currentUser) {
-      showError("Nenhum usuário logado para atualizar.");
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase.functions.invoke('manage-user', {
-        method: 'POST',
-        body: {
-          action: 'update',
-          userId: currentUser.id,
-          role: 'admin',
-        },
-      });
-      if (error) throw error;
-      showSuccess("Seu papel foi atualizado para 'admin'!");
-      // No need to fetchUsers here, as the current user's session will refresh
-      // and the SessionContext will pick up the new role.
-    } catch (error: any) {
-      console.error("Erro ao forçar papel de admin:", error);
-      showError(`Erro ao forçar papel de admin: ${error.message || "Tente novamente."}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -255,17 +226,6 @@ export function UserManagementPanel() {
     return (
       <div className="p-4">
         <p className="text-center text-red-500">Você não tem permissão para visualizar este conteúdo.</p>
-        <p className="text-center text-muted-foreground mt-2">Se você deveria ser um administrador, clique no botão abaixo para tentar corrigir seu papel.</p>
-        <div className="flex justify-center mt-4">
-          <Button onClick={forceSetAdminRole} disabled={isSubmitting}>
-            {isSubmitting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <CheckCircle className="mr-2 h-4 w-4" />
-            )}
-            Tentar me tornar Admin
-          </Button>
-        </div>
       </div>
     );
   }
