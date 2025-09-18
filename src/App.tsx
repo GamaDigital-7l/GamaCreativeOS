@@ -59,7 +59,7 @@ const PrintableSaleReceiptPage = lazy(() => import("./pages/PrintableSaleReceipt
 const PrintSaleReceiptOptionsPage = lazy(() => import("./pages/PrintSaleReceiptOptionsPage"));
 const PrintPOSReceiptOptionsPage = lazy(() => import("./pages/PrintPOSReceiptOptionsPage"));
 const ImportServiceOrdersPage = lazy(() => import("./pages/ImportServiceOrdersPage"));
-const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage")); // Importar a nova página
+// const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage")); // Removido temporariamente
 
 const queryClient = new QueryClient();
 
@@ -133,7 +133,7 @@ const App = () => (
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="/settings/custom-fields" element={<ManageCustomFieldsPage />} />
                         <Route path="/import-service-orders" element={<ImportServiceOrdersPage />} />
-                        <Route path="/admin-dashboard" element={<AdminDashboardPage />} /> {/* Nova rota para o painel de administração */}
+                        {/* <Route path="/admin-dashboard" element={<AdminDashboardPage />} /> Removido temporariamente */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>

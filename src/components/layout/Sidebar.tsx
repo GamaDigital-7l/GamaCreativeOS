@@ -55,12 +55,12 @@ export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
           </NavLink>
         ))}
         {/* Link para o Painel de Administração, visível apenas para admins */}
-        {!isLoading && user?.role === 'admin' && (
+        {/* {!isLoading && user?.role === 'admin' && (
           <NavLink to="/admin-dashboard" className={navLinkClasses}>
             <ShieldCheck className="h-4 w-4" />
             Painel Admin
           </NavLink>
-        )}
+        )} */}
       </nav>
       <nav className={cn("mt-auto grid gap-2 text-sm font-medium", isMobile ? "px-2" : "px-2 sm:py-5")}>
         {bottomNavItems.map((item) => (
