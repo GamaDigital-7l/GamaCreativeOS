@@ -8,7 +8,7 @@ const navItems = [
   { href: "/", label: "Início", icon: Home },
   { href: "/service-orders", label: "Ordens de Serviço", icon: Wrench },
   { href: "/sales", label: "Vendas de Aparelhos", icon: ShoppingCart },
-  { href: "/pos", label: "PDV", icon: Receipt },
+  { href: "/pos", label: "PDV", icon: Receipt }, // PDV agora é o item pai
   { href: "/financials", label: "Financeiro", icon: DollarSign },
   { href: "/customers", label: "Clientes", icon: Users },
   { href: "/devices", label: "Dispositivos", icon: Smartphone },
@@ -20,11 +20,9 @@ const navItems = [
 ];
 
 const bottomNavItems = [
-  // { href: "/imei-consultation", label: "Consulta IMEI", icon: Search }, // Item removido
-  { href: "/import-service-orders", label: "Importar OS", icon: FileUp },
-  { href: "/gamification/manage", label: "Gerenciar Gamificação", icon: Trophy },
-  { href: "/settings/custom-fields", label: "Campos da OS", icon: ListPlus },
-  { href: "/settings", label: "Configurações", icon: Settings },
+  // Os itens 'Importar OS', 'Gerenciar Gamificação' e 'Campos da OS' serão movidos para dentro de /settings
+  // O 'Histórico PDV' será acessado pela página /pos
+  { href: "/settings", label: "Configurações", icon: Settings }, // Configurações agora é o item pai
   { href: "/profile", label: "Meu Perfil", icon: UserCircle },
 ];
 
@@ -57,10 +55,7 @@ export function SidebarNav({ isMobile = false }: { isMobile?: boolean }) {
             {item.label}
           </NavLink>
         ))}
-        <NavLink to="/pos/history" className={navLinkClasses}>
-          <History className="h-4 w-4" />
-          Histórico PDV
-        </NavLink>
+        {/* O Histórico PDV agora será acessado pela página /pos */}
       </nav>
       <nav className={cn("mt-auto grid gap-2 text-sm font-medium", isMobile ? "px-2" : "px-2 sm:py-5")}>
         {bottomNavItems.map((item) => (
