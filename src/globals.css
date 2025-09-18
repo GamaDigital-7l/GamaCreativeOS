@@ -4,28 +4,62 @@
 
 @layer base {
   :root {
+    /* Light Mode Colors */
+    --background: 0 0% 100%; /* White background */
+    --foreground: 220 14.3% 9.4%; /* Dark text */
+    --card: 0 0% 100%; /* White card background */
+    --card-foreground: 220 14.3% 9.4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 14.3% 9.4%;
+    --primary: 210 80% 50%; /* Keep primary blue */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 210 40% 96.1%; /* Light gray secondary */
+    --secondary-foreground: 220 14.3% 9.4%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 14.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 220 14.3% 9.4%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214.3 31.8% 91.4%; /* Light border */
+    --input: 214.3 31.8% 91.4%;
+    --ring: 210 80% 50%;
+    --radius: 0.75rem;
+
+    /* Sidebar specific colors for Light Mode */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 14.3% 9.4%;
+    --sidebar-primary: 210 80% 50%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 210 80% 50%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 210 80% 50%;
+  }
+
+  .dark {
+    /* Dark Mode Colors (existing values) */
     --background: 220 14.3% 9.4%; /* Darker, softer background */
     --foreground: 210 20% 98%;
     --card: 220 12% 13%; /* Slightly lighter card background */
     --card-foreground: 210 20% 98%;
     --popover: 220 14.3% 9.4%;
     --popover-foreground: 210 20% 98%;
-    --primary: 210 80% 50%; /* Keep primary blue */
+    --primary: 210 80% 50%;
     --primary-foreground: 0 0% 98%;
     --secondary: 215 27.9% 16.9%; /* Softer secondary */
-    --secondary-foreground: 210 20% 98%;
+    --secondary-foreground: 0 0% 98%;
     --muted: 215 27.9% 16.9%;
     --muted-foreground: 215 14.3% 56.9%;
     --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 215 27.9% 25%; /* Softer border */
     --input: 215 27.9% 16.9%;
     --ring: 210 80% 50%;
-    --radius: 0.75rem; /* Slightly more rounded corners */
 
-    /* Sidebar specific colors, now aligned with blue theme */
+    /* Sidebar specific colors for Dark Mode */
     --sidebar-background: 220 14.3% 9.4%;
     --sidebar-foreground: 210 20% 98%;
     --sidebar-primary: 210 80% 50%;
@@ -35,28 +69,6 @@
     --sidebar-border: 215 27.9% 25%;
     --sidebar-ring: 210 80% 50%;
   }
-
-  .dark {
-    --background: 220 14.3% 9.4%;
-    --foreground: 210 20% 98%;
-    --card: 220 12% 13%;
-    --card-foreground: 210 20% 98%;
-    --popover: 220 14.3% 9.4%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 210 80% 50%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 215 14.3% 56.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 215 27.9% 25%;
-    --input: 215 27.9% 16.9%;
-    --ring: 210 80% 50%;
-  }
 }
 
 @layer base {
@@ -65,6 +77,14 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Background pattern for light mode */
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(circle at 25px 25px, hsl(var(--primary) / 0.05) 2%, transparent 0%), radial-gradient(circle at 75px 75px, hsl(var(--primary) / 0.02) 2%, transparent 0%);
+    background-size: 100px 100px;
+  }
+
+  .dark body {
+    /* Background pattern for dark mode */
     background-color: hsl(var(--background));
     background-image: radial-gradient(circle at 25px 25px, hsl(var(--primary) / 0.1) 2%, transparent 0%), radial-gradient(circle at 75px 75px, hsl(var(--primary) / 0.05) 2%, transparent 0%);
     background-size: 100px 100px;
