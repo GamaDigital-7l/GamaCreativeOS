@@ -140,9 +140,9 @@ export function ServiceOrderKanban() {
   }
 
   return (
-    <div className="flex overflow-x-auto space-x-4 p-2">
+    <div className="flex overflow-x-auto space-x-4 p-2 h-[calc(100vh-180px)] items-start"> {/* Adicionado altura fixa e alinhamento ao topo */}
       {kanbanColumns.map(column => (
-        <div key={column.value} className="flex-shrink-0 w-72 md:w-80 bg-card rounded-lg shadow-md border"> {/* Ajustado w-72 para mobile */}
+        <div key={column.value} className="flex-shrink-0 w-72 md:w-80 bg-card rounded-lg shadow-md border flex flex-col h-full"> {/* Coluna como flex container vertical */}
           <CardHeader className={`py-3 px-4 rounded-t-lg ${column.color} text-white`}>
             <CardTitle className="text-lg font-semibold flex justify-between items-center">
               {column.label}
@@ -151,7 +151,7 @@ export function ServiceOrderKanban() {
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 space-y-3 min-h-[200px]">
+          <CardContent className="p-3 space-y-3 flex-grow overflow-y-auto"> {/* Conteúdo da coluna com rolagem vertical */}
             {ordersByStatus[column.value]?.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">Nenhuma OS aqui.</p>
             ) : (
