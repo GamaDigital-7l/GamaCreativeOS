@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
@@ -14,9 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Link, useNavigate } from 'react-router-dom'; // Adicionado useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, PlusCircle, Wrench, User, Smartphone, Clock, CheckCircle, Ban } from 'lucide-react'; // Adicionado User, Smartphone, Clock, CheckCircle, Ban icons
+import { Eye, Search, X, PlusCircle, Wrench, User, Smartphone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -47,23 +47,34 @@ const serviceOrderStatuses = [
   { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente' },
 ];
 
-export function ServiceOrderList() {
+// Adiciona um debounce simples para a função de busca
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+export const ServiceOrderList = React.memo(function ServiceOrderList() {
   const { user, isLoading: isSessionLoading } = useSession();
-  const navigate = useNavigate(); // Inicializado useNavigate
+  const navigate = useNavigate();
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // Debounce de 500ms
   const [statusFilter, setStatusFilter] = useState('all');
 
-  useEffect(() => {
-    if (!isSessionLoading && user) {
-      fetchServiceOrders();
-    } else if (!isSessionLoading && !user) {
-      setIsLoading(false);
-    }
-  }, [user, isSessionLoading, searchTerm, statusFilter]); // Re-fetch when filters change
-
-  const fetchServiceOrders = async () => {
+  const fetchServiceOrders = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
       let query = supabase
@@ -76,17 +87,17 @@ export function ServiceOrderList() {
           customers (name, phone),
           devices (brand, model)
         `)
-        .eq('user_id', user?.id) // Filter by current user's ID
+        .eq('user_id', user.id) // Filter by current user's ID
         .order('created_at', { ascending: false });
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
 
-      if (searchTerm) {
+      if (debouncedSearchTerm) {
         // Perform a case-insensitive search across customer name, device brand, and device model
         query = query.or(
-          `customers.name.ilike.%${searchTerm}%,devices.brand.ilike.%${searchTerm}%,devices.model.ilike.%${searchTerm}%`
+          `customers.name.ilike.%${debouncedSearchTerm}%,devices.brand.ilike.%${debouncedSearchTerm}%,devices.model.ilike.%${debouncedSearchTerm}%`
         );
       }
 
@@ -101,18 +112,26 @@ export function ServiceOrderList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, debouncedSearchTerm, statusFilter]); // Dependências para useCallback
+
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchServiceOrders();
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+    }
+  }, [user, isSessionLoading, fetchServiceOrders]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'orcamento':
         return 'secondary';
       case 'aguardando_pecas':
-        return 'warning'; // Usando 'warning' para aguardando peças
+        return 'warning';
       case 'em_manutencao':
         return 'default';
       case 'pronto_para_retirada':
-        return 'success'; // Usando 'success' para pronto
+        return 'success';
       case 'finalizado':
         return 'outline';
       case 'nao_teve_reparo':
@@ -125,15 +144,15 @@ export function ServiceOrderList() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 sm:p-6"> {/* Ajustado padding */}
-        <CardTitle className="text-xl sm:text-2xl flex items-center gap-2"><Wrench className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Ordens de Serviço</CardTitle> {/* Ajustado tamanho do título */}
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 sm:p-6">
+        <CardTitle className="text-xl sm:text-2xl flex items-center gap-2"><Wrench className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Ordens de Serviço</CardTitle>
         <Button asChild className="w-full sm:w-auto">
           <Link to="/new-service-order">
             <PlusCircle className="h-4 w-4 mr-2" /> Nova Ordem de Serviço
           </Link>
         </Button>
       </CardHeader>
-      <CardContent className="p-4 sm:p-6"> {/* Ajustado padding */}
+      <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -141,7 +160,7 @@ export function ServiceOrderList() {
               placeholder="Buscar por cliente, marca ou modelo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-8 w-full" // Garantido largura total
+              className="pl-9 pr-8 w-full"
             />
             {searchTerm && (
               <Button
@@ -155,7 +174,7 @@ export function ServiceOrderList() {
             )}
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-[180px]"> {/* Garantido largura total em mobile */}
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Filtrar por Status" />
             </SelectTrigger>
             <SelectContent>
@@ -203,7 +222,7 @@ export function ServiceOrderList() {
                     <TableCell className="max-w-[200px] truncate">{order.issue_description}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/service-orders/${order.id}`} onClick={(e) => e.stopPropagation()}> {/* Prevent double navigation */}
+                        <Link to={`/service-orders/${order.id}`} onClick={(e) => e.stopPropagation()}>
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
@@ -217,4 +236,4 @@ export function ServiceOrderList() {
       </CardContent>
     </Card>
   );
-}
+});

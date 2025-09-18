@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, Plus, Loader2, Trash2, User, Phone, Mail, MapPin } from 'lucide-react'; // Adicionado Phone, Mail, MapPin
+import { Eye, Search, X, Plus, Loader2, Trash2, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -38,35 +38,45 @@ interface Customer {
   address?: string;
 }
 
-export function CustomerList() {
+// Adiciona um debounce simples para a função de busca
+function useDebounce(value: string, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+export const CustomerList = React.memo(function CustomerList() {
   const { user, isLoading: isSessionLoading } = useSession();
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // Debounce de 500ms
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (!isSessionLoading && user) {
-      fetchCustomers();
-    } else if (!isSessionLoading && !user) {
-      setIsLoading(false);
-      navigate('/login');
-    }
-  }, [user, isSessionLoading, searchTerm, navigate]);
-
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
       let query = supabase
         .from('customers')
         .select(`id, created_at, name, phone, email, address`)
-        .eq('user_id', user?.id) // Filter by current user's ID
+        .eq('user_id', user.id) // Filter by current user's ID
         .order('created_at', { ascending: false });
 
-      if (searchTerm) {
+      if (debouncedSearchTerm) {
         query = query.or(
-          `name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+          `name.ilike.%${debouncedSearchTerm}%,phone.ilike.%${debouncedSearchTerm}%,email.ilike.%${debouncedSearchTerm}%`
         );
       }
 
@@ -81,9 +91,19 @@ export function CustomerList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, debouncedSearchTerm]); // Dependências para useCallback
 
-  const handleDeleteCustomer = async (customerId: string) => {
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchCustomers();
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+      navigate('/login');
+    }
+  }, [user, isSessionLoading, fetchCustomers, navigate]);
+
+  const handleDeleteCustomer = useCallback(async (customerId: string) => {
+    if (!user) return;
     setIsDeleting(true);
     try {
       // Check if customer is linked to any devices or service orders
@@ -110,7 +130,7 @@ export function CustomerList() {
         .from('customers')
         .delete()
         .eq('id', customerId)
-        .eq('user_id', user?.id); // Ensure only user's own customers can be deleted
+        .eq('user_id', user.id); // Ensure only user's own customers can be deleted
 
       if (error) throw error;
 
@@ -122,7 +142,7 @@ export function CustomerList() {
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [user]); // Dependências para useCallback
 
   return (
     <Card className="w-full">
@@ -231,4 +251,4 @@ export function CustomerList() {
       </CardContent>
     </Card>
   );
-}
+});
