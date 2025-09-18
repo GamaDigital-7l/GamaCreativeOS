@@ -23,7 +23,7 @@ export function Layout() {
           </Sheet>
           {/* Futuramente, podemos adicionar um breadcrumb ou barra de busca aqui */}
         </header>
-        <main className="flex-1 p-4 sm:px-6 sm:pb-4 md:gap-8">
+        <main className="flex-1 p-4 sm:px-6 sm:pb-4 md:gap-8"> {/* Ajustado p-4 para mobile */}
           <Outlet />
         </main>
       </div>

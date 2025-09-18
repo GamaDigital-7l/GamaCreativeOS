@@ -280,7 +280,7 @@ export function CashRegisterReports() {
                             <p className="font-semibold">R$ {(cr.final_balance || 0).toFixed(2)}</p>
                           </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-4 border-t pt-3 mt-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t pt-3 mt-3"> {/* Ajustado para 1 coluna em mobile */}
                           <div className="flex items-center gap-1 text-green-500">
                             <ArrowUpCircle className="h-4 w-4" />
                             <p className="text-sm">Entradas: <span className="font-semibold">R$ {totalIncome.toFixed(2)}</span></p>

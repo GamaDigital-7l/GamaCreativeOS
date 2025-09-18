@@ -178,7 +178,7 @@ export function PointOfSale() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> {/* Ajustado para 1 coluna em mobile */}
       <div className="md:col-span-2">
         <Card>
           <CardHeader>

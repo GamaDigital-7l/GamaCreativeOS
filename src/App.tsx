@@ -1,60 +1,64 @@
+import React, { lazy, Suspense } from "react"; // Importar lazy e Suspense
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import NewServiceOrderPage from "./pages/NewServiceOrderPage";
-import ServiceOrdersPage from "./pages/ServiceOrdersPage";
-import ServiceOrderDetailPage from "./pages/ServiceOrderDetailPage";
-import EditServiceOrderPage from "./pages/EditServiceOrderPage";
-import CustomersPage from "./pages/CustomersPage";
-import NewCustomerPage from "./pages/NewCustomerPage";
-import CustomerDetailPage from "./pages/CustomerDetailPage";
-import EditCustomerPage from "./pages/EditCustomerPage";
-import DevicesPage from "./pages/DevicesPage";
-import NewDevicePage from "./pages/NewDevicePage";
-import DeviceDetailPage from "./pages/DeviceDetailPage";
-import EditDevicePage from "./pages/EditDevicePage";
-import UserProfilePage from "./pages/UserProfilePage";
-import EditUserProfilePage from "./pages/EditUserProfilePage";
-import InventoryPage from "./pages/InventoryPage";
-import NewInventoryItemPage from "./pages/NewInventoryItemPage";
-import InventoryItemDetailPage from "./pages/InventoryItemDetailPage";
-import EditInventoryItemPage from "./pages/EditInventoryItemPage";
-import SettingsPage from "./pages/SettingsPage";
-import PrintServiceOrderPage from "./pages/PrintServiceOrderPage";
-import PrintServiceOrderLabelPage from "./pages/PrintServiceOrderLabelPage";
-import PrintableServiceOrderWarrantyPage from "./pages/PrintableServiceOrderWarrantyPage";
 import PhotoUploadPage from "./pages/PhotoUploadPage";
-import SuppliersPage from "./pages/SuppliersPage";
-import NewSupplierPage from "./pages/NewSupplierPage";
-import SupplierDetailPage from "./pages/SupplierDetailPage";
-import EditSupplierPage from "./pages/EditSupplierPage";
-import SalesPage from "./pages/SalesPage";
-import NewSalePage from "./pages/NewSalePage";
-import SaleDetailPage from "./pages/SaleDetailPage";
-import EditSalePage from "./pages/EditSalePage";
-import PointOfSalePage from "./pages/PointOfSalePage";
 import QuoteApprovalPage from "./pages/QuoteApprovalPage";
-import FinancialsPage from "./pages/FinancialsPage";
-import GamificationPage from "./pages/GamificationPage";
-import ManageGamificationPage from "./pages/ManageGamificationPage";
-import OnlineCatalogPage from "./pages/OnlineCatalogPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
 import PublicCatalogPage from "./pages/PublicCatalogPage";
-import ManageCustomFieldsPage from "./pages/ManageCustomFieldsPage";
-import POSSalesListPage from "./pages/POSSalesListPage";
-import POSSaleDetailPage from "./pages/POSSaleDetailPage";
-import PurchaseRequestsPage from "./pages/PurchaseRequestsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContext";
 import { Layout } from "./components/layout/Layout";
-import PrintableSaleReceiptPage from "./pages/PrintableSaleReceiptPage";
-import PrintSaleReceiptOptionsPage from "./pages/PrintSaleReceiptOptionsPage";
-import PrintPOSReceiptOptionsPage from "./pages/PrintPOSReceiptOptionsPage";
-import ImportServiceOrdersPage from "./pages/ImportServiceOrdersPage";
+
+// Lazy-loaded pages
+const Index = lazy(() => import("./pages/Index"));
+const NewServiceOrderPage = lazy(() => import("./pages/NewServiceOrderPage"));
+const ServiceOrdersPage = lazy(() => import("./pages/ServiceOrdersPage"));
+const ServiceOrderDetailPage = lazy(() => import("./pages/ServiceOrderDetailPage"));
+const EditServiceOrderPage = lazy(() => import("./pages/EditServiceOrderPage"));
+const CustomersPage = lazy(() => import("./pages/CustomersPage"));
+const NewCustomerPage = lazy(() => import("./pages/NewCustomerPage"));
+const CustomerDetailPage = lazy(() => import("./pages/CustomerDetailPage"));
+const EditCustomerPage = lazy(() => import("./pages/EditCustomerPage"));
+const DevicesPage = lazy(() => import("./pages/DevicesPage"));
+const NewDevicePage = lazy(() => import("./pages/NewDevicePage"));
+const DeviceDetailPage = lazy(() => import("./pages/DeviceDetailPage"));
+const EditDevicePage = lazy(() => import("./pages/EditDevicePage"));
+const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
+const EditUserProfilePage = lazy(() => import("./pages/EditUserProfilePage"));
+const InventoryPage = lazy(() => import("./pages/InventoryPage"));
+const NewInventoryItemPage = lazy(() => import("./pages/NewInventoryItemPage"));
+const InventoryItemDetailPage = lazy(() => import("./pages/InventoryItemDetailPage"));
+const EditInventoryItemPage = lazy(() => import("./pages/EditInventoryItemPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const PrintServiceOrderPage = lazy(() => import("./pages/PrintServiceOrderPage"));
+const PrintServiceOrderLabelPage = lazy(() => import("./pages/PrintServiceOrderLabelPage"));
+const PrintableServiceOrderWarrantyPage = lazy(() => import("./pages/PrintableServiceOrderWarrantyPage"));
+const SuppliersPage = lazy(() => import("./pages/SuppliersPage"));
+const NewSupplierPage = lazy(() => import("./pages/NewSupplierPage"));
+const SupplierDetailPage = lazy(() => import("./pages/SupplierDetailPage"));
+const EditSupplierPage = lazy(() => import("./pages/EditSupplierPage"));
+const SalesPage = lazy(() => import("./pages/SalesPage"));
+const NewSalePage = lazy(() => import("./pages/NewSalePage"));
+const SaleDetailPage = lazy(() => import("./pages/SaleDetailPage"));
+const EditSalePage = lazy(() => import("./pages/EditSalePage"));
+const PointOfSalePage = lazy(() => import("./pages/PointOfSalePage"));
+const FinancialsPage = lazy(() => import("./pages/FinancialsPage"));
+const GamificationPage = lazy(() => import("./pages/GamificationPage"));
+const ManageGamificationPage = lazy(() => import("./pages/ManageGamificationPage"));
+const OnlineCatalogPage = lazy(() => import("./pages/OnlineCatalogPage"));
+const ManageCustomFieldsPage = lazy(() => import("./pages/ManageCustomFieldsPage"));
+const POSSalesListPage = lazy(() => import("./pages/POSSalesListPage"));
+const POSSaleDetailPage = lazy(() => import("./pages/POSSaleDetailPage"));
+const PurchaseRequestsPage = lazy(() => import("./pages/PurchaseRequestsPage"));
+const PrintableSaleReceiptPage = lazy(() => import("./pages/PrintableSaleReceiptPage"));
+const PrintSaleReceiptOptionsPage = lazy(() => import("./pages/PrintSaleReceiptOptionsPage"));
+const PrintPOSReceiptOptionsPage = lazy(() => import("./pages/PrintPOSReceiptOptionsPage"));
+const ImportServiceOrdersPage = lazy(() => import("./pages/ImportServiceOrdersPage"));
+
 
 const queryClient = new QueryClient();
 
@@ -83,47 +87,55 @@ const App = () => (
 
             {/* Rotas dentro do layout principal (com menu lateral) */}
             <Route element={<Layout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/service-orders" element={<ServiceOrdersPage />} />
-              <Route path="/new-service-order" element={<NewServiceOrderPage />} />
-              <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
-              <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
-              <Route path="/sales" element={<SalesPage />} />
-              <Route path="/sales/new" element={<NewSalePage />} />
-              <Route path="/sales/:id" element={<SaleDetailPage />} />
-              <Route path="/sales/:id/edit" element={<EditSalePage />} />
-              <Route path="/pos" element={<PointOfSalePage />} />
-              <Route path="/pos/history" element={<POSSalesListPage />} />
-              <Route path="/pos-sales/:id" element={<POSSaleDetailPage />} />
-              <Route path="/financials" element={<FinancialsPage />} />
-              <Route path="/customers" element={<CustomersPage />} />
-              <Route path="/new-customer" element={<NewCustomerPage />} />
-              <Route path="/customers/:id" element={<CustomerDetailPage />} />
-              <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
-              <Route path="/devices" element={<DevicesPage />} />
-              <Route path="/new-device" element={<NewDevicePage />} />
-              <Route path="/devices/:id" element={<DeviceDetailPage />} />
-              <Route path="/devices/:id/edit" element={<EditDevicePage />} />
-              <Route path="/inventory" element={<InventoryPage />} />
-              <Route path="/inventory/new" element={<NewInventoryItemPage />} />
-              <Route path="/inventory/:id" element={<InventoryItemDetailPage />} />
-              <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
-              <Route path="/purchase-requests" element={<PurchaseRequestsPage />} />
-              <Route path="/suppliers" element={<SuppliersPage />} />
-              <Route path="/suppliers/new" element={<NewSupplierPage />} />
-              <Route path="/suppliers/:id" element={<SupplierDetailPage />} />
-              <Route path="/suppliers/:id/edit" element={<EditSupplierPage />} />
-              <Route path="/catalog" element={<OnlineCatalogPage />} />
-              <Route path="/catalog/:itemIds" element={<OnlineCatalogPage />} />
-              <Route path="/gamification" element={<GamificationPage />} />
-              <Route path="/gamification/manage" element={<ManageGamificationPage />} />
-              <Route path="/profile" element={<UserProfilePage />} />
-              <Route path="/profile/edit" element={<EditUserProfilePage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/settings/custom-fields" element={<ManageCustomFieldsPage />} />
-              <Route path="/import-service-orders" element={<ImportServiceOrdersPage />} />
-              {/* <Route path="/imei-consultation" element={<ImeiConsultationPage />} /> */}
-              <Route path="*" element={<NotFound />} />
+              <Route 
+                path="*" 
+                element={
+                  <Suspense fallback={<div className="flex h-screen items-center justify-center text-primary text-xl">Carregando...</div>}>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/service-orders" element={<ServiceOrdersPage />} />
+                      <Route path="/new-service-order" element={<NewServiceOrderPage />} />
+                      <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
+                      <Route path="/service-orders/:id/edit" element={<EditServiceOrderPage />} />
+                      <Route path="/sales" element={<SalesPage />} />
+                      <Route path="/sales/new" element={<NewSalePage />} />
+                      <Route path="/sales/:id" element={<SaleDetailPage />} />
+                      <Route path="/sales/:id/edit" element={<EditSalePage />} />
+                      <Route path="/pos" element={<PointOfSalePage />} />
+                      <Route path="/pos/history" element={<POSSalesListPage />} />
+                      <Route path="/pos-sales/:id" element={<POSSaleDetailPage />} />
+                      <Route path="/financials" element={<FinancialsPage />} />
+                      <Route path="/customers" element={<CustomersPage />} />
+                      <Route path="/new-customer" element={<NewCustomerPage />} />
+                      <Route path="/customers/:id" element={<CustomerDetailPage />} />
+                      <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
+                      <Route path="/devices" element={<DevicesPage />} />
+                      <Route path="/new-device" element={<NewDevicePage />} />
+                      <Route path="/devices/:id" element={<DeviceDetailPage />} />
+                      <Route path="/devices/:id/edit" element={<EditDevicePage />} />
+                      <Route path="/inventory" element={<InventoryPage />} />
+                      <Route path="/inventory/new" element={<NewInventoryItemPage />} />
+                      <Route path="/inventory/:id" element={<InventoryItemDetailPage />} />
+                      <Route path="/inventory/:id/edit" element={<EditInventoryItemPage />} />
+                      <Route path="/purchase-requests" element={<PurchaseRequestsPage />} />
+                      <Route path="/suppliers" element={<SuppliersPage />} />
+                      <Route path="/suppliers/new" element={<NewSupplierPage />} />
+                      <Route path="/suppliers/:id" element={<SupplierDetailPage />} />
+                      <Route path="/suppliers/:id/edit" element={<EditSupplierPage />} />
+                      <Route path="/catalog" element={<OnlineCatalogPage />} />
+                      <Route path="/catalog/:itemIds" element={<OnlineCatalogPage />} />
+                      <Route path="/gamification" element={<GamificationPage />} />
+                      <Route path="/gamification/manage" element={<ManageGamificationPage />} />
+                      <Route path="/profile" element={<UserProfilePage />} />
+                      <Route path="/profile/edit" element={<EditUserProfilePage />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/settings/custom-fields" element={<ManageCustomFieldsPage />} />
+                      <Route path="/import-service-orders" element={<ImportServiceOrdersPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                }
+              />
             </Route>
           </Routes>
         </SessionContextProvider>

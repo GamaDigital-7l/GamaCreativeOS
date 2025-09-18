@@ -184,7 +184,7 @@ export function FinancialLedger() {
             <SelectItem value="pos_sale">Vendas PDV</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto"> {/* Ajustado para flex-col em mobile */}
           <Dialog open={isIncomeFormOpen} onOpenChange={setIsIncomeFormOpen}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto" disabled={!currentCashRegister || currentCashRegister.status !== 'open'}>

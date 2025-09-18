@@ -142,7 +142,7 @@ export function ServiceOrderKanban() {
   return (
     <div className="flex overflow-x-auto space-x-4 p-2">
       {kanbanColumns.map(column => (
-        <div key={column.value} className="flex-shrink-0 w-80 bg-card rounded-lg shadow-md border">
+        <div key={column.value} className="flex-shrink-0 w-72 md:w-80 bg-card rounded-lg shadow-md border"> {/* Ajustado w-72 para mobile */}
           <CardHeader className={`py-3 px-4 rounded-t-lg ${column.color} text-white`}>
             <CardTitle className="text-lg font-semibold flex justify-between items-center">
               {column.label}

@@ -118,7 +118,7 @@ export function ServiceOrderSummary() {
         <CardTitle className="text-3xl font-bold tracking-tight">Resumo de Ordens de Serviço</CardTitle>
         <CardDescription className="text-muted-foreground">Visão geral do status das suas ordens de serviço.</CardDescription>
       </CardHeader>
-      <CardContent className="p-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <CardContent className="p-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"> {/* Ajustado para 4 colunas em XL */}
         <Card className="col-span-full sm:col-span-2 lg:col-span-3 xl:col-span-1 bg-primary/10 border-primary/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Ordens</CardTitle>
