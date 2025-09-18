@@ -14,4 +14,9 @@ export default defineConfig(() => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Expose Supabase project ID and URL to the client
+    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify("https://wazymrsugupnogtcddpq.supabase.co"),
+    'import.meta.env.VITE_SUPABASE_FUNCTIONS_URL': JSON.stringify("https://wazymrsugupnogtcddpq.supabase.co/functions/v1"),
+  },
 }));

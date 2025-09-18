@@ -38,6 +38,7 @@ interface UserProfile {
   role: string;
   subscription_status: string;
   created_at: string;
+  is_blocked: boolean; // Added to reflect ban_until status
 }
 
 interface UserFormValues {
@@ -47,6 +48,7 @@ interface UserFormValues {
   last_name?: string;
   role: string;
   subscription_status: string;
+  is_blocked?: boolean;
 }
 
 export function UserManagementPanel() {
@@ -63,6 +65,7 @@ export function UserManagementPanel() {
     last_name: '',
     role: 'user',
     subscription_status: 'inactive',
+    is_blocked: false,
   });
 
   useEffect(() => {
@@ -77,24 +80,12 @@ export function UserManagementPanel() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, role, subscription_status, created_at');
+      const { data, error } = await supabase.functions.invoke('list-users', {
+        method: 'GET',
+      });
 
       if (error) throw error;
-
-      // Fetch auth.users to get emails
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      if (authError) throw authError;
-
-      const authUsersMap = new Map(authUsers.users.map(u => [u.id, u.email]));
-
-      const combinedUsers: UserProfile[] = profiles.map(profile => ({
-        ...profile,
-        email: authUsersMap.get(profile.id) || 'N/A',
-      }));
-
-      setUsers(combinedUsers);
+      setUsers(data as UserProfile[]);
     } catch (error: any) {
       console.error("Erro ao buscar usuários:", error);
       showError(`Erro ao carregar usuários: ${error.message || "Tente novamente."}`);
@@ -112,6 +103,7 @@ export function UserManagementPanel() {
       last_name: '',
       role: 'user',
       subscription_status: 'inactive',
+      is_blocked: false,
     });
     setIsFormOpen(true);
   };
@@ -125,6 +117,7 @@ export function UserManagementPanel() {
       role: user.role,
       subscription_status: user.subscription_status,
       password: '', // Password should not be pre-filled for security
+      is_blocked: user.is_blocked,
     });
     setIsFormOpen(true);
   };
@@ -134,54 +127,37 @@ export function UserManagementPanel() {
     try {
       if (editingUser) {
         // Update existing user
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
+        const { error } = await supabase.functions.invoke('manage-user', {
+          method: 'POST',
+          body: {
+            action: 'update',
+            userId: editingUser.id,
+            email: formValues.email,
+            password: formValues.password || undefined, // Only send if provided
             first_name: formValues.first_name,
             last_name: formValues.last_name,
             role: formValues.role,
             subscription_status: formValues.subscription_status,
-          })
-          .eq('id', editingUser.id);
-        if (profileError) throw profileError;
-
-        // Update email if changed (requires admin privileges)
-        if (formValues.email !== editingUser.email) {
-          const { error: authUpdateError } = await supabase.auth.admin.updateUserById(editingUser.id, { email: formValues.email });
-          if (authUpdateError) throw authUpdateError;
-        }
-        // Update password if provided
-        if (formValues.password) {
-          const { error: passwordUpdateError } = await supabase.auth.admin.updateUserById(editingUser.id, { password: formValues.password });
-          if (passwordUpdateError) throw passwordUpdateError;
-        }
-
+            is_blocked: formValues.is_blocked,
+          },
+        });
+        if (error) throw error;
         showSuccess("Usuário atualizado com sucesso!");
       } else {
         // Create new user
-        const { data, error: authError } = await supabase.auth.admin.createUser({
-          email: formValues.email,
-          password: formValues.password,
-          email_confirm: true, // Automatically confirm email
-          user_metadata: {
-            first_name: formValues.first_name,
-            last_name: formValues.last_name,
-          },
-        });
-        if (authError) throw authError;
-
-        // Insert profile data
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
+        const { error } = await supabase.functions.invoke('manage-user', {
+          method: 'POST',
+          body: {
+            action: 'create',
+            email: formValues.email,
+            password: formValues.password,
             first_name: formValues.first_name,
             last_name: formValues.last_name,
             role: formValues.role,
             subscription_status: formValues.subscription_status,
-          });
-        if (profileError) throw profileError;
-
+          },
+        });
+        if (error) throw error;
         showSuccess("Usuário criado com sucesso!");
       }
       setIsFormOpen(false);
@@ -197,10 +173,14 @@ export function UserManagementPanel() {
   const handleDeleteUser = async (userId: string) => {
     setIsSubmitting(true);
     try {
-      // Delete from auth.users (this will cascade delete from profiles due to FK)
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-      if (authError) throw authError;
-
+      const { error } = await supabase.functions.invoke('manage-user', {
+        method: 'POST',
+        body: {
+          action: 'delete',
+          userId,
+        },
+      });
+      if (error) throw error;
       showSuccess("Usuário deletado com sucesso!");
       fetchUsers();
     } catch (error: any) {
@@ -214,8 +194,13 @@ export function UserManagementPanel() {
   const handleBlockUser = async (userId: string, currentBlockedStatus: boolean) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        ban_duration: currentBlockedStatus ? null : '1000000h', // Block indefinitely or unblock
+      const { error } = await supabase.functions.invoke('manage-user', {
+        method: 'POST',
+        body: {
+          action: 'update',
+          userId,
+          is_blocked: !currentBlockedStatus, // Toggle block status
+        },
       });
       if (error) throw error;
       showSuccess(currentBlockedStatus ? "Usuário desbloqueado!" : "Usuário bloqueado!");
@@ -284,8 +269,8 @@ export function UserManagementPanel() {
                       {user.id === currentUser?.id ? (
                         <Badge variant="outline">Você</Badge>
                       ) : (
-                        <Badge variant={user.email === 'N/A' ? 'destructive' : 'success'}>
-                          {user.email === 'N/A' ? 'Bloqueado' : 'Ativo'}
+                        <Badge variant={user.is_blocked ? 'destructive' : 'success'}>
+                          {user.is_blocked ? 'Bloqueado' : 'Ativo'}
                         </Badge>
                       )}
                     </TableCell>
@@ -300,7 +285,7 @@ export function UserManagementPanel() {
                               <Button variant="outline" size="sm" disabled={isSubmitting}>
                                 {isSubmitting ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : user.email === 'N/A' ? (
+                                ) : user.is_blocked ? (
                                   <Unlock className="h-4 w-4" />
                                 ) : (
                                   <Lock className="h-4 w-4" />
@@ -310,20 +295,20 @@ export function UserManagementPanel() {
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>
-                                  {user.email === 'N/A' ? "Desbloquear Usuário?" : "Bloquear Usuário?"}
+                                  {user.is_blocked ? "Desbloquear Usuário?" : "Bloquear Usuário?"}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  {user.email === 'N/A'
+                                  {user.is_blocked
                                     ? `Esta ação irá desbloquear ${user.first_name || user.email}. Ele poderá fazer login novamente.`
                                     : `Esta ação irá bloquear ${user.first_name || user.email}. Ele não poderá mais fazer login.`}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleBlockUser(user.id, user.email === 'N/A')} disabled={isSubmitting}>
+                                <AlertDialogAction onClick={() => handleBlockUser(user.id, user.is_blocked)} disabled={isSubmitting}>
                                   {isSubmitting ? (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  ) : user.email === 'N/A' ? (
+                                  ) : user.is_blocked ? (
                                     "Desbloquear"
                                   ) : (
                                     "Bloquear"
