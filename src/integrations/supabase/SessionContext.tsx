@@ -27,6 +27,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   const navigate = useNavigate();
 
   const fetchUserProfile = async (supabaseUser: User) => {
+    console.log('Fetching user profile for:', supabaseUser.id);
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('first_name, last_name, avatar_url, role, subscription_status')
@@ -37,7 +38,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       console.error('Error fetching user profile:', error);
       return { ...supabaseUser, role: 'user', subscription_status: 'inactive' }; // Default role on error
     }
-
+    console.log('User profile fetched:', profile);
     return {
       ...supabaseUser,
       ...profile,
@@ -47,15 +48,16 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   };
 
   useEffect(() => {
+    console.log('SessionContext useEffect triggered.');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log('onAuthStateChange event:', event, 'session:', currentSession); // ADDED LOG
+        console.log('onAuthStateChange event:', event, 'session:', currentSession);
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
           if (currentSession?.user) {
             const userWithProfile = await fetchUserProfile(currentSession.user);
             setSession(currentSession);
             setUser(userWithProfile);
-            console.log('User set from onAuthStateChange:', userWithProfile); // ADDED LOG
+            console.log('User set from onAuthStateChange:', userWithProfile);
             if (location.pathname === '/login') {
               navigate('/');
             }
@@ -63,7 +65,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
         } else if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
-          console.log('User signed out.'); // ADDED LOG
+          console.log('User signed out.');
           navigate('/login');
         }
         setIsLoading(false);
@@ -71,16 +73,16 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     );
 
     supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
-      console.log('Initial getSession result:', initialSession); // ADDED LOG
+      console.log('Initial getSession result:', initialSession);
       if (initialSession?.user) {
         const userWithProfile = await fetchUserProfile(initialSession.user);
         setSession(initialSession);
         setUser(userWithProfile);
-        console.log('User set from initial getSession:', userWithProfile); // ADDED LOG
+        console.log('User set from initial getSession:', userWithProfile);
       } else {
         setSession(null);
         setUser(null);
-        console.log('No initial session found.'); // ADDED LOG
+        console.log('No initial session found.');
       }
       setIsLoading(false);
       if (!initialSession && location.pathname !== '/login') {
@@ -90,7 +92,10 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('SessionContext useEffect cleanup.');
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
