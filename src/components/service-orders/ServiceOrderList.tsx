@@ -125,15 +125,15 @@ export function ServiceOrderList() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <CardTitle className="text-2xl flex items-center gap-2"><Wrench className="h-6 w-6 text-primary" /> Ordens de Serviço</CardTitle>
-        <Button asChild className="w-full md:w-auto">
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 sm:p-6"> {/* Ajustado padding */}
+        <CardTitle className="text-xl sm:text-2xl flex items-center gap-2"><Wrench className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Ordens de Serviço</CardTitle> {/* Ajustado tamanho do título */}
+        <Button asChild className="w-full sm:w-auto">
           <Link to="/new-service-order">
             <PlusCircle className="h-4 w-4 mr-2" /> Nova Ordem de Serviço
           </Link>
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6"> {/* Ajustado padding */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -141,7 +141,7 @@ export function ServiceOrderList() {
               placeholder="Buscar por cliente, marca ou modelo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-8"
+              className="pl-9 pr-8 w-full" // Garantido largura total
             />
             {searchTerm && (
               <Button
@@ -155,7 +155,7 @@ export function ServiceOrderList() {
             )}
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px]"> {/* Garantido largura total em mobile */}
               <SelectValue placeholder="Filtrar por Status" />
             </SelectTrigger>
             <SelectContent>

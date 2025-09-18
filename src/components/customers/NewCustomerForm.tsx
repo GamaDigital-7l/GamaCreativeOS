@@ -16,8 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2, UserPlus, Phone, Mail, MapPin, User } from "lucide-react"; // Adicionado Phone, Mail, MapPin, User
 import { useState } from "react";
+import { Loader2, UserPlus, Phone, Mail, MapPin, User } from "lucide-react"; // Adicionado Phone, Mail, MapPin, User
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do cliente é obrigatório." }),
@@ -94,7 +94,7 @@ export function NewCustomerForm({ onSuccess }: NewCustomerFormProps) {
             <FormItem>
               <FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Nome Completo</FormLabel>
               <FormControl>
-                <Input placeholder="Nome do cliente" {...field} />
+                <Input placeholder="Nome do cliente" {...field} className="w-full" /> {/* Garantido largura total */}
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -107,7 +107,7 @@ export function NewCustomerForm({ onSuccess }: NewCustomerFormProps) {
             <FormItem>
               <FormLabel className="flex items-center gap-2"><Phone className="h-4 w-4" /> Telefone</FormLabel>
               <FormControl>
-                <Input placeholder="(XX) XXXXX-XXXX" {...field} />
+                <Input placeholder="(XX) XXXXX-XXXX" {...field} className="w-full" /> {/* Garantido largura total */}
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -120,7 +120,7 @@ export function NewCustomerForm({ onSuccess }: NewCustomerFormProps) {
             <FormItem>
               <FormLabel className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Endereço</FormLabel>
               <FormControl>
-                <Textarea placeholder="Rua, Número, Bairro, Cidade" className="resize-y min-h-[80px]" {...field} />
+                <Textarea placeholder="Rua, Número, Bairro, Cidade" className="resize-y min-h-[80px] w-full" {...field} /> {/* Garantido largura total */}
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -133,7 +133,7 @@ export function NewCustomerForm({ onSuccess }: NewCustomerFormProps) {
             <FormItem>
               <FormLabel className="flex items-center gap-2"><Mail className="h-4 w-4" /> Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="email@exemplo.com" {...field} />
+                <Input type="email" placeholder="email@exemplo.com" {...field} className="w-full" /> {/* Garantido largura total */}
               </FormControl>
               <FormMessage />
             </FormItem>

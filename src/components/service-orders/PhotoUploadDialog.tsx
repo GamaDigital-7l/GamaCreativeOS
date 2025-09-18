@@ -31,8 +31,8 @@ export function PhotoUploadDialog({ isOpen, onClose, serviceOrderId }: PhotoUplo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Ordem de Serviço Criada!</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl sm:text-2xl">Ordem de Serviço Criada!</DialogTitle> {/* Ajustado tamanho do título */}
+          <DialogDescription className="text-sm sm:text-base"> {/* Ajustado tamanho do parágrafo */}
             Use o QR code ou o link abaixo no seu celular para enviar as fotos do aparelho.
           </DialogDescription>
         </DialogHeader>
@@ -45,7 +45,7 @@ export function PhotoUploadDialog({ isOpen, onClose, serviceOrderId }: PhotoUplo
               <Label htmlFor="link" className="sr-only">
                 Link
               </Label>
-              <Input id="link" defaultValue={uploadUrl} readOnly />
+              <Input id="link" defaultValue={uploadUrl} readOnly className="w-full" /> {/* Garantido largura total */}
             </div>
             <Button type="button" size="sm" className="px-3" onClick={handleCopyLink}>
               <span className="sr-only">Copiar</span>
@@ -54,7 +54,7 @@ export function PhotoUploadDialog({ isOpen, onClose, serviceOrderId }: PhotoUplo
           </div>
         </div>
         <DialogFooter className="sm:justify-center">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose} className="w-full sm:w-auto"> {/* Garantido largura total em mobile */}
             Fechar
           </Button>
         </DialogFooter>
