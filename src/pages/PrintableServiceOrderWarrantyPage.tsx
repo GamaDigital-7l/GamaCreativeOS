@@ -15,8 +15,8 @@ interface WarrantyData {
   total_amount?: number;
   guarantee_terms?: string;
   warranty_days?: number;
-  customers: { name: string; phone?: string; } | null;
-  devices: { brand: string; model: string; serial_number?: string; } | null;
+  customers: { name: string; phone?: string; } | null; // Adjusted to be a single object or null
+  devices: { brand: string; model: string; serial_number?: string; } | null; // Adjusted to be a single object or null
 }
 
 export default function PrintableServiceOrderWarrantyPage() {
@@ -45,7 +45,7 @@ export default function PrintableServiceOrderWarrantyPage() {
           .eq('id', id)
           .single();
         if (error) throw error;
-        setData(osData as WarrantyData);
+        setData(osData as WarrantyData); // Cast data to WarrantyData
       } catch (err: any) {
         showError(`Erro ao carregar dados da garantia: ${err.message}`);
         navigate(`/service-orders/${id}`);
@@ -91,13 +91,13 @@ export default function PrintableServiceOrderWarrantyPage() {
           <section>
             <h3 className="text-lg font-semibold border-b border-black pb-1 mb-2">Cliente</h3>
             <p><strong>Nome:</strong> {data.customers?.name || 'Não informado'}</p>
-            <p><strong>Telefone:</strong> {data.customers?.phone || 'Não informado'}</p>
+            <p><strong>Telefone:</strong> {data.customers?.phone || 'N/A'}</p>
           </section>
 
           <section>
             <h3 className="text-lg font-semibold border-b border-black pb-1 mb-2">Dispositivo</h3>
             <p><strong>Marca/Modelo:</strong> {data.devices?.brand} {data.devices?.model}</p>
-            <p><strong>Série/IMEI:</strong> {data.devices?.serial_number || 'Não informado'}</p>
+            <p><strong>Série/IMEI:</strong> {data.devices?.serial_number || 'N/A'}</p>
             <p><strong>Serviço Realizado:</strong> {data.service_details || 'Não informado'}</p>
           </section>
 

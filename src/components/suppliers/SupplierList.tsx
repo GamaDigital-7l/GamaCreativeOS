@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast'; // Added showSuccess import
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Plus, Search, Building, Eye, Trash2, Loader2, User, Phone, Mail, Edit } from 'lucide-react'; // Adicionado Edit icon

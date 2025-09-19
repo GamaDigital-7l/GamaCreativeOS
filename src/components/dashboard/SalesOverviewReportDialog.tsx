@@ -26,7 +26,7 @@ interface Sale {
   trade_in_details?: { value: number };
   customers: {
     name: string;
-  } | null;
+  } | null; // Adjusted to be a single object or null
 }
 
 interface SalesOverviewReportDialogProps {
@@ -61,7 +61,7 @@ export function SalesOverviewReportDialog({ isOpen, onClose }: SalesOverviewRepo
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSales(data || []);
+      setSales(data as Sale[] || []); // Cast data to Sale[]
     } catch (error: any) {
       showError(`Erro ao carregar vendas: ${error.message}`);
     } finally {

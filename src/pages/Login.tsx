@@ -22,7 +22,7 @@ const Login = () => {
                   brandAccent: 'hsl(var(--primary-foreground))',
                   inputBackground: 'hsl(var(--input))',
                   inputBorder: 'hsl(var(--border))',
-                  inputLabel: 'hsl(var(--muted-foreground))',
+                  // inputLabel: 'hsl(var(--muted-foreground))', // Removed non-standard property
                   inputText: 'hsl(var(--foreground))',
                 },
               },
@@ -40,9 +40,8 @@ const Login = () => {
                 password_input_placeholder: 'Digite sua senha',
                 button_label: 'Entrar',
                 social_provider_text: 'Ou continue com',
-                // Estas linhas são a chave para remover o link de cadastro
-                no_account_text: '', // Esconde "Não tem uma conta?"
-                sign_up_link_text: '', // Esconde "Cadastre-se"
+                // no_account_text: '', // Removed non-standard property
+                // sign_up_link_text: '', // Removed non-standard property
                 link_text: '', // Esconde qualquer outro link que possa aparecer na tela de sign_in
               },
               forgotten_password: {
@@ -62,8 +61,8 @@ const Login = () => {
                 button_label: '',
                 social_provider_text: '',
                 link_text: '',
-                no_account_text: '',
-                sign_up_link_text: '',
+                // no_account_text: '', // Removed non-standard property
+                // sign_up_link_text: '', // Removed non-standard property
               },
               update_password: {
                 password_label: 'Sua nova senha',

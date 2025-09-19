@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, DollarSign, Users, CalendarDays } from 'lucide-react';
+import { Loader2, DollarSign, Users, CalendarDays, User } from 'lucide-react'; // Imported User icon
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
@@ -82,8 +82,10 @@ export function AverageTicketReportDialog({ isOpen, onClose }: AverageTicketRepo
       const customerMap = new Map<string, { total_spent: number; transaction_count: number; name: string }>();
 
       serviceOrders?.forEach(order => {
-        if (order.customer_id && order.customers?.name) {
-          const current = customerMap.get(order.customer_id) || { total_spent: 0, transaction_count: 0, name: order.customers.name };
+        // Access name safely using optional chaining and ensure it's a string
+        const customerName = (order.customers as { name: string } | null)?.name;
+        if (order.customer_id && customerName) {
+          const current = customerMap.get(order.customer_id) || { total_spent: 0, transaction_count: 0, name: customerName };
           current.total_spent += order.total_amount || 0;
           current.transaction_count++;
           customerMap.set(order.customer_id, current);
@@ -91,8 +93,10 @@ export function AverageTicketReportDialog({ isOpen, onClose }: AverageTicketRepo
       });
 
       sales?.forEach(sale => {
-        if (sale.customer_id && sale.customers?.name) {
-          const current = customerMap.get(sale.customer_id) || { total_spent: 0, transaction_count: 0, name: sale.customers.name };
+        // Access name safely using optional chaining and ensure it's a string
+        const customerName = (sale.customers as { name: string } | null)?.name;
+        if (sale.customer_id && customerName) {
+          const current = customerMap.get(sale.customer_id) || { total_spent: 0, transaction_count: 0, name: customerName };
           current.total_spent += sale.sale_price || 0;
           current.transaction_count++;
           customerMap.set(sale.customer_id, current);
@@ -100,8 +104,10 @@ export function AverageTicketReportDialog({ isOpen, onClose }: AverageTicketRepo
       });
 
       posSales?.forEach(posSale => {
-        if (posSale.customer_id && posSale.customers?.name) {
-          const current = customerMap.get(posSale.customer_id) || { total_spent: 0, transaction_count: 0, name: posSale.customers.name };
+        // Access name safely using optional chaining and ensure it's a string
+        const customerName = (posSale.customers as { name: string } | null)?.name;
+        if (posSale.customer_id && customerName) {
+          const current = customerMap.get(posSale.customer_id) || { total_spent: 0, transaction_count: 0, name: customerName };
           current.total_spent += posSale.total_amount || 0;
           current.transaction_count++;
           customerMap.set(posSale.customer_id, current);

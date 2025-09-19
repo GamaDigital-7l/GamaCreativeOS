@@ -48,7 +48,7 @@ export function SalesList() {
 
     const { data, error } = await query;
     if (error) showError("Erro ao buscar vendas.");
-    else setSales(data as any || []);
+    else setSales(data as Sale[] || []); // Cast data to Sale[]
     setIsLoading(false);
   };
 

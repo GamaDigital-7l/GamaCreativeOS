@@ -24,11 +24,11 @@ interface ServiceOrder {
   issue_description: string;
   customers: {
     name: string;
-  } | null;
+  } | null; // Adjusted to be a single object or null
   devices: {
     brand: string;
     model: string;
-  } | null;
+  } | null; // Adjusted to be a single object or null
 }
 
 const serviceOrderStatuses = [
@@ -73,7 +73,7 @@ export function ServiceOrderReportDialog({ isOpen, onClose }: ServiceOrderReport
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setServiceOrders(data || []);
+      setServiceOrders(data as ServiceOrder[] || []); // Cast data to ServiceOrder[]
     } catch (error: any) {
       showError(`Erro ao carregar ordens de serviço: ${error.message}`);
     } finally {
@@ -81,8 +81,8 @@ export function ServiceOrderReportDialog({ isOpen, onClose }: ServiceOrderReport
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    return serviceOrderStatuses.find(s => s.value === status)?.variant || 'secondary';
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "warning" | "success" => {
+    return (serviceOrderStatuses.find(s => s.value === status)?.variant || 'secondary') as "default" | "destructive" | "outline" | "secondary" | "warning" | "success";
   };
 
   const getStatusLabel = (status: string) => {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast'; // Added showSuccess import
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, User, Smartphone, Clock, CheckCircle, Wrench, Package, Ban, XCircle, DollarSign } from 'lucide-react';
@@ -20,11 +20,11 @@ interface ServiceOrder {
   total_amount?: number;
   customers: {
     name: string;
-  };
+  } | null; // Adjusted to be a single object or null
   devices: {
     brand: string;
     model: string;
-  };
+  } | null; // Adjusted to be a single object or null
 }
 
 // Definindo os status para as colunas do Kanban
@@ -39,7 +39,7 @@ const kanbanColumns = [
 ];
 
 // Helper para obter a variante do badge (igual ao ServiceOrderList)
-const getStatusBadgeVariant = (status: string) => {
+const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "warning" | "success" => {
   switch (status) {
     case 'orcamento':
       return 'secondary';
@@ -95,7 +95,7 @@ export function ServiceOrderKanban() {
       const groupedOrders: Record<string, ServiceOrder[]> = {};
       kanbanColumns.forEach(col => (groupedOrders[col.value] = [])); // Initialize all columns
 
-      (data as ServiceOrder[]).forEach(order => {
+      (data as ServiceOrder[] || []).forEach(order => { // Cast data to ServiceOrder[]
         if (groupedOrders[order.status]) {
           groupedOrders[order.status].push(order);
         } else {

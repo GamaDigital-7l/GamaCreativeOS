@@ -53,7 +53,7 @@ export function EditInventoryItemForm() {
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "image_urls",
+    name: "image_urls" as "image_urls", // Explicitly cast to the correct type
   });
 
   useEffect(() => {
@@ -222,8 +222,7 @@ export function EditInventoryItemForm() {
           </FormItem>
         )} />
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Atualizando...</> : <><Save className="h-4 w-4 mr-2" /> Atualizar Item</>}
-        </Button>
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Atualizando...</> : <><Save className="h-4 w-4 mr-2" /> Atualizar Item</>}</Button>
       </form>
     </Form>
   );

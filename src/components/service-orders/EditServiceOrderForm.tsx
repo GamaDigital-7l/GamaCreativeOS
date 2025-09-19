@@ -137,7 +137,7 @@ export function EditServiceOrderForm() {
         const { data: settingsData } = await supabase.from("user_settings").select("default_guarantee_terms").eq("id", user.id).single();
         
         // Fetch suppliers
-        const { data: suppliersData } = await supabase.from('suppliers').select('id, name').eq('user.id', user.id);
+        const { data: suppliersData } = await supabase.from('suppliers').select('id, name').eq('user_id', user.id); // Corrected user.id access
         setSuppliers(suppliersData || []);
 
         // Fetch custom field definitions
@@ -195,7 +195,7 @@ export function EditServiceOrderForm() {
     fetchData();
   }, [id, user, form]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>, shouldNavigate = true) {
+  async function onSubmit(values: z.infer<typeof formSchema>) { // Removed shouldNavigate parameter
     if (!user || !id) return;
     setIsSubmitting(true);
     try {
@@ -241,9 +241,7 @@ export function EditServiceOrderForm() {
       }).eq('id', id);
 
       showSuccess("Ordem de Serviço atualizada!");
-      if (shouldNavigate) {
-        navigate(`/service-orders/${id}`);
-      }
+      navigate(`/service-orders/${id}`); // Always navigate after successful save
     } catch (error: any) {
       showError(`Erro ao atualizar: ${error.message}`);
     } finally {
@@ -254,8 +252,9 @@ export function EditServiceOrderForm() {
   const handleFinalizePayment = async (paymentMethod: string) => {
     if (!user || !id || !serviceOrderData) return;
     
-    await form.handleSubmit((values) => onSubmit(values, false))();
-    
+    // Submit the form first to ensure all latest data is saved
+    await form.handleSubmit(onSubmit)(); // Call onSubmit without navigation
+
     if (!form.formState.isValid) {
         showError("Por favor, corrija os erros no formulário antes de finalizar.");
         return;

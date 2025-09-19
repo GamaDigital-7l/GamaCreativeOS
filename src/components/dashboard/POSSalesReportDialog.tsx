@@ -23,14 +23,14 @@ interface POSSale {
   payment_method?: string;
   customers: {
     name: string;
-  } | null;
+  } | null; // Adjusted to be a single object or null
   pos_sale_items: {
     quantity: number;
     price_at_time: number;
     inventory_items: {
       name: string;
       sku?: string;
-    } | null;
+    } | null; // Adjusted to be a single object or null
   }[];
 }
 
@@ -70,7 +70,7 @@ export function POSSalesReportDialog({ isOpen, onClose }: POSSalesReportDialogPr
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPOSSales(data || []);
+      setPOSSales(data as POSSale[] || []); // Cast data to POSSale[]
     } catch (error: any) {
       showError(`Erro ao carregar vendas PDV: ${error.message}`);
     } finally {

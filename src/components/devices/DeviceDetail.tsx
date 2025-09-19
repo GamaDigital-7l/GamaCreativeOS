@@ -32,7 +32,7 @@ interface DeviceDetails {
   customers: {
     id: string;
     name: string;
-  };
+  } | null; // Adjusted to be a single object or null
 }
 
 export function DeviceDetail() {
@@ -75,12 +75,7 @@ export function DeviceDetail() {
         .single();
 
       if (error) throw error;
-      if (!data) {
-        showError("Dispositivo não encontrado.");
-        navigate('/devices');
-        return;
-      }
-      setDevice(data as DeviceDetails);
+      setDevice(data as DeviceDetails); // Cast data to DeviceDetails
     } catch (error: any) {
       console.error("Erro ao buscar detalhes do dispositivo:", error);
       showError(`Erro ao carregar detalhes: ${error.message || "Tente novamente."}`);

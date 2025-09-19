@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
@@ -28,11 +30,11 @@ interface ServiceOrder {
   customers: {
     name: string;
     phone?: string;
-  };
+  } | null; // Adjusted to be a single object or null
   devices: {
     brand: string;
     model: string;
-  };
+  } | null; // Adjusted to be a single object or null
 }
 
 // Definindo os novos status para a UI e para o banco de dados
@@ -105,7 +107,7 @@ export const ServiceOrderList = React.memo(function ServiceOrderList() {
 
       if (error) throw error;
 
-      setServiceOrders(data as ServiceOrder[]);
+      setServiceOrders(data as ServiceOrder[] || []); // Cast data to ServiceOrder[]
     } catch (error: any) {
       console.error("Erro ao buscar Ordens de Serviço:", error);
       showError(`Erro ao carregar Ordens de Serviço: ${error.message || "Tente novamente."}`);
@@ -122,7 +124,7 @@ export const ServiceOrderList = React.memo(function ServiceOrderList() {
     }
   }, [user, isSessionLoading, fetchServiceOrders]);
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "warning" | "success" => {
     switch (status) {
       case 'orcamento':
         return 'secondary';

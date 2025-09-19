@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } => 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
@@ -105,7 +105,7 @@ export function SaleDetail() {
     const warrantyEndDate = addDays(saleDate, sale.warranty_days);
     const daysRemaining = differenceInDays(warrantyEndDate, new Date());
 
-    let statusBadge;
+    let statusBadge: React.ReactNode;
     if (daysRemaining <= 0) {
       statusBadge = <Badge variant="destructive">Garantia Expirada</Badge>;
     } else if (daysRemaining <= 30) {

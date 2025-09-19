@@ -39,7 +39,7 @@ interface Device {
   customers: {
     id: string;
     name: string;
-  };
+  } | null; // Adjusted to be a single object or null
 }
 
 interface CustomerOption {
@@ -113,7 +113,7 @@ export function DeviceList() {
 
       if (error) throw error;
 
-      setDevices(data as Device[]);
+      setDevices(data as Device[] || []); // Cast data to Device[]
     } catch (error: any) {
       console.error("Erro ao buscar dispositivos:", error);
       showError(`Erro ao carregar dispositivos: ${error.message || "Tente novamente."}`);

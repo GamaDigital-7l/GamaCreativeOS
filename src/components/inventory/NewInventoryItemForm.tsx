@@ -16,8 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Loader2, PlusCircle, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon, Trash2 } from "lucide-react"; // Adicionado Trash2
-import React, { useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do item é obrigatório." }),
@@ -62,7 +62,7 @@ export function NewInventoryItemForm() {
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "image_urls",
+    name: "image_urls" as "image_urls", // Explicitly cast to the correct type
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -188,8 +188,7 @@ export function NewInventoryItemForm() {
           </FormItem>
         )} />
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><PlusCircle className="h-4 w-4 mr-2" /> Criar Item</>}
-        </Button>
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><PlusCircle className="h-4 w-4 mr-2" /> Criar Item</>}</Button>
       </form>
     </Form>
   );

@@ -38,8 +38,8 @@ interface ServiceOrderDetails {
   client_checklist?: Record<string, 'ok' | 'not_working'>;
   is_untestable?: boolean;
   casing_status?: 'good' | 'scratched' | 'damaged' | null;
-  customers: { id: string; name: string; phone?: string; address?: string; email?: string; };
-  devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; };
+  customers: { id: string; name: string; phone?: string; address?: string; email?: string; } | null; // Adjusted to be a single object or null
+  devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; } | null; // Adjusted to be a single object or null
   suppliers: { name: string } | null; // For part_supplier_id
   service_order_field_values: {
     value: string;
@@ -48,7 +48,7 @@ interface ServiceOrderDetails {
       field_name: string;
       field_type: string;
       order_index: number;
-    } | null;
+    } | null; // Adjusted to be a single object or null
   }[];
 }
 
@@ -104,7 +104,7 @@ export function ServiceOrderDetail() {
   };
 
   // Helper function to get badge variant for the main status
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "warning" | "success" => {
     switch (status) {
       case 'orcamento':
         return 'secondary';
@@ -175,7 +175,7 @@ export function ServiceOrderDetail() {
       }).eq('id', id);
       if (osError) throw osError;
 
-      const description = `Recebimento OS #${id.substring(0, 8)} - Cliente: ${serviceOrder.customers.name}`;
+      const description = `Recebimento OS #${id.substring(0, 8)} - Cliente: ${serviceOrder.customers?.name}`;
       const { error: transactionError } = await supabase
         .from('financial_transactions')
         .insert({
@@ -367,20 +367,20 @@ export function ServiceOrderDetail() {
 
           <div>
             <h3 className="text-lg font-semibold mb-2">Dados do Cliente</h3>
-            <p><strong>Nome:</strong> {serviceOrder.customers.name}</p>
-            <p><strong>Telefone:</strong> {serviceOrder.customers.phone || 'N/A'}</p>
-            <p><strong>Email:</strong> {serviceOrder.customers.email || 'N/A'}</p>
-            <p><strong>Endereço:</strong> {serviceOrder.customers.address || 'N/A'}</p>
+            <p><strong>Nome:</strong> {serviceOrder.customers?.name}</p>
+            <p><strong>Telefone:</strong> {serviceOrder.customers?.phone || 'N/A'}</p>
+            <p><strong>Email:</strong> {serviceOrder.customers?.email || 'N/A'}</p>
+            <p><strong>Endereço:</strong> {serviceOrder.customers?.address || 'N/A'}</p>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-2">Dados do Aparelho</h3>
-            <p><strong>Marca:</strong> {serviceOrder.devices.brand}</p>
-            <p><strong>Modelo:</strong> {serviceOrder.devices.model}</p>
-            <p><strong>Número de Série/IMEI:</strong> {serviceOrder.devices.serial_number || 'N/A'}</p>
-            <p><strong>Defeito Relatado:</strong> {serviceOrder.devices.defect_description || 'N/A'}</p>
-            <p><strong>Informações de Senha:</strong> {serviceOrder.devices.password_info || 'N/A'}</p>
-            {serviceOrder.devices.checklist && Object.keys(serviceOrder.devices.checklist).length > 0 && (
+            <p><strong>Marca:</strong> {serviceOrder.devices?.brand}</p>
+            <p><strong>Modelo:</strong> {serviceOrder.devices?.model}</p>
+            <p><strong>Número de Série/IMEI:</strong> {serviceOrder.devices?.serial_number || 'N/A'}</p>
+            <p><strong>Defeito Relatado:</strong> {serviceOrder.devices?.defect_description || 'N/A'}</p>
+            <p><strong>Informações de Senha:</strong> {serviceOrder.devices?.password_info || 'N/A'}</p>
+            {serviceOrder.devices?.checklist && Object.keys(serviceOrder.devices.checklist).length > 0 && (
               <div>
                 <p className="font-semibold mt-2">Checklist de Entrada:</p>
                 <ul className="list-disc list-inside ml-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4">

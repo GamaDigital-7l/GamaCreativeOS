@@ -24,11 +24,11 @@ import { VisualChecklist } from "../service-orders/VisualChecklist"; // Import V
 const formSchema = z.object({
   customer_id: z.string().uuid({ message: "Selecione um cliente válido." }),
   brand: z.string().min(2, { message: "Marca do aparelho é obrigatória." }),
-  model: z.string().min(2, { message: "Modelo do aparelho é obrigatório." }),
+  model: z.string().min(2, { message: "Modelo do aparelho é obrigatória." }),
   serial_number: z.string().optional(),
   defect_description: z.string().min(10, { message: "Descrição do defeito é obrigatória e deve ter pelo menos 10 caracteres." }),
   password_info: z.string().optional(),
-  checklist: z.record(z.string()).optional(), // Changed to z.record(z.string())
+  checklist: z.record(z.enum(['ok', 'damaged', 'scratched', 'not_working'])).optional(), // Changed to z.record(z.enum(...))
 });
 
 interface CustomerOption {
