@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray } from "react-hook-form"; // Import useFieldArray
+import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Loader2, PlusCircle, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon, Trash2 } from "lucide-react"; // Adicionado Trash2
+import { Loader2, PlusCircle, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon, Trash2 } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do item é obrigatório." }),
@@ -37,7 +37,7 @@ const formSchema = z.object({
   ),
   supplier: z.string().optional(),
   category: z.string().optional(),
-  image_urls: z.array(z.string().url({ message: "URL de imagem inválida." }).or(z.literal(''))).max(5, "Máximo de 5 imagens.").optional(), // Alterado para array
+  image_urls: z.array(z.object({ url: z.string().url({ message: "URL de imagem inválida." }).or(z.literal('')) })).max(5, "Máximo de 5 imagens.").optional(),
 });
 
 export function NewInventoryItemForm() {
@@ -56,13 +56,13 @@ export function NewInventoryItemForm() {
       selling_price: 0,
       supplier: "",
       category: "",
-      image_urls: [], // Default para array vazio
+      image_urls: [],
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "image_urls", // Corrected type
+    name: "image_urls",
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -80,7 +80,7 @@ export function NewInventoryItemForm() {
           ...values,
           sku: values.sku || null,
           category: values.category || null,
-          image_urls: values.image_urls?.filter(url => url) || null, // Filtrar URLs vazias
+          image_urls: values.image_urls?.map(item => item.url).filter(url => url) || null,
           user_id: user.id,
         });
 
@@ -135,7 +135,7 @@ export function NewInventoryItemForm() {
             <FormField
               key={field.id}
               control={form.control}
-              name={`image_urls.${index}`}
+              name={`image_urls.${index}.url`}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="sr-only">URL da Imagem {index + 1}</FormLabel>
@@ -153,7 +153,7 @@ export function NewInventoryItemForm() {
             />
           ))}
           {fields.length < 5 && (
-            <Button type="button" variant="outline" onClick={() => append("")} className="w-full">
+            <Button type="button" variant="outline" onClick={() => append({ url: "" })} className="w-full">
               <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Imagem
             </Button>
           )}

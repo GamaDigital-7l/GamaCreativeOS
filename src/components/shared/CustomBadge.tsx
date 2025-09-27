@@ -1,7 +1,7 @@
 import { Badge, BadgeProps } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-interface CustomBadgeProps extends BadgeProps {
+interface CustomBadgeProps extends Omit<BadgeProps, 'variant'> {
   variant?: "default" | "secondary" | "destructive" | "outline" | "success" | "warning";
 }
 
@@ -11,13 +11,17 @@ export function CustomBadge({ className, variant, ...props }: CustomBadgeProps) 
     warning: "bg-yellow-500 text-yellow-50-foreground hover:bg-yellow-500/80",
   };
 
+  const baseVariant = variant && Object.keys(customVariantClasses).includes(variant)
+    ? "default" // Fallback to a base variant if it's a custom one
+    : variant;
+
   return (
     <Badge
       className={cn(
         variant && (customVariantClasses[variant as keyof typeof customVariantClasses]),
         className
       )}
-      variant={variant && !Object.keys(customVariantClasses).includes(variant) ? variant : "default"}
+      variant={baseVariant as BadgeProps['variant']}
       {...props}
     />
   );

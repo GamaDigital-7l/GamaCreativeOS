@@ -16,12 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Save, PlusCircle, Trophy, Sparkles, Award } from "lucide-react";
-import * as LucideIcons from 'lucide-react'; // Importa todos os ícones Lucide
+import * as LucideIcons from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showSuccess, showError } from '@/utils/toast';
 
-// Lista de ícones Lucide para seleção
 const lucideIconNames = Object.keys(LucideIcons).filter(key => key !== 'createReactComponent' && key !== 'default');
 
 const formSchema = z.object({
@@ -35,7 +34,7 @@ const formSchema = z.object({
 });
 
 interface AchievementFormProps {
-  achievementId?: string; // Optional for editing existing achievements
+  achievementId?: string;
   onSuccess: () => void;
 }
 
@@ -49,7 +48,7 @@ export function AchievementForm({ achievementId, onSuccess }: AchievementFormPro
     defaultValues: {
       name: "",
       description: "",
-      icon_name: "Award", // Default icon
+      icon_name: "Award",
       points_reward: 0,
     },
   });
@@ -65,7 +64,11 @@ export function AchievementForm({ achievementId, onSuccess }: AchievementFormPro
             form.reset(data);
           }
         })
-        .finally(() => setIsLoadingData(false));
+        .catch((error) => {
+          console.error("Error in AchievementForm useEffect:", error);
+          showError(`Erro ao carregar conquista: ${error.message}`);
+        })
+        .then(() => setIsLoadingData(false));
     }
   }, [achievementId, user, form]);
 
@@ -97,7 +100,7 @@ export function AchievementForm({ achievementId, onSuccess }: AchievementFormPro
     return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
-  const SelectedIcon = LucideIcons[form.watch('icon_name') as keyof typeof LucideIcons] || LucideIcons.Award;
+  const SelectedIcon = (LucideIcons[form.watch('icon_name') as keyof typeof LucideIcons] || LucideIcons.Award) as React.ElementType;
 
   return (
     <Form {...form}>

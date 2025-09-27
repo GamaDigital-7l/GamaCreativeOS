@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import * as LucideIcons from 'lucide-react'; // Para ícones de conquistas
+import * as LucideIcons from 'lucide-react';
 
 interface Goal {
   id: string;
@@ -213,7 +213,7 @@ export default function ManageGamificationPage() {
                 <p className="text-muted-foreground text-center">Nenhuma conquista criada ainda.</p>
               ) : (
                 achievements.map(achievement => {
-                  const Icon = LucideIcons[achievement.icon_name as keyof typeof LucideIcons] || LucideIcons.Award;
+                  const Icon = (LucideIcons[achievement.icon_name as keyof typeof LucideIcons] || LucideIcons.Award) as React.ElementType;
                   return (
                     <Card key={achievement.id} className="flex items-center justify-between p-4">
                       <div className="flex items-center gap-4">

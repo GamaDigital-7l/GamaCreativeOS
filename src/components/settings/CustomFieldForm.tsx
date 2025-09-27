@@ -37,7 +37,7 @@ const formSchema = z.object({
 });
 
 interface CustomFieldFormProps {
-  fieldId?: string; // Optional for editing existing fields
+  fieldId?: string;
   onSuccess: () => void;
 }
 
@@ -78,7 +78,11 @@ export function CustomFieldForm({ fieldId, onSuccess }: CustomFieldFormProps) {
             });
           }
         })
-        .finally(() => setIsLoadingData(false));
+        .catch((error) => {
+          console.error("Error in CustomFieldForm useEffect:", error);
+          showError(`Erro ao carregar campo: ${error.message}`);
+        })
+        .then(() => setIsLoadingData(false));
     }
   }, [fieldId, user, form]);
 
@@ -99,7 +103,7 @@ export function CustomFieldForm({ fieldId, onSuccess }: CustomFieldFormProps) {
       };
 
       if (fieldId) {
-        const { error } = await supabase.from('service_order_custom_fields').update(payload).eq('id', fieldId).eq('user_id', user.id);
+        const { error } = await supabase.from('service_order_custom_fields').update(payload).eq('id', fieldId).eq('user.id', user.id);
         if (error) throw error;
         showSuccess("Campo personalizado atualizado com sucesso!");
       } else {

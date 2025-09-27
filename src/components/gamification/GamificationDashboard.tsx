@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Loader2 } from 'lucide-react';
-import * as LucideIcons from 'lucide-react'; // Para ícones de conquistas
+import * as LucideIcons from 'lucide-react';
 
 interface RankingUser {
   id: string;
@@ -31,7 +31,7 @@ interface Achievement {
   id: string;
   name: string;
   description: string;
-  icon: React.ElementType; // Alterado para React.ElementType
+  icon: React.ElementType;
   earned: boolean;
 }
 
@@ -75,7 +75,7 @@ export function GamificationDashboard() {
       // Buscar metas e progresso do usuário
       const { data: goalsData, error: goalsError } = await supabase
         .from('gamification_goals')
-        .select('*'); // Selecionar todas as colunas para metas
+        .select('*');
 
       if (goalsError) throw goalsError;
 
@@ -115,12 +115,12 @@ export function GamificationDashboard() {
       const earnedAchievementIds = new Set(userAchievementsData.map(ua => ua.achievement_id));
 
       const processedAchievements: Achievement[] = achievementsData.map(ach => {
-        const IconComponent = LucideIcons[ach.icon_name as keyof typeof LucideIcons] || LucideIcons.Award;
+        const IconComponent = (LucideIcons[ach.icon_name as keyof typeof LucideIcons] || LucideIcons.Award) as React.ElementType;
         return {
           id: ach.id,
           name: ach.name,
           description: ach.description,
-          icon: IconComponent, // Atribui o componente diretamente
+          icon: IconComponent,
           earned: earnedAchievementIds.has(ach.id),
         };
       });

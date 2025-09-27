@@ -21,17 +21,17 @@ import { showSuccess, showError } from "@/utils/toast";
 import { Loader2, Save, PlusCircle, ClipboardList, FileText } from "lucide-react";
 
 const formSchema = z.object({
-  inventory_item_id: z.string().uuid().optional().nullable(), // Agora opcional
+  inventory_item_id: z.string().uuid().optional().nullable(),
   requested_quantity: z.preprocess(
     (val) => (val === "" ? undefined : Number(val)),
-    z.number().int().min(1, "A quantidade deve ser pelo menos 1.").optional().nullable() // Agora opcional
+    z.number().int().min(1, "A quantidade deve ser pelo menos 1.").optional().nullable()
   ),
   status: z.enum(["pending", "ordered", "received", "cancelled"], { required_error: "Selecione um status." }),
-  notes: z.string().min(1, "A descrição do pedido é obrigatória."), // Tornando notes o campo principal e obrigatório
+  notes: z.string().min(1, "A descrição do pedido é obrigatória."),
 });
 
 interface PurchaseRequestFormProps {
-  requestId?: string; // Optional for editing existing requests
+  requestId?: string;
   onSuccess: () => void;
 }
 
@@ -43,15 +43,15 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      inventory_item_id: null, // Definir como null por padrão
-      requested_quantity: null, // Definir como null por padrão
+      inventory_item_id: null,
+      requested_quantity: null,
       status: "pending",
       notes: "",
     },
   });
 
   useEffect(() => {
-    console.log("PurchaseRequestForm loaded/re-rendered. User:", user?.id); // Added log
+    console.log("PurchaseRequestForm loaded/re-rendered. User:", user?.id);
     if (requestId && user) {
       setIsLoadingData(true);
       supabase.from('purchase_requests').select('*').eq('id', requestId).eq('user_id', user.id).single()
@@ -63,24 +63,27 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
             form.reset(data);
           }
         })
-        .finally(() => setIsLoadingData(false));
+        .catch((error) => {
+          console.error("Error in PurchaseRequestForm useEffect:", error);
+          showError(`Erro ao carregar pedido de compra: ${error.message}`);
+        })
+        .then(() => setIsLoadingData(false));
     }
   }, [requestId, user, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("onSubmit triggered with values:", values); // Existing log
+    console.log("onSubmit triggered with values:", values);
     if (!user) {
       showError("Você precisa estar logado para gerenciar pedidos de compra.");
       console.error("User not logged in for purchase request submission.");
       return;
     }
     setIsSubmitting(true);
-    console.log("Submitting purchase request with values:", values); // Existing log
+    console.log("Submitting purchase request with values:", values);
     try {
       const payload = {
         ...values,
         user_id: user.id,
-        // Garantir que campos opcionais sejam explicitamente null se vazios/indefinidos
         inventory_item_id: values.inventory_item_id || null,
         requested_quantity: values.requested_quantity || null,
       };
@@ -108,7 +111,7 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
   }
 
   const handleFormSubmit = (event: React.FormEvent) => {
-    console.log("Attempting form submission..."); // New log
+    console.log("Attempting form submission...");
     form.handleSubmit(onSubmit)(event);
   };
 
@@ -128,7 +131,7 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
             <FormDescription>
               Use este campo para registrar livremente o que precisa ser pedido.
             </FormDescription>
-            <FormMessage className="text-red-500 font-bold" /> {/* Made more visible */}
+            <FormMessage className="text-red-500 font-bold" />
           </FormItem>
         )} />
 

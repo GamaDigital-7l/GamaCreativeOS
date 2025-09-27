@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray } from "react-hook-form"; // Import useFieldArray
+import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/SessionContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Save, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon, PlusCircle, Trash2 } from "lucide-react"; // Adicionado PlusCircle, Trash2
+import { Loader2, Save, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon, PlusCircle, Trash2 } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome do item é obrigatório." }),
@@ -37,7 +37,7 @@ const formSchema = z.object({
   ),
   supplier: z.string().optional(),
   category: z.string().optional(),
-  image_urls: z.array(z.string().url({ message: "URL de imagem inválida." }).or(z.literal(''))).max(5, "Máximo de 5 imagens.").optional(), // Alterado para array
+  image_urls: z.array(z.object({ url: z.string().url({ message: "URL de imagem inválida." }).or(z.literal('')) })).max(5, "Máximo de 5 imagens.").optional(),
 });
 
 export function EditInventoryItemForm() {
@@ -53,7 +53,7 @@ export function EditInventoryItemForm() {
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "image_urls", // Corrected type
+    name: "image_urls",
   });
 
   useEffect(() => {
@@ -80,7 +80,7 @@ export function EditInventoryItemForm() {
         if (error) throw error;
         form.reset({
           ...data,
-          image_urls: data.image_urls || [], // Garantir que seja um array
+          image_urls: data.image_urls?.map((url: string) => ({ url })) || [],
         });
       } catch (error: any) {
         showError(`Erro ao carregar dados: ${error.message}`);
@@ -104,7 +104,7 @@ export function EditInventoryItemForm() {
           ...values,
           sku: values.sku || null,
           category: values.category || null,
-          image_urls: values.image_urls?.filter(url => url) || null, // Filtrar URLs vazias
+          image_urls: values.image_urls?.map(item => item.url).filter(url => url) || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -119,15 +119,6 @@ export function EditInventoryItemForm() {
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (isLoadingData) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2 text-gray-600 dark:text-gray-400">Carregando dados do item...</p>
-      </div>
-    );
   }
 
   return (
@@ -169,7 +160,7 @@ export function EditInventoryItemForm() {
             <FormField
               key={field.id}
               control={form.control}
-              name={`image_urls.${index}`}
+              name={`image_urls.${index}.url`}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="sr-only">URL da Imagem {index + 1}</FormLabel>
@@ -187,7 +178,7 @@ export function EditInventoryItemForm() {
             />
           ))}
           {fields.length < 5 && (
-            <Button type="button" variant="outline" onClick={() => append("")} className="w-full">
+            <Button type="button" variant="outline" onClick={() => append({ url: "" })} className="w-full">
               <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Imagem
             </Button>
           )}

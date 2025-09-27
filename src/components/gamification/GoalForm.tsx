@@ -19,8 +19,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Loader2, Save, PlusCircle, Goal as GoalIcon, Scale, Clock, DollarSign, User } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
-import { useSession } from '@/integrations/supabase/SessionContext';
-import { showSuccess, showError } from '@/utils/toast';
+import { useSession } from "@/integrations/supabase/SessionContext";
+import { showSuccess, showError } from "@/utils/toast";
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -45,7 +45,7 @@ const formSchema = z.object({
 });
 
 interface GoalFormProps {
-  goalId?: string; // Optional for editing existing goals
+  goalId?: string;
   onSuccess: () => void;
 }
 
@@ -85,7 +85,11 @@ export function GoalForm({ goalId, onSuccess }: GoalFormProps) {
             });
           }
         })
-        .finally(() => setIsLoadingData(false));
+        .catch((error) => {
+          console.error("Error in GoalForm useEffect:", error);
+          showError(`Erro ao carregar meta: ${error.message}`);
+        })
+        .then(() => setIsLoadingData(false)); // Use .then() after .catch() to ensure finally-like behavior
     }
   }, [goalId, user, form]);
 

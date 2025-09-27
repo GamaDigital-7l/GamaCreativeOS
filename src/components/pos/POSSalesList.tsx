@@ -25,7 +25,7 @@ interface POSSale {
   payment_method?: string;
   customers: {
     name: string;
-  } | null;
+  }[] | null; // Ajustado para array de objetos
 }
 
 export function POSSalesList() {
@@ -69,7 +69,7 @@ export function POSSalesList() {
 
       if (error) throw error;
 
-      setPOSSales(data || []);
+      setPOSSales(data as POSSale[] || []); // Cast explícito para POSSale[]
     } catch (error: any) {
       console.error("Erro ao buscar vendas PDV:", error);
       showError(`Erro ao carregar vendas PDV: ${error.message || "Tente novamente."}`);
@@ -125,12 +125,12 @@ export function POSSalesList() {
                   <TableRow key={sale.id} className="cursor-pointer" onClick={() => navigate(`/pos-sales/${sale.id}`)}>
                     <TableCell className="font-medium">{sale.id.substring(0, 8)}...</TableCell>
                     <TableCell>{format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
-                    <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{sale.customers?.name || 'N/A'}</TableCell>
+                    <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{sale.customers?.[0]?.name || 'N/A'}</TableCell>
                     <TableCell className="font-semibold text-primary">R$ {sale.total_amount.toFixed(2)}</TableCell>
                     <TableCell>{sale.payment_method || 'N/A'}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/pos-sales/${sale.id}`} onClick={(e) => e.stopPropagation()}> {/* Prevent double navigation */}
+                        <Link to={`/pos-sales/${sale.id}`} onClick={(e) => e.stopPropagation()}>
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>

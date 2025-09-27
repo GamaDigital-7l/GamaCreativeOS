@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/integrations/supabase/SessionContext";
+import { Label } from "@/components/ui/label"; // Adicionado import do Label
 
 const formSchema = z.object({
   transaction_date: z.date({ required_error: "A data é obrigatória." }),

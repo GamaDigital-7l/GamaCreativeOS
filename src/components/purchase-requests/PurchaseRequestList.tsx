@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from '@/components/ui/badge';
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Usando CustomBadge
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PurchaseRequestForm } from './PurchaseRequestForm';
 
@@ -35,15 +35,15 @@ interface PurchaseRequest {
   id: string;
   created_at: string;
   updated_at: string;
-  requested_quantity: number | null; // Pode ser nulo agora
+  requested_quantity: number | null;
   status: 'pending' | 'ordered' | 'received' | 'cancelled';
-  notes?: string; // Campo principal
+  notes?: string;
   inventory_items: {
     id: string;
     name: string;
     sku?: string;
-    quantity: number; // Current stock
-  } | null;
+    quantity: number;
+  } | null; // Ajustado para objeto único ou null
 }
 
 export function PurchaseRequestList() {
@@ -74,7 +74,6 @@ export function PurchaseRequestList() {
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
-        // Buscar por notas ou nome/sku do item (se existir)
         query = query.or(
           `notes.ilike.%${searchTerm}%,inventory_items.name.ilike.%${searchTerm}%,inventory_items.sku.ilike.%${searchTerm}%`
         );
@@ -82,7 +81,7 @@ export function PurchaseRequestList() {
 
       const { data, error } = await query;
       if (error) throw error;
-      setRequests(data || []);
+      setRequests(data as PurchaseRequest[] || []); // Cast explícito para PurchaseRequest[]
     } catch (error: any) {
       showError(`Erro ao carregar pedidos de compra: ${error.message}`);
     } finally {
@@ -128,7 +127,7 @@ export function PurchaseRequestList() {
     }
   };
 
-  const getStatusBadgeVariant = (status: PurchaseRequest['status']) => {
+  const getStatusBadgeVariant = (status: PurchaseRequest['status']): "default" | "destructive" | "outline" | "secondary" | "success" | "warning" => {
     switch (status) {
       case 'pending': return 'secondary';
       case 'ordered': return 'default';
