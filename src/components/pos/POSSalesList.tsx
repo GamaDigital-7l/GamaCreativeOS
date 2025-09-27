@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, Loader2, Receipt, User, DollarSign } from 'lucide-react';
+import { Eye, Search, X, Loader2, Receipt, User, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface POSSale {
@@ -25,7 +25,20 @@ interface POSSale {
   payment_method?: string;
   customers: {
     name: string;
-  }[] | null; // Ajustado para array de objetos
+  }[] | null;
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
 }
 
 export function POSSalesList() {
@@ -34,15 +47,18 @@ export function POSSalesList() {
   const [posSales, setPOSSales] = useState<POSSale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     if (!isSessionLoading && user) {
       fetchPOSSales();
     } else if (!isSessionLoading && !user) {
       setIsLoading(false);
-      // navigate('/login'); // Assuming login redirect is handled by SessionContext
     }
-  }, [user, isSessionLoading, searchTerm]);
+  }, [user, isSessionLoading, debouncedSearchTerm, page, pageSize]);
 
   const fetchPOSSales = async () => {
     setIsLoading(true);
@@ -55,21 +71,23 @@ export function POSSalesList() {
           total_amount,
           payment_method,
           customers (name)
-        `)
+        `, { count: 'exact' })
         .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
-      if (searchTerm) {
+      if (debouncedSearchTerm) {
         query = query.or(
-          `id.ilike.%${searchTerm}%,customers.name.ilike.%${searchTerm}%`
+          `id.ilike.%${debouncedSearchTerm}%,customers.name.ilike.%${debouncedSearchTerm}%`
         );
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
 
       if (error) throw error;
 
-      setPOSSales(data as POSSale[] || []); // Cast explícito para POSSale[]
+      setPOSSales(data as POSSale[] || []);
+      setHasMore((page + 1) * pageSize < (count || 0));
     } catch (error: any) {
       console.error("Erro ao buscar vendas PDV:", error);
       showError(`Erro ao carregar vendas PDV: ${error.message || "Tente novamente."}`);
@@ -108,38 +126,48 @@ export function POSSalesList() {
         ) : posSales.length === 0 ? (
           <p className="text-center text-gray-600 dark:text-gray-400">Nenhuma venda PDV encontrada com os filtros aplicados.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID da Venda</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Valor Total</TableHead>
-                  <TableHead>Método de Pagamento</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {posSales.map((sale) => (
-                  <TableRow key={sale.id} className="cursor-pointer" onClick={() => navigate(`/pos-sales/${sale.id}`)}>
-                    <TableCell className="font-medium">{sale.id.substring(0, 8)}...</TableCell>
-                    <TableCell>{format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
-                    <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{sale.customers?.[0]?.name || 'N/A'}</TableCell>
-                    <TableCell className="font-semibold text-primary">R$ {sale.total_amount.toFixed(2)}</TableCell>
-                    <TableCell>{sale.payment_method || 'N/A'}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/pos-sales/${sale.id}`} onClick={(e) => e.stopPropagation()}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </TableCell>
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID da Venda</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Valor Total</TableHead>
+                    <TableHead>Método de Pagamento</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {posSales.map((sale) => (
+                    <TableRow key={sale.id} className="cursor-pointer" onClick={() => navigate(`/pos-sales/${sale.id}`)}>
+                      <TableCell className="font-medium">{sale.id.substring(0, 8)}...</TableCell>
+                      <TableCell>{format(new Date(sale.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
+                      <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{sale.customers?.[0]?.name || 'N/A'}</TableCell>
+                      <TableCell className="font-semibold text-primary">R$ {sale.total_amount.toFixed(2)}</TableCell>
+                      <TableCell>{sale.payment_method || 'N/A'}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/pos-sales/${sale.id}`} onClick={(e) => e.stopPropagation()}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex justify-center space-x-4 mt-6">
+              <Button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page === 0 || isLoading}>
+                <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
+              </Button>
+              <Button onClick={() => setPage(prev => prev + 1)} disabled={!hasMore || isLoading}>
+                Próxima <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

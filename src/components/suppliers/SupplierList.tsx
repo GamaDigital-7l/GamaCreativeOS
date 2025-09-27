@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
-import { showError, showSuccess } from '@/utils/toast'; // Added showSuccess import
+import { showError, showSuccess } from '@/utils/toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Building, Eye, Trash2, Loader2, User, Phone, Mail, Edit } from 'lucide-react'; // Adicionado Edit icon
+import { Plus, Search, Building, Eye, Trash2, Loader2, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import {
@@ -27,33 +27,51 @@ interface Supplier {
   email?: string;
 }
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
+
 export function SupplierList() {
   const { user } = useSession();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     if (user) fetchSuppliers();
-  }, [user, searchTerm]);
+  }, [user, debouncedSearchTerm, page, pageSize]);
 
   const fetchSuppliers = async () => {
     setIsLoading(true);
-    let query = supabase.from('suppliers').select('*').eq('user_id', user?.id).order('name');
-    if (searchTerm) {
-      query = query.ilike('name', `%${searchTerm}%`);
+    let query = supabase.from('suppliers').select('*', { count: 'exact' }).eq('user_id', user?.id).order('name')
+      .range(page * pageSize, (page + 1) * pageSize - 1);
+    if (debouncedSearchTerm) {
+      query = query.ilike('name', `%${debouncedSearchTerm}%`);
     }
-    const { data, error } = await query;
+    const { data, error, count } = await query;
     if (error) showError("Erro ao buscar fornecedores.");
     else setSuppliers(data || []);
+    setHasMore((page + 1) * pageSize < (count || 0));
     setIsLoading(false);
   };
 
   const handleDeleteSupplier = async (supplierId: string) => {
     setIsDeleting(true);
     try {
-      // Check if supplier is linked to any sales
       const { count: salesCount, error: salesError } = await supabase
         .from('sales')
         .select('id', { count: 'exact' })
@@ -76,6 +94,7 @@ export function SupplierList() {
 
       setSuppliers(prev => prev.filter(supplier => supplier.id !== supplierId));
       showSuccess("Fornecedor deletado com sucesso!");
+      fetchSuppliers(); // Refetch to update pagination if needed
     } catch (error: any) {
       console.error("Erro ao deletar fornecedor:", error);
       showError(`Erro ao deletar fornecedor: ${error.message || "Tente novamente."}`);
@@ -176,6 +195,14 @@ export function SupplierList() {
             )}
           </TableBody>
         </Table>
+      </div>
+      <div className="flex justify-center space-x-4 mt-6">
+        <Button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page === 0 || isLoading}>
+          <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
+        </Button>
+        <Button onClick={() => setPage(prev => prev + 1)} disabled={!hasMore || isLoading}>
+          Próxima <ChevronRight className="h-4 w-4 ml-2" />
+        </Button>
       </div>
     </div>
   );

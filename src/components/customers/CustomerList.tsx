@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, Plus, Loader2, Trash2, User } from 'lucide-react';
+import { Eye, Search, X, Plus, Loader2, Trash2, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -38,9 +38,8 @@ interface Customer {
   address?: string;
 }
 
-// Adiciona um debounce simples para a função de busca
-function useDebounce(value: string, delay: number) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -61,8 +60,11 @@ export const CustomerList = React.memo(function CustomerList() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const debouncedSearchTerm = useDebounce(searchTerm, 500); // Debounce de 500ms
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10); // Itens por página
+  const [hasMore, setHasMore] = useState(true);
 
   const fetchCustomers = useCallback(async () => {
     if (!user) return;
@@ -70,9 +72,10 @@ export const CustomerList = React.memo(function CustomerList() {
     try {
       let query = supabase
         .from('customers')
-        .select(`id, created_at, name, phone, email, address`)
-        .eq('user_id', user.id) // Filter by current user's ID
-        .order('created_at', { ascending: false });
+        .select(`id, created_at, name, phone, email, address`, { count: 'exact' })
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (debouncedSearchTerm) {
         query = query.or(
@@ -80,18 +83,19 @@ export const CustomerList = React.memo(function CustomerList() {
         );
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
 
       if (error) throw error;
 
       setCustomers(data as Customer[]);
+      setHasMore((page + 1) * pageSize < (count || 0));
     } catch (error: any) {
       console.error("Erro ao buscar clientes:", error);
       showError(`Erro ao carregar clientes: ${error.message || "Tente novamente."}`);
     } finally {
       setIsLoading(false);
     }
-  }, [user, debouncedSearchTerm]); // Dependências para useCallback
+  }, [user, debouncedSearchTerm, page, pageSize]);
 
   useEffect(() => {
     if (!isSessionLoading && user) {
@@ -106,7 +110,6 @@ export const CustomerList = React.memo(function CustomerList() {
     if (!user) return;
     setIsDeleting(true);
     try {
-      // Check if customer is linked to any devices or service orders
       const { count: devicesCount, error: devicesError } = await supabase
         .from('devices')
         .select('id', { count: 'exact' })
@@ -130,19 +133,20 @@ export const CustomerList = React.memo(function CustomerList() {
         .from('customers')
         .delete()
         .eq('id', customerId)
-        .eq('user_id', user.id); // Ensure only user's own customers can be deleted
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
       setCustomers(prev => prev.filter(customer => customer.id !== customerId));
       showSuccess("Cliente deletado com sucesso!");
+      fetchCustomers(); // Refetch to update pagination if needed
     } catch (error: any) {
       console.error("Erro ao deletar cliente:", error);
       showError(`Erro ao deletar cliente: ${error.message || "Tente novamente."}`);
     } finally {
       setIsDeleting(false);
     }
-  }, [user]); // Dependências para useCallback
+  }, [user, fetchCustomers]);
 
   return (
     <Card className="w-full">
@@ -182,71 +186,81 @@ export const CustomerList = React.memo(function CustomerList() {
         ) : customers.length === 0 ? (
           <p className="text-center text-gray-600 dark:text-gray-400">Nenhum cliente encontrado com os filtros aplicados.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Endereço</TableHead>
-                  <TableHead>Criado em</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.name}</TableCell>
-                    <TableCell>{customer.phone || 'N/A'}</TableCell>
-                    <TableCell>{customer.email || 'N/A'}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{customer.address || 'N/A'}</TableCell>
-                    <TableCell>{format(new Date(customer.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                    <TableCell className="text-right flex justify-end space-x-2">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/customers/${customer.id}`}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" disabled={isDeleting}>
-                            {isDeleting ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Tem certeza que deseja deletar?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta ação não pode ser desfeita. Isso excluirá permanentemente este cliente.
-                              Se o cliente estiver associado a dispositivos ou ordens de serviço, a exclusão não será permitida.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteCustomer(customer.id)} disabled={isDeleting}>
-                              {isDeleting ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Deletando...
-                                </>
-                              ) : (
-                                "Deletar"
-                              )}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Endereço</TableHead>
+                    <TableHead>Criado em</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {customers.map((customer) => (
+                    <TableRow key={customer.id}>
+                      <TableCell className="font-medium">{customer.name}</TableCell>
+                      <TableCell>{customer.phone || 'N/A'}</TableCell>
+                      <TableCell>{customer.email || 'N/A'}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{customer.address || 'N/A'}</TableCell>
+                      <TableCell>{format(new Date(customer.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+                      <TableCell className="text-right flex justify-end space-x-2">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/customers/${customer.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" disabled={isDeleting}>
+                              {isDeleting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Tem certeza que deseja deletar?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta ação não pode ser desfeita. Isso excluirá permanentemente este cliente.
+                                Se o cliente estiver associado a dispositivos ou ordens de serviço, a exclusão não será permitida.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteCustomer(customer.id)} disabled={isDeleting}>
+                                {isDeleting ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Deletando...
+                                  </>
+                                ) : (
+                                  "Deletar"
+                                )}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex justify-center space-x-4 mt-6">
+              <Button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page === 0 || isLoading}>
+                <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
+              </Button>
+              <Button onClick={() => setPage(prev => prev + 1)} disabled={!hasMore || isLoading}>
+                Próxima <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

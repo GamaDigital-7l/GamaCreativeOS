@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, Plus, Loader2, Trash2, Smartphone, User, Tag } from 'lucide-react'; // Adicionado User, Tag icons
+import { Eye, Search, X, Plus, Loader2, Trash2, Smartphone, User, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -39,12 +39,25 @@ interface Device {
   customers: Array<{
     id: string;
     name: string;
-  }> | null; // Changed to array
+  }> | null;
 }
 
 interface CustomerOption {
   id: string;
   name: string;
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
 }
 
 export function DeviceList() {
@@ -54,20 +67,14 @@ export function DeviceList() {
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [customerFilter, setCustomerFilter] = useState('all');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    if (!isSessionLoading && user) {
-      fetchCustomersForFilter();
-      fetchDevices();
-    } else if (!isSessionLoading && !user) {
-      setIsLoading(false);
-      navigate('/login');
-    }
-  }, [user, isSessionLoading, searchTerm, customerFilter, navigate]);
-
-  const fetchCustomersForFilter = async () => {
+  const fetchCustomersForFilter = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('customers')
@@ -81,9 +88,10 @@ export function DeviceList() {
       console.error("Erro ao buscar clientes para filtro:", error);
       showError(`Erro ao carregar clientes: ${error.message || "Tente novamente."}`);
     }
-  };
+  }, [user]);
 
-  const fetchDevices = async () => {
+  const fetchDevices = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
       let query = supabase
@@ -95,37 +103,49 @@ export function DeviceList() {
           model,
           serial_number,
           customers (id, name)
-        `)
-        .eq('user_id', user?.id) // Ensure user can only see their own devices
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (customerFilter !== 'all') {
         query = query.eq('customer_id', customerFilter);
       }
 
-      if (searchTerm) {
+      if (debouncedSearchTerm) {
         query = query.or(
-          `brand.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%,serial_number.ilike.%${searchTerm}%,customers.name.ilike.%${searchTerm}%`
+          `brand.ilike.%${debouncedSearchTerm}%,model.ilike.%${debouncedSearchTerm}%,serial_number.ilike.%${debouncedSearchTerm}%,customers.name.ilike.%${debouncedSearchTerm}%`
         );
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
 
       if (error) throw error;
 
-      setDevices(data as Device[] || []); // Cast data to Device[]
+      setDevices(data as Device[] || []);
+      setHasMore((page + 1) * pageSize < (count || 0));
     } catch (error: any) {
       console.error("Erro ao buscar dispositivos:", error);
       showError(`Erro ao carregar dispositivos: ${error.message || "Tente novamente."}`);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, debouncedSearchTerm, customerFilter, page, pageSize]);
 
-  const handleDeleteDevice = async (deviceId: string) => {
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchCustomersForFilter();
+      fetchDevices();
+    } else if (!isSessionLoading && !user) {
+      setIsLoading(false);
+      navigate('/login');
+    }
+  }, [user, isSessionLoading, debouncedSearchTerm, customerFilter, fetchCustomersForFilter, fetchDevices, navigate]);
+
+  const handleDeleteDevice = useCallback(async (deviceId: string) => {
+    if (!user) return;
     setIsDeleting(true);
     try {
-      // Check if device is linked to any service orders
       const { count: serviceOrdersCount, error: serviceOrdersError } = await supabase
         .from('service_orders')
         .select('id', { count: 'exact' })
@@ -142,19 +162,20 @@ export function DeviceList() {
         .from('devices')
         .delete()
         .eq('id', deviceId)
-        .eq('user_id', user?.id); // Ensure only user's own devices can be deleted
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
       setDevices(prev => prev.filter(device => device.id !== deviceId));
       showSuccess("Dispositivo deletado com sucesso!");
+      fetchDevices(); // Refetch to update pagination if needed
     } catch (error: any) {
       console.error("Erro ao deletar dispositivo:", error);
       showError(`Erro ao deletar dispositivo: ${error.message || "Tente novamente."}`);
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [user, fetchDevices]);
 
   return (
     <Card className="w-full">
@@ -187,7 +208,7 @@ export function DeviceList() {
               </Button>
             )}
           </div>
-          <Select value={customerFilter} onValueChange={setCustomerFilter}>
+          <Select value={customerFilter} onValueChange={(value) => { setCustomerFilter(value); setPage(0); }}>
             <SelectTrigger className="w-full md:w-[200px]">
               <SelectValue placeholder="Filtrar por Cliente" />
             </SelectTrigger>
@@ -209,71 +230,81 @@ export function DeviceList() {
         ) : devices.length === 0 ? (
           <p className="text-center text-gray-600 dark:text-gray-400">Nenhum dispositivo encontrado com os filtros aplicados.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Marca</TableHead>
-                  <TableHead>Modelo</TableHead>
-                  <TableHead>Nº de Série</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Criado em</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {devices.map((device) => (
-                  <TableRow key={device.id}>
-                    <TableCell className="font-medium">{device.brand}</TableCell>
-                    <TableCell>{device.model}</TableCell>
-                    <TableCell>{device.serial_number || 'N/A'}</TableCell>
-                    <TableCell>{device.customers?.[0]?.name || 'N/A'}</TableCell>
-                    <TableCell>{format(new Date(device.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                    <TableCell className="text-right flex justify-end space-x-2">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/devices/${device.id}`}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" disabled={isDeleting}>
-                            {isDeleting ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Tem certeza que deseja deletar?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta ação não pode ser desfeita. Isso excluirá permanentemente este dispositivo.
-                              Se o dispositivo estiver associado a ordens de serviço, a exclusão não será permitida.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteDevice(device.id)} disabled={isDeleting}>
-                              {isDeleting ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Deletando...
-                                </>
-                              ) : (
-                                "Deletar"
-                              )}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Marca</TableHead>
+                    <TableHead>Modelo</TableHead>
+                    <TableHead>Nº de Série</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Criado em</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {devices.map((device) => (
+                    <TableRow key={device.id}>
+                      <TableCell className="font-medium">{device.brand}</TableCell>
+                      <TableCell>{device.model}</TableCell>
+                      <TableCell>{device.serial_number || 'N/A'}</TableCell>
+                      <TableCell>{device.customers?.[0]?.name || 'N/A'}</TableCell>
+                      <TableCell>{format(new Date(device.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+                      <TableCell className="text-right flex justify-end space-x-2">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/devices/${device.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" disabled={isDeleting}>
+                              {isDeleting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Tem certeza que deseja deletar?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta ação não pode ser desfeita. Isso excluirá permanentemente este dispositivo.
+                                Se o dispositivo estiver associado a ordens de serviço, a exclusão não será permitida.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteDevice(device.id)} disabled={isDeleting}>
+                                {isDeleting ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Deletando...
+                                  </>
+                                ) : (
+                                  "Deletar"
+                                )}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex justify-center space-x-4 mt-6">
+              <Button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page === 0 || isLoading}>
+                <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
+              </Button>
+              <Button onClick={() => setPage(prev => prev + 1)} disabled={!hasMore || isLoading}>
+                Próxima <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

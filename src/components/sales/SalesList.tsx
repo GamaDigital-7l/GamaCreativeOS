@@ -4,12 +4,12 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Eye, ShoppingCart, User, Smartphone, DollarSign, CalendarDays } from 'lucide-react'; // Adicionado CalendarDays icon
+import { Plus, Search, Eye, ShoppingCart, User, Smartphone, DollarSign, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { format, addDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Use CustomBadge
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge';
 
 interface Sale {
   id: string;
@@ -18,8 +18,21 @@ interface Sale {
   device_model: string;
   imei_serial: string;
   sale_price: number;
-  warranty_days?: number; // Novo campo
-  customers: Array<{ name: string }> | null; // Changed to array
+  warranty_days?: number;
+  customers: Array<{ name: string }> | null;
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
 }
 
 export function SalesList() {
@@ -27,28 +40,34 @@ export function SalesList() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     if (user) fetchSales();
-  }, [user, searchTerm]);
+  }, [user, debouncedSearchTerm, page, pageSize]);
 
   const fetchSales = async () => {
     setIsLoading(true);
     let query = supabase
       .from('sales')
-      .select(`*, customers (name)`)
+      .select(`id, created_at, device_brand, device_model, imei_serial, sale_price, warranty_days, customers (name)`, { count: 'exact' })
       .eq('user_id', user?.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(page * pageSize, (page + 1) * pageSize - 1);
       
-    if (searchTerm) {
+    if (debouncedSearchTerm) {
       query = query.or(
-        `device_brand.ilike.%${searchTerm}%,device_model.ilike.%${searchTerm}%,imei_serial.ilike.%${searchTerm}%,customers.name.ilike.%${searchTerm}%`
+        `device_brand.ilike.%${debouncedSearchTerm}%,device_model.ilike.%${debouncedSearchTerm}%,imei_serial.ilike.%${debouncedSearchTerm}%,customers.name.ilike.%${debouncedSearchTerm}%`
       );
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
     if (error) showError("Erro ao buscar vendas.");
-    else setSales(data as Sale[] || []); // Cast data to Sale[]
+    else setSales(data as Sale[] || []);
+    setHasMore((page + 1) * pageSize < (count || 0));
     setIsLoading(false);
   };
 
@@ -73,7 +92,7 @@ export function SalesList() {
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        <div className="relative w-full md:max-w-sm"> {/* Adjusted width for mobile */}
+        <div className="relative w-full md:max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
@@ -98,7 +117,7 @@ export function SalesList() {
               <TableHead>Aparelho</TableHead>
               <TableHead>IMEI/Serial</TableHead>
               <TableHead>Valor</TableHead>
-              <TableHead>Garantia</TableHead> {/* Nova coluna */}
+              <TableHead>Garantia</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -113,7 +132,7 @@ export function SalesList() {
                   <TableCell>{sale.device_brand} {sale.device_model}</TableCell>
                   <TableCell>{sale.imei_serial}</TableCell>
                   <TableCell>R$ {sale.sale_price.toFixed(2)}</TableCell>
-                  <TableCell>{getWarrantyStatus(sale)}</TableCell> {/* Exibindo status da garantia */}
+                  <TableCell>{getWarrantyStatus(sale)}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" asChild>
                       <Link to={`/sales/${sale.id}`}>
@@ -128,6 +147,14 @@ export function SalesList() {
             )}
           </TableBody>
         </Table>
+      </div>
+      <div className="flex justify-center space-x-4 mt-6">
+        <Button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page === 0 || isLoading}>
+          <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
+        </Button>
+        <Button onClick={() => setPage(prev => prev + 1)} disabled={!hasMore || isLoading}>
+          Próxima <ChevronRight className="h-4 w-4 ml-2" />
+        </Button>
       </div>
     </div>
   );

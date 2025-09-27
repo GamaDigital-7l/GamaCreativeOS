@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { Search, X, Plus, Loader2, Trash2, Edit, ClipboardList, FileText, CalendarDays } from 'lucide-react';
+import { Search, X, Plus, Loader2, Trash2, Edit, ClipboardList, FileText, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Usando CustomBadge
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PurchaseRequestForm } from './PurchaseRequestForm';
 
@@ -45,7 +45,20 @@ interface PurchaseRequest {
   requested_quantity: number | null;
   status: 'pending' | 'ordered' | 'received' | 'cancelled';
   notes?: string;
-  inventory_items: InventoryItemData[] | null; // Ajustado para array de objetos
+  inventory_items: InventoryItemData[] | null;
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
 }
 
 export function PurchaseRequestList() {
@@ -53,9 +66,13 @@ export function PurchaseRequestList() {
   const [requests, setRequests] = useState<PurchaseRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRequestId, setEditingRequestId] = useState<string | undefined>(undefined);
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
 
   const fetchPurchaseRequests = useCallback(async () => {
     if (!user) return;
@@ -71,25 +88,27 @@ export function PurchaseRequestList() {
           status,
           notes,
           inventory_items (id, name, sku, quantity)
-        `)
+        `, { count: 'exact' })
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
-      if (searchTerm) {
+      if (debouncedSearchTerm) {
         query = query.or(
-          `notes.ilike.%${searchTerm}%,inventory_items.name.ilike.%${searchTerm}%,inventory_items.sku.ilike.%${searchTerm}%`
+          `notes.ilike.%${debouncedSearchTerm}%,inventory_items.name.ilike.%${debouncedSearchTerm}%,inventory_items.sku.ilike.%${debouncedSearchTerm}%`
         );
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       if (error) throw error;
-      setRequests(data as PurchaseRequest[] || []); // Cast explícito para PurchaseRequest[]
+      setRequests(data as PurchaseRequest[] || []);
+      setHasMore((page + 1) * pageSize < (count || 0));
     } catch (error: any) {
       showError(`Erro ao carregar pedidos de compra: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
-  }, [user, searchTerm]);
+  }, [user, debouncedSearchTerm, page, pageSize]);
 
   useEffect(() => {
     if (!isSessionLoading && user) {
@@ -122,6 +141,7 @@ export function PurchaseRequestList() {
 
       setRequests(prev => prev.filter(req => req.id !== requestId));
       showSuccess("Pedido de compra deletado com sucesso!");
+      fetchPurchaseRequests(); // Refetch to update pagination if needed
     } catch (error: any) {
       showError(`Erro ao deletar pedido: ${error.message}`);
     } finally {
@@ -189,68 +209,78 @@ export function PurchaseRequestList() {
         ) : requests.length === 0 ? (
           <p className="text-center text-gray-600">Nenhum pedido de compra encontrado.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição do Pedido</TableHead>
-                  <TableHead>Item (Qtd.)</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Última Atualização</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {requests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-medium max-w-[300px] truncate">{request.notes || 'N/A'}</TableCell>
-                    <TableCell>
-                      {request.inventory_items?.[0]?.name ? (
-                        <div className="flex items-center gap-1">
-                          {request.inventory_items?.[0]?.name} ({request.requested_quantity ?? 'N/A'})
-                          {request.inventory_items?.[0]?.sku && <span className="text-xs text-muted-foreground">({request.inventory_items?.[0]?.sku})</span>}
-                        </div>
-                      ) : (
-                        'N/A'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(request.status)}>
-                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{format(new Date(request.updated_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                    <TableCell className="text-right flex justify-end space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEditRequest(request.id)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" disabled={isDeleting === request.id}>
-                            {isDeleting === request.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta ação não pode ser desfeita e excluirá permanentemente este pedido de compra.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteRequest(request.id)}>
-                              Deletar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição do Pedido</TableHead>
+                    <TableHead>Item (Qtd.)</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Última Atualização</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {requests.map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell className="font-medium max-w-[300px] truncate">{request.notes || 'N/A'}</TableCell>
+                      <TableCell>
+                        {request.inventory_items?.[0]?.name ? (
+                          <div className="flex items-center gap-1">
+                            {request.inventory_items?.[0]?.name} ({request.requested_quantity ?? 'N/A'})
+                            {request.inventory_items?.[0]?.sku && <span className="text-xs text-muted-foreground">({request.inventory_items?.[0]?.sku})</span>}
+                          </div>
+                        ) : (
+                          'N/A'
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(request.status)}>
+                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{format(new Date(request.updated_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+                      <TableCell className="text-right flex justify-end space-x-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditRequest(request.id)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" disabled={isDeleting === request.id}>
+                              {isDeleting === request.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta ação não pode ser desfeita e excluirá permanentemente este pedido de compra.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteRequest(request.id)}>
+                                Deletar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex justify-center space-x-4 mt-6">
+              <Button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page === 0 || isLoading}>
+                <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
+              </Button>
+              <Button onClick={() => setPage(prev => prev + 1)} disabled={!hasMore || isLoading}>
+                Próxima <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

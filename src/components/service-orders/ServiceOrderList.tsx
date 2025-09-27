@@ -13,12 +13,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CustomBadge as Badge } from "@/components/shared/CustomBadge"; // Use CustomBadge
+import { CustomBadge as Badge } from "@/components/shared/CustomBadge";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, X, PlusCircle, Wrench, User, Smartphone } from 'lucide-react';
+import { Eye, Search, X, PlusCircle, Wrench, User, Smartphone, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -30,14 +30,13 @@ interface ServiceOrder {
   customers: Array<{
     name: string;
     phone?: string;
-  }> | null; // Changed to array
+  }> | null;
   devices: Array<{
     brand: string;
     model: string;
-  }> | null; // Changed to array
+  }> | null;
 }
 
-// Definindo os novos status para a UI e para o banco de dados
 const serviceOrderStatuses = [
   { value: 'all', label: 'Todos os Status' },
   { value: 'orcamento', label: 'Orçamento', variant: 'secondary' },
@@ -49,7 +48,6 @@ const serviceOrderStatuses = [
   { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente', variant: 'destructive' },
 ];
 
-// Adiciona um debounce simples para a função de busca
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -72,8 +70,11 @@ export const ServiceOrderList = React.memo(function ServiceOrderList() {
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const debouncedSearchTerm = useDebounce(searchTerm, 500); // Debounce de 500ms
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
 
   const fetchServiceOrders = useCallback(async () => {
     if (!user) return;
@@ -88,33 +89,34 @@ export const ServiceOrderList = React.memo(function ServiceOrderList() {
           issue_description,
           customers (name, phone),
           devices (brand, model)
-        `)
-        .eq('user_id', user.id) // Filter by current user's ID
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
 
       if (debouncedSearchTerm) {
-        // Perform a case-insensitive search across customer name, device brand, and device model
         query = query.or(
           `customers.name.ilike.%${debouncedSearchTerm}%,devices.brand.ilike.%${debouncedSearchTerm}%,devices.model.ilike.%${debouncedSearchTerm}%`
         );
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
 
       if (error) throw error;
 
-      setServiceOrders(data as ServiceOrder[] || []); // Cast data to ServiceOrder[]
+      setServiceOrders(data as ServiceOrder[] || []);
+      setHasMore((page + 1) * pageSize < (count || 0));
     } catch (error: any) {
       console.error("Erro ao buscar Ordens de Serviço:", error);
       showError(`Erro ao carregar Ordens de Serviço: ${error.message || "Tente novamente."}`);
     } finally {
       setIsLoading(false);
     }
-  }, [user, debouncedSearchTerm, statusFilter]); // Dependências para useCallback
+  }, [user, debouncedSearchTerm, statusFilter, page, pageSize]);
 
   useEffect(() => {
     if (!isSessionLoading && user) {
@@ -159,7 +161,7 @@ export const ServiceOrderList = React.memo(function ServiceOrderList() {
               </Button>
             )}
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(0); }}>
             <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Filtrar por Status" />
             </SelectTrigger>
@@ -180,44 +182,54 @@ export const ServiceOrderList = React.memo(function ServiceOrderList() {
         ) : serviceOrders.length === 0 ? (
           <p className="text-center text-gray-600 dark:text-gray-400">Nenhuma Ordem de Serviço encontrada com os filtros aplicados.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Aparelho</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Descrição do Problema</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {serviceOrders.map((order) => (
-                  <TableRow key={order.id} className="cursor-pointer" onClick={() => navigate(`/service-orders/${order.id}`)}>
-                    <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
-                    <TableCell>{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
-                    <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{order.customers?.[0]?.name || 'N/A'}</TableCell>
-                    <TableCell className="flex items-center gap-1"><Smartphone className="h-4 w-4 text-muted-foreground" />{order.devices?.[0]?.brand} {order.devices?.[0]?.model}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(order.status)}>
-                        {serviceOrderStatuses.find(s => s.value === order.status)?.label || order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">{order.issue_description}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/service-orders/${order.id}`} onClick={(e) => e.stopPropagation()}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </TableCell>
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Aparelho</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Descrição do Problema</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {serviceOrders.map((order) => (
+                    <TableRow key={order.id} className="cursor-pointer" onClick={() => navigate(`/service-orders/${order.id}`)}>
+                      <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
+                      <TableCell>{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
+                      <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{order.customers?.[0]?.name || 'N/A'}</TableCell>
+                      <TableCell className="flex items-center gap-1"><Smartphone className="h-4 w-4 text-muted-foreground" />{order.devices?.[0]?.brand} {order.devices?.[0]?.model}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(order.status)}>
+                          {serviceOrderStatuses.find(s => s.value === order.status)?.label || order.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate">{order.issue_description}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/service-orders/${order.id}`} onClick={(e) => e.stopPropagation()}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex justify-center space-x-4 mt-6">
+              <Button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page === 0 || isLoading}>
+                <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
+              </Button>
+              <Button onClick={() => setPage(prev => prev + 1)} disabled={!hasMore || isLoading}>
+                Próxima <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
