@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from '@/components/ui/badge'; // Import Badge
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Use CustomBadge
 
 interface InventoryItem {
   id: string;

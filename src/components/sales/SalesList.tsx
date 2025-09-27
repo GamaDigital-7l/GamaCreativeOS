@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { format, addDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge'; // Import Badge
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Use CustomBadge
 
 interface Sale {
   id: string;
@@ -19,7 +19,7 @@ interface Sale {
   imei_serial: string;
   sale_price: number;
   warranty_days?: number; // Novo campo
-  customers: { name: string } | null;
+  customers: Array<{ name: string }> | null; // Changed to array
 }
 
 export function SalesList() {
@@ -109,7 +109,7 @@ export function SalesList() {
               sales.map((sale) => (
                 <TableRow key={sale.id}>
                   <TableCell>{format(new Date(sale.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                  <TableCell>{sale.customers?.name || 'N/A'}</TableCell>
+                  <TableCell>{sale.customers?.[0]?.name || 'N/A'}</TableCell>
                   <TableCell>{sale.device_brand} {sale.device_model}</TableCell>
                   <TableCell>{sale.imei_serial}</TableCell>
                   <TableCell>R$ {sale.sale_price.toFixed(2)}</TableCell>

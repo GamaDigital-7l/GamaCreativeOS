@@ -21,16 +21,16 @@ interface POSSale {
   created_at: string;
   total_amount: number;
   payment_method?: string;
-  customers: {
+  customers: Array<{
     name: string;
-  } | null; // Adjusted to be a single object or null
+  }> | null; // Changed to array
   pos_sale_items: {
     quantity: number;
     price_at_time: number;
-    inventory_items: {
+    inventory_items: Array<{
       name: string;
       sku?: string;
-    } | null; // Adjusted to be a single object or null
+    }> | null; // Changed to array
   }[];
 }
 
@@ -118,11 +118,11 @@ export function POSSalesReportDialog({ isOpen, onClose }: POSSalesReportDialogPr
                   {posSales.map((sale) => (
                     <TableRow key={sale.id}>
                       <TableCell>{format(new Date(sale.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                      <TableCell>{sale.customers?.name || 'N/A'}</TableCell>
+                      <TableCell>{sale.customers?.[0]?.name || 'N/A'}</TableCell>
                       <TableCell>
                         <ul className="list-disc list-inside text-sm">
                           {sale.pos_sale_items.map((item, idx) => (
-                            <li key={idx}>{item.inventory_items?.name} (x{item.quantity})</li>
+                            <li key={idx}>{item.inventory_items?.[0]?.name} (x{item.quantity})</li>
                           ))}
                         </ul>
                       </TableCell>

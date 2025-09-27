@@ -62,7 +62,7 @@ export function NewInventoryItemForm() {
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "image_urls" as "image_urls", // Explicitly cast to the correct type
+    name: "image_urls", // Corrected type
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {

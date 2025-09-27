@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { CustomBadge as Badge } from "@/components/shared/CustomBadge"; // Use CustomBadge
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Trash2, Loader2, Printer, Share2, CheckCircle, XCircle, Clock, Ticket, DollarSign, FileText, List, PowerOff, ListChecks, Factory } from 'lucide-react';
 import { format } from 'date-fns';
@@ -38,29 +38,29 @@ interface ServiceOrderDetails {
   client_checklist?: Record<string, 'ok' | 'not_working'>;
   is_untestable?: boolean;
   casing_status?: 'good' | 'scratched' | 'damaged' | null;
-  customers: { id: string; name: string; phone?: string; address?: string; email?: string; } | null; // Adjusted to be a single object or null
-  devices: { id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; } | null; // Adjusted to be a single object or null
-  suppliers: { name: string } | null; // For part_supplier_id
+  customers: Array<{ id: string; name: string; phone?: string; address?: string; email?: string; }> | null; // Changed to array
+  devices: Array<{ id: string; brand: string; model: string; serial_number?: string; defect_description?: string; password_info?: string; checklist?: Record<string, string>; }> | null; // Changed to array
+  suppliers: Array<{ name: string }> | null; // For part_supplier_id, changed to array
   service_order_field_values: {
     value: string;
     custom_field_id: string;
-    service_order_custom_fields: {
+    service_order_custom_fields: Array<{
       field_name: string;
       field_type: string;
       order_index: number;
-    } | null; // Adjusted to be a single object or null
+    }> | null; // Changed to array
   }[];
 }
 
 // Definindo os novos status para a UI e para o banco de dados
 const serviceOrderUiStatuses = [
-  { value: 'orcamento', label: 'Orçamento' },
-  { value: 'aguardando_pecas', label: 'Aguardando Peças' },
-  { value: 'em_manutencao', label: 'Em Manutenção' },
-  { value: 'pronto_para_retirada', label: 'Pronto para Retirada' },
-  { value: 'finalizado', label: 'Finalizado' },
-  { value: 'nao_teve_reparo', label: 'Não Teve Reparo' },
-  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente' },
+  { value: 'orcamento', label: 'Orçamento', variant: 'secondary' },
+  { value: 'aguardando_pecas', label: 'Aguardando Peças', variant: 'warning' },
+  { value: 'em_manutencao', label: 'Em Manutenção', variant: 'default' },
+  { value: 'pronto_para_retirada', label: 'Pronto para Retirada', variant: 'success' },
+  { value: 'finalizado', label: 'Finalizado', variant: 'outline' },
+  { value: 'nao_teve_reparo', label: 'Não Teve Reparo', variant: 'destructive' },
+  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente', variant: 'destructive' },
 ];
 
 export function ServiceOrderDetail() {
@@ -105,23 +105,7 @@ export function ServiceOrderDetail() {
 
   // Helper function to get badge variant for the main status
   const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "warning" | "success" => {
-    switch (status) {
-      case 'orcamento':
-        return 'secondary';
-      case 'aguardando_pecas':
-        return 'warning';
-      case 'em_manutencao':
-        return 'default';
-      case 'pronto_para_retirada':
-        return 'success';
-      case 'finalizado':
-        return 'outline';
-      case 'nao_teve_reparo':
-      case 'cancelado_pelo_cliente':
-        return 'destructive';
-      default:
-        return 'secondary';
-    }
+    return (serviceOrderUiStatuses.find(s => s.value === status)?.variant || 'secondary') as "default" | "destructive" | "outline" | "secondary" | "warning" | "success";
   };
 
   const ApprovalStatusBadge = () => {
@@ -175,7 +159,7 @@ export function ServiceOrderDetail() {
       }).eq('id', id);
       if (osError) throw osError;
 
-      const description = `Recebimento OS #${id.substring(0, 8)} - Cliente: ${serviceOrder.customers?.name}`;
+      const description = `Recebimento OS #${id.substring(0, 8)} - Cliente: ${serviceOrder.customers?.[0]?.name}`;
       const { error: transactionError } = await supabase
         .from('financial_transactions')
         .insert({
@@ -239,7 +223,7 @@ export function ServiceOrderDetail() {
 
   // Group custom field values by field_name
   const groupedCustomFields = serviceOrder.service_order_field_values.reduce((acc, fieldValue) => {
-    const fieldName = fieldValue.service_order_custom_fields?.field_name;
+    const fieldName = fieldValue.service_order_custom_fields?.[0]?.field_name; // Adjusted access
     if (fieldName) {
       if (!acc[fieldName]) {
         acc[fieldName] = [];
@@ -367,24 +351,24 @@ export function ServiceOrderDetail() {
 
           <div>
             <h3 className="text-lg font-semibold mb-2">Dados do Cliente</h3>
-            <p><strong>Nome:</strong> {serviceOrder.customers?.name}</p>
-            <p><strong>Telefone:</strong> {serviceOrder.customers?.phone || 'N/A'}</p>
-            <p><strong>Email:</strong> {serviceOrder.customers?.email || 'N/A'}</p>
-            <p><strong>Endereço:</strong> {serviceOrder.customers?.address || 'N/A'}</p>
+            <p><strong>Nome:</strong> {serviceOrder.customers?.[0]?.name}</p>
+            <p><strong>Telefone:</strong> {serviceOrder.customers?.[0]?.phone || 'N/A'}</p>
+            <p><strong>Email:</strong> {serviceOrder.customers?.[0]?.email || 'N/A'}</p>
+            <p><strong>Endereço:</strong> {serviceOrder.customers?.[0]?.address || 'N/A'}</p>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-2">Dados do Aparelho</h3>
-            <p><strong>Marca:</strong> {serviceOrder.devices?.brand}</p>
-            <p><strong>Modelo:</strong> {serviceOrder.devices?.model}</p>
-            <p><strong>Número de Série/IMEI:</strong> {serviceOrder.devices?.serial_number || 'N/A'}</p>
-            <p><strong>Defeito Relatado:</strong> {serviceOrder.devices?.defect_description || 'N/A'}</p>
-            <p><strong>Informações de Senha:</strong> {serviceOrder.devices?.password_info || 'N/A'}</p>
-            {serviceOrder.devices?.checklist && Object.keys(serviceOrder.devices.checklist).length > 0 && (
+            <p><strong>Marca:</strong> {serviceOrder.devices?.[0]?.brand}</p>
+            <p><strong>Modelo:</strong> {serviceOrder.devices?.[0]?.model}</p>
+            <p><strong>Número de Série/IMEI:</strong> {serviceOrder.devices?.[0]?.serial_number || 'N/A'}</p>
+            <p><strong>Defeito Relatado:</strong> {serviceOrder.devices?.[0]?.defect_description || 'N/A'}</p>
+            <p><strong>Informações de Senha:</strong> {serviceOrder.devices?.[0]?.password_info || 'N/A'}</p>
+            {serviceOrder.devices?.[0]?.checklist && Object.keys(serviceOrder.devices?.[0]?.checklist).length > 0 && (
               <div>
                 <p className="font-semibold mt-2">Checklist de Entrada:</p>
                 <ul className="list-disc list-inside ml-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4">
-                  {Object.entries(serviceOrder.devices.checklist).map(([key, status], index) => (
+                  {Object.entries(serviceOrder.devices?.[0]?.checklist).map(([key, status], index) => (
                     <li key={index}>{key.replace(/_/g, ' ')}: {status}</li>
                   ))}
                 </ul>
@@ -449,7 +433,7 @@ export function ServiceOrderDetail() {
             </div>
             <div className="flex justify-between">
               <span>Fornecedor da Peça:</span>
-              <span>{serviceOrder.suppliers?.name || 'N/A'}</span>
+              <span>{serviceOrder.suppliers?.[0]?.name || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span>Custo do Frete:</span>

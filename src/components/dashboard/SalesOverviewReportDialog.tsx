@@ -24,9 +24,9 @@ interface Sale {
   sale_price: number;
   acquisition_cost?: number;
   trade_in_details?: { value: number };
-  customers: {
+  customers: Array<{
     name: string;
-  } | null; // Adjusted to be a single object or null
+  }> | null; // Changed to array
 }
 
 interface SalesOverviewReportDialogProps {
@@ -126,7 +126,7 @@ export function SalesOverviewReportDialog({ isOpen, onClose }: SalesOverviewRepo
                   {sales.map((sale) => (
                     <TableRow key={sale.id}>
                       <TableCell>{format(new Date(sale.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                      <TableCell>{sale.customers?.name || 'N/A'}</TableCell>
+                      <TableCell>{sale.customers?.[0]?.name || 'N/A'}</TableCell>
                       <TableCell>{sale.device_brand} {sale.device_model}</TableCell>
                       <TableCell className="text-right">R$ {(sale.acquisition_cost || 0).toFixed(2)}</TableCell>
                       <TableCell className="text-right">R$ {(sale.trade_in_details?.value || 0).toFixed(2)}</TableCell>

@@ -15,20 +15,20 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Use CustomBadge
 
 interface ServiceOrder {
   id: string;
   created_at: string;
   status: string;
   issue_description: string;
-  customers: {
+  customers: Array<{
     name: string;
-  } | null; // Adjusted to be a single object or null
-  devices: {
+  }> | null; // Changed to array
+  devices: Array<{
     brand: string;
     model: string;
-  } | null; // Adjusted to be a single object or null
+  }> | null; // Changed to array
 }
 
 const serviceOrderStatuses = [
@@ -127,8 +127,8 @@ export function ServiceOrderReportDialog({ isOpen, onClose }: ServiceOrderReport
                   {serviceOrders.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell>{format(new Date(order.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                      <TableCell>{order.customers?.name || 'N/A'}</TableCell>
-                      <TableCell>{order.devices?.brand} {order.devices?.model}</TableCell>
+                      <TableCell>{order.customers?.[0]?.name || 'N/A'}</TableCell>
+                      <TableCell>{order.devices?.[0]?.brand} {order.devices?.[0]?.model}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(order.status)}>
                           {getStatusLabel(order.status)}

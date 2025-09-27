@@ -6,7 +6,7 @@ import { showError } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Loader2, Package, Tag, Hash, DollarSign, Factory, FileText, Image as ImageIcon } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Use CustomBadge
 
 interface ItemDetails {
   id: string;
@@ -34,6 +34,9 @@ export function InventoryItemDetail() {
       fetchItemDetails(id);
     } else if (!isSessionLoading && !user) {
       navigate('/login');
+    } else if (!id) {
+      showError("ID do Item não fornecido.");
+      navigate('/inventory');
     }
   }, [id, user, isSessionLoading, navigate]);
 

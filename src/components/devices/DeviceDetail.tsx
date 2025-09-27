@@ -29,10 +29,10 @@ interface DeviceDetails {
   defect_description?: string;
   password_info?: string;
   checklist?: Record<string, string>; // Changed to Record<string, string>
-  customers: {
+  customers: Array<{
     id: string;
     name: string;
-  } | null; // Adjusted to be a single object or null
+  }> | null; // Changed to array
 }
 
 export function DeviceDetail() {
@@ -191,7 +191,7 @@ export function DeviceDetail() {
       <CardContent className="space-y-4 p-6">
         <div className="flex items-center gap-2">
           <User className="h-5 w-5 text-muted-foreground" />
-          <p><strong>Cliente:</strong> {device.customers?.name || 'N/A'}</p>
+          <p><strong>Cliente:</strong> {device.customers?.[0]?.name || 'N/A'}</p>
         </div>
         <div className="flex items-center gap-2">
           <Smartphone className="h-5 w-5 text-muted-foreground" />

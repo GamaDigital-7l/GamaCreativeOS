@@ -22,9 +22,9 @@ interface Sale {
   device_brand: string;
   device_model: string;
   sale_price: number;
-  customers: {
+  customers: Array<{
     name: string;
-  } | null; // Adjusted to be a single object or null
+  }> | null; // Changed to array
 }
 
 interface SalesReportDialogProps {
@@ -106,7 +106,7 @@ export function SalesReportDialog({ isOpen, onClose }: SalesReportDialogProps) {
                   {sales.map((sale) => (
                     <TableRow key={sale.id}>
                       <TableCell>{format(new Date(sale.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                      <TableCell>{sale.customers?.name || 'N/A'}</TableCell>
+                      <TableCell>{sale.customers?.[0]?.name || 'N/A'}</TableCell>
                       <TableCell>{sale.device_brand} {sale.device_model}</TableCell>
                       <TableCell className="text-right text-blue-600">R$ {sale.sale_price.toFixed(2)}</TableCell>
                     </TableRow>

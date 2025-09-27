@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast'; // Added showSuccess import
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { CustomBadge as Badge } from "@/components/shared/CustomBadge"; // Use CustomBadge
 import { Loader2, User, Smartphone, Clock, CheckCircle, Wrench, Package, Ban, XCircle, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -18,45 +18,29 @@ interface ServiceOrder {
   status: string;
   issue_description: string;
   total_amount?: number;
-  customers: {
+  customers: Array<{
     name: string;
-  } | null; // Adjusted to be a single object or null
-  devices: {
+  }> | null; // Changed to array
+  devices: Array<{
     brand: string;
     model: string;
-  } | null; // Adjusted to be a single object or null
+  }> | null; // Changed to array
 }
 
 // Definindo os status para as colunas do Kanban
 const kanbanColumns = [
-  { value: 'orcamento', label: 'Orçamento', color: 'bg-yellow-500' },
-  { value: 'aguardando_pecas', label: 'Aguardando Peças', color: 'bg-indigo-500' },
-  { value: 'em_manutencao', label: 'Em Manutenção', color: 'bg-blue-500' },
-  { value: 'pronto_para_retirada', label: 'Pronto para Retirada', color: 'bg-green-500' },
-  { value: 'finalizado', label: 'Finalizado', color: 'bg-gray-500' },
-  { value: 'nao_teve_reparo', label: 'Não Teve Reparo', color: 'bg-red-500' },
-  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente', color: 'bg-red-700' },
+  { value: 'orcamento', label: 'Orçamento', color: 'bg-yellow-500', badgeVariant: 'secondary' },
+  { value: 'aguardando_pecas', label: 'Aguardando Peças', color: 'bg-indigo-500', badgeVariant: 'warning' },
+  { value: 'em_manutencao', label: 'Em Manutenção', color: 'bg-blue-500', badgeVariant: 'default' },
+  { value: 'pronto_para_retirada', label: 'Pronto para Retirada', color: 'bg-green-500', badgeVariant: 'success' },
+  { value: 'finalizado', label: 'Finalizado', color: 'bg-gray-500', badgeVariant: 'outline' },
+  { value: 'nao_teve_reparo', label: 'Não Teve Reparo', color: 'bg-red-500', badgeVariant: 'destructive' },
+  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente', color: 'bg-red-700', badgeVariant: 'destructive' },
 ];
 
 // Helper para obter a variante do badge (igual ao ServiceOrderList)
 const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "warning" | "success" => {
-  switch (status) {
-    case 'orcamento':
-      return 'secondary';
-    case 'aguardando_pecas':
-      return 'warning';
-    case 'em_manutencao':
-      return 'default';
-    case 'pronto_para_retirada':
-      return 'success';
-    case 'finalizado':
-      return 'outline';
-    case 'nao_teve_reparo':
-    case 'cancelado_pelo_cliente':
-      return 'destructive';
-    default:
-      return 'secondary';
-  }
+  return (kanbanColumns.find(s => s.value === status)?.badgeVariant || 'secondary') as "default" | "destructive" | "outline" | "secondary" | "warning" | "success";
 };
 
 export function ServiceOrderKanban() {
@@ -169,8 +153,8 @@ export function ServiceOrderKanban() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-0 space-y-1">
-                    <p className="text-sm flex items-center gap-1"><User className="h-3 w-3 text-muted-foreground" /> {order.customers?.name}</p>
-                    <p className="text-sm flex items-center gap-1"><Smartphone className="h-3 w-3 text-muted-foreground" /> {order.devices?.brand} {order.devices?.model}</p>
+                    <p className="text-sm flex items-center gap-1"><User className="h-3 w-3 text-muted-foreground" /> {order.customers?.[0]?.name}</p>
+                    <p className="text-sm flex items-center gap-1"><Smartphone className="h-3 w-3 text-muted-foreground" /> {order.devices?.[0]?.brand} {order.devices?.[0]?.model}</p>
                     <p className="text-sm line-clamp-2">{order.issue_description}</p>
                     {order.total_amount && (
                       <p className="text-md font-bold text-right text-primary">R$ {order.total_amount.toFixed(2)}</p>

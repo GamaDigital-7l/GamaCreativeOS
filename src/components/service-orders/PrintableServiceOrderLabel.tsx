@@ -8,8 +8,8 @@ import { QRCodeSVG } from "qrcode.react";
 
 interface LabelData {
   id: string;
-  customers: { name: string } | null; // Adjusted to be a single object or null
-  devices: { brand: string; model: string; defect_description?: string; password_info?: string } | null; // Adjusted to be a single object or null
+  customers: Array<{ name: string }> | null; // Changed to array
+  devices: Array<{ brand: string; model: string; defect_description?: string; password_info?: string }> | null; // Changed to array
 }
 
 export function PrintableServiceOrderLabel() {
@@ -81,8 +81,8 @@ export function PrintableServiceOrderLabel() {
           <div className="flex items-start justify-between gap-2">
             <div className="flex-grow space-y-1">
               <h1 className="text-lg font-bold leading-tight">OS: {data.id.substring(0, 8)}</h1>
-              <p className="text-xs leading-tight"><strong>Cliente:</strong> {data.customers?.name}</p>
-              <p className="text-xs leading-tight"><strong>Aparelho:</strong> {data.devices?.brand} {data.devices?.model}</p>
+              <p className="text-xs leading-tight"><strong>Cliente:</strong> {data.customers?.[0]?.name}</p>
+              <p className="text-xs leading-tight"><strong>Aparelho:</strong> {data.devices?.[0]?.brand} {data.devices?.[0]?.model}</p>
             </div>
             <div className="flex-shrink-0">
               <QRCodeSVG value={detailUrl} size={64} />
@@ -90,12 +90,12 @@ export function PrintableServiceOrderLabel() {
           </div>
           <div className="mt-2 pt-1 border-t border-black">
             <p className="text-xs font-bold">Defeito Relatado:</p>
-            <p className="text-xs leading-tight">{data.devices?.defect_description || 'Não informado'}</p>
+            <p className="text-xs leading-tight">{data.devices?.[0]?.defect_description || 'Não informado'}</p>
           </div>
           <div className="mt-2 pt-1 border-t border-black">
             <p className="text-xs font-bold">Senha/Padrão:</p>
-            {data.devices?.password_info ? (
-              <p className="text-xs leading-tight">{data.devices.password_info}</p>
+            {data.devices?.[0]?.password_info ? (
+              <p className="text-xs leading-tight">{data.devices?.[0]?.password_info}</p>
             ) : (
               <div className="flex justify-center mt-1">
                 {renderPasswordPattern()}

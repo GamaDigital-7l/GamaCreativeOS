@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Use CustomBadge
 
 // Define a more comprehensive type for the data needed
 interface PrintableData {
@@ -26,13 +26,13 @@ interface PrintableData {
     is_untestable?: boolean;
     casing_status?: 'good' | 'scratched' | 'damaged' | null;
   };
-  customer: {
+  customer: Array<{
     name: string;
     phone?: string;
     address?: string;
     email?: string;
-  } | null; // Adjusted to be a single object or null
-  device: {
+  }> | null; // Changed to array
+  device: Array<{
     id: string;
     brand: string;
     model: string;
@@ -40,7 +40,7 @@ interface PrintableData {
     defect_description?: string;
     password_info?: string;
     checklist?: Record<string, string>;
-  } | null; // Adjusted to be a single object or null
+  }> | null; // Changed to array
   settings: {
     service_order_template: string;
     default_guarantee_terms?: string;
@@ -54,11 +54,11 @@ interface PrintableData {
   customFieldValues: {
     value: string;
     custom_field_id: string;
-    service_order_custom_fields: {
+    service_order_custom_fields: Array<{
       field_name: string;
       field_type: string;
       order_index: number;
-    } | null; // Adjusted to be a single object or null
+    }> | null; // Changed to array
   }[];
 }
 
@@ -148,9 +148,9 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
   // Group custom field values by field_name and sort by order_index
   const groupedCustomFields = customFieldValues
     .filter(fv => fv.service_order_custom_fields) // Ensure field definition exists
-    .sort((a, b) => (a.service_order_custom_fields?.order_index || 0) - (b.service_order_custom_fields?.order_index || 0))
+    .sort((a, b) => (a.service_order_custom_fields?.[0]?.order_index || 0) - (b.service_order_custom_fields?.[0]?.order_index || 0)) // Adjusted access
     .reduce((acc, fieldValue) => {
-      const fieldName = fieldValue.service_order_custom_fields?.field_name;
+      const fieldName = fieldValue.service_order_custom_fields?.[0]?.field_name; // Adjusted access
       if (fieldName) {
         if (!acc[fieldName]) {
           acc[fieldName] = [];
@@ -243,28 +243,28 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <h2 className="text-lg font-semibold border-b pb-1 mb-2">Cliente</h2>
-          <p><strong>Nome:</strong> {customer?.name}</p>
-          <p><strong>Telefone:</strong> {customer?.phone || 'N/A'}</p>
-          <p><strong>Endereço:</strong> {customer?.address || 'N/A'}</p>
+          <p><strong>Nome:</strong> {customer?.[0]?.name}</p>
+          <p><strong>Telefone:</strong> {customer?.[0]?.phone || 'N/A'}</p>
+          <p><strong>Endereço:</strong> {customer?.[0]?.address || 'N/A'}</p>
         </div>
         <div>
           <h2 className="text-lg font-semibold border-b pb-1 mb-2">Dispositivo</h2>
-          <p><strong>Marca/Modelo:</strong> {device?.brand} {device?.model}</p>
-          <p><strong>Série/IMEI:</strong> {device?.serial_number || 'N/A'}</p>
+          <p><strong>Marca/Modelo:</strong> {device?.[0]?.brand} {device?.[0]?.model}</p>
+          <p><strong>Série/IMEI:</strong> {device?.[0]?.serial_number || 'N/A'}</p>
           <p><strong>Defeito Relatado:</strong> {serviceOrder.issue_description}</p>
           <p className="mt-2"><strong>Senha/Padrão:</strong></p>
-          {device?.password_info ? (
-            <p>{device.password_info}</p>
+          {device?.[0]?.password_info ? (
+            <p>{device?.[0]?.password_info}</p>
           ) : (
             <div className="flex justify-start mt-1">
               {renderPasswordPattern()}
             </div>
           )}
-          {device?.checklist && Object.keys(device.checklist).length > 0 && (
+          {device?.[0]?.checklist && Object.keys(device?.[0]?.checklist).length > 0 && (
             <div className="mt-4">
               <p className="font-semibold">Checklist de Entrada:</p>
               <ul className="list-disc list-inside ml-4 text-sm">
-                {Object.entries(device.checklist).map(([key, status], index) => (
+                {Object.entries(device?.[0]?.checklist).map(([key, status], index) => (
                   <li key={index}>{key.replace(/_/g, ' ')}: {status}</li>
                 ))}
               </ul>
@@ -318,14 +318,14 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
 
       <section>
         <h2 className="font-semibold border-b pb-1 mb-1">Cliente</h2>
-        <p>Nome: {customer?.name}</p>
-        <p>Tel: {customer?.phone || 'N/A'}</p>
+        <p>Nome: {customer?.[0]?.name}</p>
+        <p>Tel: {customer?.[0]?.phone || 'N/A'}</p>
       </section>
 
       <section>
         <h2 className="font-semibold border-b pb-1 mb-1">Dispositivo</h2>
-        <p>Marca/Modelo: {device?.brand} {device?.model}</p>
-        <p>Série/IMEI: {device?.serial_number || 'N/A'}</p>
+        <p>Marca/Modelo: {device?.[0]?.brand} {device?.[0]?.model}</p>
+        <p>Série/IMEI: {device?.[0]?.serial_number || 'N/A'}</p>
         <p>Defeito: {serviceOrder.issue_description}</p>
       </section>
 
@@ -388,26 +388,26 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
         </div>
         <div>
           <h3 className="text-xl font-bold border-b border-gray-500 pb-1 mb-2">Dados do Cliente</h3>
-          <p><strong>Nome:</strong> {customer?.name}</p>
-          <p><strong>Telefone:</strong> {customer?.phone || 'N/A'}</p>
-          <p><strong>Email:</strong> {customer?.email || 'N/A'}</p>
-          <p><strong>Endereço:</strong> {customer?.address || 'N/A'}</p>
+          <p><strong>Nome:</strong> {customer?.[0]?.name}</p>
+          <p><strong>Telefone:</strong> {customer?.[0]?.phone || 'N/A'}</p>
+          <p><strong>Email:</strong> {customer?.[0]?.email || 'N/A'}</p>
+          <p><strong>Endereço:</strong> {customer?.[0]?.address || 'N/A'}</p>
         </div>
       </section>
 
       <section className="text-md">
         <h3 className="text-xl font-bold border-b border-gray-500 pb-1 mb-2">Detalhes do Dispositivo</h3>
         <div className="grid grid-cols-2 gap-x-12 gap-y-2">
-          <p><strong>Marca:</strong> {device?.brand}</p>
-          <p><strong>Modelo:</strong> {device?.model}</p>
-          <p><strong>Série/IMEI:</strong> {device?.serial_number || 'N/A'}</p>
+          <p><strong>Marca:</strong> {device?.[0]?.brand}</p>
+          <p><strong>Modelo:</strong> {device?.[0]?.model}</p>
+          <p><strong>Série/IMEI:</strong> {device?.[0]?.serial_number || 'N/A'}</p>
           <p className="col-span-2"><strong>Defeito Relatado:</strong> {serviceOrder.issue_description || 'N/A'}</p>
-          <p className="col-span-2"><strong>Informações de Senha:</strong> {device?.password_info || 'N/A'}</p>
-          {device?.checklist && Object.keys(device.checklist).length > 0 && (
+          <p className="col-span-2"><strong>Informações de Senha:</strong> {device?.[0]?.password_info || 'N/A'}</p>
+          {device?.[0]?.checklist && Object.keys(device?.[0]?.checklist).length > 0 && (
             <div className="col-span-2 mt-2">
               <p className="font-semibold">Checklist de Entrada:</p>
               <ul className="list-disc list-inside ml-4 grid grid-cols-2 gap-x-4">
-                {Object.entries(device.checklist).map(([key, status], index) => (
+                {Object.entries(device?.[0]?.checklist).map(([key, status], index) => (
                   <li key={index}>{key.replace(/_/g, ' ')}: {status}</li>
                 ))}
               </ul>
@@ -473,13 +473,13 @@ export function PrintableServiceOrder({ printMode, paperFormat }: PrintableServi
       </section>
 
       <section className="mb-2 border-t border-dashed border-gray-500 pt-2">
-        <p><strong>Cliente:</strong> {customer?.name}</p>
-        <p><strong>Telefone:</strong> {customer?.phone || 'N/A'}</p>
+        <p><strong>Cliente:</strong> {customer?.[0]?.name}</p>
+        <p><strong>Telefone:</strong> {customer?.[0]?.phone || 'N/A'}</p>
       </section>
 
       <section className="mb-2 border-t border-dashed border-gray-500 pt-2">
-        <p><strong>Aparelho:</strong> {device?.brand} {device?.model}</p>
-        <p><strong>IMEI/Série:</strong> {device?.serial_number || 'N/A'}</p>
+        <p><strong>Aparelho:</strong> {device?.[0]?.brand} {device?.[0]?.model}</p>
+        <p><strong>IMEI/Série:</strong> {device?.[0]?.serial_number || 'N/A'}</p>
         <p><strong>Defeito:</strong> {serviceOrder.issue_description}</p>
         <p><strong>Serviço:</strong> {serviceOrder.service_details || 'N/A'}</p>
       </section>

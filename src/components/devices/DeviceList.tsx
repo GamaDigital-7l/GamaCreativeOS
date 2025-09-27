@@ -36,10 +36,10 @@ interface Device {
   brand: string;
   model: string;
   serial_number?: string;
-  customers: {
+  customers: Array<{
     id: string;
     name: string;
-  } | null; // Adjusted to be a single object or null
+  }> | null; // Changed to array
 }
 
 interface CustomerOption {
@@ -227,7 +227,7 @@ export function DeviceList() {
                     <TableCell className="font-medium">{device.brand}</TableCell>
                     <TableCell>{device.model}</TableCell>
                     <TableCell>{device.serial_number || 'N/A'}</TableCell>
-                    <TableCell>{device.customers?.name || 'N/A'}</TableCell>
+                    <TableCell>{device.customers?.[0]?.name || 'N/A'}</TableCell>
                     <TableCell>{format(new Date(device.created_at), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
                     <TableCell className="text-right flex justify-end space-x-2">
                       <Button variant="ghost" size="sm" asChild>

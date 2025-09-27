@@ -19,8 +19,8 @@ interface QuoteDetails {
   service_details?: string;
   total_amount?: number;
   photos?: string[];
-  customers: { name: string; } | null; // Adjusted to be a single object or null
-  devices: { brand: string; model: string; } | null; // Adjusted to be a single object or null
+  customers: Array<{ name: string }> | null; // Changed to array
+  devices: Array<{ brand: string; model: string }> | null; // Changed to array
 }
 
 export default function QuoteApprovalPage() {
@@ -119,11 +119,11 @@ export default function QuoteApprovalPage() {
         <CardContent className="space-y-6">
           <div>
             <h3 className="font-semibold">Cliente:</h3>
-            <p>{quote.customers?.name}</p>
+            <p>{quote.customers?.[0]?.name}</p>
           </div>
           <div>
             <h3 className="font-semibold">Aparelho:</h3>
-            <p>{quote.devices?.brand} {quote.devices?.model}</p>
+            <p>{quote.devices?.[0]?.brand} {quote.devices?.[0]?.model}</p>
           </div>
           <div>
             <h3 className="font-semibold">Problema Relatado:</h3>

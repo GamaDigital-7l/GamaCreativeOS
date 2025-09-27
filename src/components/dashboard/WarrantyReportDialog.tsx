@@ -15,7 +15,7 @@ import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError } from '@/utils/toast';
 import { format, startOfMonth, endOfMonth, addDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Use CustomBadge
 
 interface SaleWithWarranty {
   id: string;

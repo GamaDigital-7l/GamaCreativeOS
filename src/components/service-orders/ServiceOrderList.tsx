@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { CustomBadge as Badge } from "@/components/shared/CustomBadge"; // Use CustomBadge
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
@@ -27,26 +27,26 @@ interface ServiceOrder {
   created_at: string;
   status: string;
   issue_description: string;
-  customers: {
+  customers: Array<{
     name: string;
     phone?: string;
-  } | null; // Adjusted to be a single object or null
-  devices: {
+  }> | null; // Changed to array
+  devices: Array<{
     brand: string;
     model: string;
-  } | null; // Adjusted to be a single object or null
+  }> | null; // Changed to array
 }
 
 // Definindo os novos status para a UI e para o banco de dados
 const serviceOrderStatuses = [
   { value: 'all', label: 'Todos os Status' },
-  { value: 'orcamento', label: 'Orçamento' },
-  { value: 'aguardando_pecas', label: 'Aguardando Peças' },
-  { value: 'em_manutencao', label: 'Em Manutenção' },
-  { value: 'pronto_para_retirada', label: 'Pronto para Retirada' },
-  { value: 'finalizado', label: 'Finalizado' },
-  { value: 'nao_teve_reparo', label: 'Não Teve Reparo' },
-  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente' },
+  { value: 'orcamento', label: 'Orçamento', variant: 'secondary' },
+  { value: 'aguardando_pecas', label: 'Aguardando Peças', variant: 'warning' },
+  { value: 'em_manutencao', label: 'Em Manutenção', variant: 'default' },
+  { value: 'pronto_para_retirada', label: 'Pronto para Retirada', variant: 'success' },
+  { value: 'finalizado', label: 'Finalizado', variant: 'outline' },
+  { value: 'nao_teve_reparo', label: 'Não Teve Reparo', variant: 'destructive' },
+  { value: 'cancelado_pelo_cliente', label: 'Cancelado pelo Cliente', variant: 'destructive' },
 ];
 
 // Adiciona um debounce simples para a função de busca
@@ -125,23 +125,7 @@ export const ServiceOrderList = React.memo(function ServiceOrderList() {
   }, [user, isSessionLoading, fetchServiceOrders]);
 
   const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "warning" | "success" => {
-    switch (status) {
-      case 'orcamento':
-        return 'secondary';
-      case 'aguardando_pecas':
-        return 'warning';
-      case 'em_manutencao':
-        return 'default';
-      case 'pronto_para_retirada':
-        return 'success';
-      case 'finalizado':
-        return 'outline';
-      case 'nao_teve_reparo':
-      case 'cancelado_pelo_cliente':
-        return 'destructive';
-      default:
-        return 'secondary';
-    }
+    return (serviceOrderStatuses.find(s => s.value === status)?.variant || 'secondary') as "default" | "destructive" | "outline" | "secondary" | "warning" | "success";
   };
 
   return (
@@ -214,8 +198,8 @@ export const ServiceOrderList = React.memo(function ServiceOrderList() {
                   <TableRow key={order.id} className="cursor-pointer" onClick={() => navigate(`/service-orders/${order.id}`)}>
                     <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
                     <TableCell>{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</TableCell>
-                    <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{order.customers?.name || 'N/A'}</TableCell>
-                    <TableCell className="flex items-center gap-1"><Smartphone className="h-4 w-4 text-muted-foreground" />{order.devices?.brand} {order.devices?.model}</TableCell>
+                    <TableCell className="flex items-center gap-1"><User className="h-4 w-4 text-muted-foreground" />{order.customers?.[0]?.name || 'N/A'}</TableCell>
+                    <TableCell className="flex items-center gap-1"><Smartphone className="h-4 w-4 text-muted-foreground" />{order.devices?.[0]?.brand} {order.devices?.[0]?.model}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(order.status)}>
                         {serviceOrderStatuses.find(s => s.value === order.status)?.label || order.status}

@@ -83,7 +83,7 @@ export function AverageTicketReportDialog({ isOpen, onClose }: AverageTicketRepo
 
       serviceOrders?.forEach(order => {
         // Access name safely using optional chaining and ensure it's a string
-        const customerName = (order.customers as { name: string } | null)?.name;
+        const customerName = (order.customers as Array<{ name: string }> | null)?.[0]?.name; // Adjusted access
         if (order.customer_id && customerName) {
           const current = customerMap.get(order.customer_id) || { total_spent: 0, transaction_count: 0, name: customerName };
           current.total_spent += order.total_amount || 0;
@@ -94,7 +94,7 @@ export function AverageTicketReportDialog({ isOpen, onClose }: AverageTicketRepo
 
       sales?.forEach(sale => {
         // Access name safely using optional chaining and ensure it's a string
-        const customerName = (sale.customers as { name: string } | null)?.name;
+        const customerName = (sale.customers as Array<{ name: string }> | null)?.[0]?.name; // Adjusted access
         if (sale.customer_id && customerName) {
           const current = customerMap.get(sale.customer_id) || { total_spent: 0, transaction_count: 0, name: customerName };
           current.total_spent += sale.sale_price || 0;
@@ -105,7 +105,7 @@ export function AverageTicketReportDialog({ isOpen, onClose }: AverageTicketRepo
 
       posSales?.forEach(posSale => {
         // Access name safely using optional chaining and ensure it's a string
-        const customerName = (posSale.customers as { name: string } | null)?.name;
+        const customerName = (posSale.customers as Array<{ name: string }> | null)?.[0]?.name; // Adjusted access
         if (posSale.customer_id && customerName) {
           const current = customerMap.get(posSale.customer_id) || { total_spent: 0, transaction_count: 0, name: customerName };
           current.total_spent += posSale.total_amount || 0;

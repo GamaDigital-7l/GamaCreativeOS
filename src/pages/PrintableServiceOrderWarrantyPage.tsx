@@ -15,8 +15,8 @@ interface WarrantyData {
   total_amount?: number;
   guarantee_terms?: string;
   warranty_days?: number;
-  customers: { name: string; phone?: string; } | null; // Adjusted to be a single object or null
-  devices: { brand: string; model: string; serial_number?: string; } | null; // Adjusted to be a single object or null
+  customers: Array<{ name: string; phone?: string }> | null; // Changed to array
+  devices: Array<{ brand: string; model: string; serial_number?: string }> | null; // Changed to array
 }
 
 export default function PrintableServiceOrderWarrantyPage() {
@@ -90,14 +90,14 @@ export default function PrintableServiceOrderWarrantyPage() {
 
           <section>
             <h3 className="text-lg font-semibold border-b border-black pb-1 mb-2">Cliente</h3>
-            <p><strong>Nome:</strong> {data.customers?.name || 'Não informado'}</p>
-            <p><strong>Telefone:</strong> {data.customers?.phone || 'N/A'}</p>
+            <p><strong>Nome:</strong> {data.customers?.[0]?.name || 'Não informado'}</p>
+            <p><strong>Telefone:</strong> {data.customers?.[0]?.phone || 'N/A'}</p>
           </section>
 
           <section>
             <h3 className="text-lg font-semibold border-b border-black pb-1 mb-2">Dispositivo</h3>
-            <p><strong>Marca/Modelo:</strong> {data.devices?.brand} {data.devices?.model}</p>
-            <p><strong>Série/IMEI:</strong> {data.devices?.serial_number || 'N/A'}</p>
+            <p><strong>Marca/Modelo:</strong> {data.devices?.[0]?.brand} {data.devices?.[0]?.model}</p>
+            <p><strong>Série/IMEI:</strong> {data.devices?.[0]?.serial_number || 'N/A'}</p>
             <p><strong>Serviço Realizado:</strong> {data.service_details || 'Não informado'}</p>
           </section>
 

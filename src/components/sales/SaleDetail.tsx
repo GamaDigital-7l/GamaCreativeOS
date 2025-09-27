@@ -1,15 +1,15 @@
-import React, { useEffect, useState } => 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2, Printer, Smartphone, User, Package, DollarSign, CalendarDays, CreditCard, Factory, FileText, RefreshCcw } from 'lucide-react'; // Added RefreshCcw icon
+import { ArrowLeft, Edit, Trash2, Loader2, Printer, Smartphone, User, Package, DollarSign, CalendarDays, CreditCard, Factory, FileText, RefreshCcw } from 'lucide-react';
 import { format, addDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Badge } from '@/components/ui/badge';
+import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Use CustomBadge
 
 interface TradeInDetails {
   brand: string;
@@ -35,9 +35,9 @@ interface SaleDetails {
   payment_method?: string;
   warranty_days?: number;
   warranty_policy?: string;
-  trade_in_details?: TradeInDetails; // New field
-  customers: { name: string } | null;
-  suppliers: { name: string } | null;
+  trade_in_details?: TradeInDetails;
+  customers: Array<{ name: string }> | null; // Changed to array
+  suppliers: Array<{ name: string }> | null; // Changed to array
 }
 
 export function SaleDetail() {
@@ -136,7 +136,7 @@ export function SaleDetail() {
           </div>
           <div className="flex flex-wrap gap-2 justify-end">
             <Button variant="outline" size="sm" asChild>
-              <Link to={`/sales/${sale.id}/print-options`} target="_blank"> {/* Updated link */}
+              <Link to={`/sales/${sale.id}/print-options`} target="_blank">
                 <Printer className="h-4 w-4 mr-2" /> Imprimir Recibo
               </Link>
             </Button>
@@ -177,12 +177,12 @@ export function SaleDetail() {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4 p-4 border rounded-lg">
             <h3 className="font-semibold text-lg border-b pb-2 flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Dados da Compra</h3>
-            <p className="flex items-center gap-2"><strong>Fornecedor:</strong> {sale.suppliers?.name || 'N/A'}</p>
+            <p className="flex items-center gap-2"><strong>Fornecedor:</strong> {sale.suppliers?.[0]?.name || 'N/A'}</p>
             <p className="flex items-center gap-2"><strong>Data da Compra:</strong> {sale.purchase_date ? format(new Date(sale.purchase_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'}</p>
           </div>
           <div className="space-y-4 p-4 border rounded-lg">
             <h3 className="font-semibold text-lg border-b pb-2 flex items-center gap-2"><User className="h-5 w-5 text-primary" /> Dados da Venda</h3>
-            <p className="flex items-center gap-2"><strong>Cliente:</strong> {sale.customers?.name || 'N/A'}</p>
+            <p className="flex items-center gap-2"><strong>Cliente:</strong> {sale.customers?.[0]?.name || 'N/A'}</p>
             <p className="flex items-center gap-2"><strong>Pagamento:</strong> {sale.payment_method || 'N/A'}</p>
           </div>
         </div>
