@@ -45,7 +45,7 @@ interface PurchaseRequest {
   requested_quantity: number | null;
   status: 'pending' | 'ordered' | 'received' | 'cancelled';
   notes?: string;
-  inventory_items: InventoryItemData | null; // Ajustado para objeto único ou null
+  inventory_items: InventoryItemData[] | null; // Ajustado para array de objetos
 }
 
 export function PurchaseRequestList() {
@@ -205,10 +205,10 @@ export function PurchaseRequestList() {
                   <TableRow key={request.id}>
                     <TableCell className="font-medium max-w-[300px] truncate">{request.notes || 'N/A'}</TableCell>
                     <TableCell>
-                      {request.inventory_items?.name ? (
+                      {request.inventory_items?.[0]?.name ? (
                         <div className="flex items-center gap-1">
-                          {request.inventory_items.name} ({request.requested_quantity ?? 'N/A'})
-                          {request.inventory_items.sku && <span className="text-xs text-muted-foreground">({request.inventory_items.sku})</span>}
+                          {request.inventory_items?.[0]?.name} ({request.requested_quantity ?? 'N/A'})
+                          {request.inventory_items?.[0]?.sku && <span className="text-xs text-muted-foreground">({request.inventory_items?.[0]?.sku})</span>}
                         </div>
                       ) : (
                         'N/A'

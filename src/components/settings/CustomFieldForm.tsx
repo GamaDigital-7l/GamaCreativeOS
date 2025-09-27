@@ -65,25 +65,28 @@ export function CustomFieldForm({ fieldId, onSuccess }: CustomFieldFormProps) {
   const watchedFieldType = form.watch("field_type");
 
   useEffect(() => {
-    if (fieldId && user) {
+    const fetchCustomField = async () => {
+      if (!fieldId || !user) return;
       setIsLoadingData(true);
-      supabase.from('service_order_custom_fields').select('*').eq('id', fieldId).eq('user_id', user.id).single()
-        .then(({ data, error }) => {
-          if (error) {
-            showError(`Erro ao carregar campo: ${error.message}`);
-          } else if (data) {
-            form.reset({
-              ...data,
-              options: data.options ? data.options.map((opt: string) => ({ value: opt })) : [],
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error in CustomFieldForm useEffect:", error);
+      try {
+        const { data, error } = await supabase.from('service_order_custom_fields').select('*').eq('id', fieldId).eq('user_id', user.id).single();
+        if (error) {
           showError(`Erro ao carregar campo: ${error.message}`);
-        })
-        .then(() => setIsLoadingData(false));
-    }
+        } else if (data) {
+          form.reset({
+            ...data,
+            options: data.options ? data.options.map((opt: string) => ({ value: opt })) : [],
+          });
+        }
+      } catch (error: any) {
+        console.error("Error in CustomFieldForm useEffect:", error);
+        showError(`Erro ao carregar campo: ${error.message}`);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchCustomField();
   }, [fieldId, user, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {

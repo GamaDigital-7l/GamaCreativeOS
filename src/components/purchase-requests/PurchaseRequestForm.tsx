@@ -51,24 +51,27 @@ export function PurchaseRequestForm({ requestId, onSuccess }: PurchaseRequestFor
   });
 
   useEffect(() => {
-    console.log("PurchaseRequestForm loaded/re-rendered. User:", user?.id);
-    if (requestId && user) {
+    const fetchPurchaseRequest = async () => {
+      console.log("PurchaseRequestForm loaded/re-rendered. User:", user?.id);
+      if (!requestId || !user) return;
       setIsLoadingData(true);
-      supabase.from('purchase_requests').select('*').eq('id', requestId).eq('user_id', user.id).single()
-        .then(({ data, error }) => {
-          if (error) {
-            showError(`Erro ao carregar pedido de compra: ${error.message}`);
-            console.error("Erro ao carregar pedido de compra:", error);
-          } else if (data) {
-            form.reset(data);
-          }
-        })
-        .catch((error) => {
-          console.error("Error in PurchaseRequestForm useEffect:", error);
+      try {
+        const { data, error } = await supabase.from('purchase_requests').select('*').eq('id', requestId).eq('user_id', user.id).single();
+        if (error) {
           showError(`Erro ao carregar pedido de compra: ${error.message}`);
-        })
-        .then(() => setIsLoadingData(false));
-    }
+          console.error("Erro ao carregar pedido de compra:", error);
+        } else if (data) {
+          form.reset(data);
+        }
+      } catch (error: any) {
+        console.error("Error in PurchaseRequestForm useEffect:", error);
+        showError(`Erro ao carregar pedido de compra: ${error.message}`);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchPurchaseRequest();
   }, [requestId, user, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {

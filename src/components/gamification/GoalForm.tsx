@@ -71,26 +71,29 @@ export function GoalForm({ goalId, onSuccess }: GoalFormProps) {
   });
 
   useEffect(() => {
-    if (goalId && user) {
+    const fetchGoal = async () => {
+      if (!goalId || !user) return;
       setIsLoadingData(true);
-      supabase.from('gamification_goals').select('*').eq('id', goalId).eq('created_by', user.id).single()
-        .then(({ data, error }) => {
-          if (error) {
-            showError(`Erro ao carregar meta: ${error.message}`);
-          } else if (data) {
-            form.reset({
-              ...data,
-              start_date: new Date(data.start_date),
-              end_date: new Date(data.end_date),
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error in GoalForm useEffect:", error);
+      try {
+        const { data, error } = await supabase.from('gamification_goals').select('*').eq('id', goalId).eq('created_by', user.id).single();
+        if (error) {
           showError(`Erro ao carregar meta: ${error.message}`);
-        })
-        .then(() => setIsLoadingData(false)); // Use .then() after .catch() to ensure finally-like behavior
-    }
+        } else if (data) {
+          form.reset({
+            ...data,
+            start_date: new Date(data.start_date),
+            end_date: new Date(data.end_date),
+          });
+        }
+      } catch (error: any) {
+        console.error("Error in GoalForm useEffect:", error);
+        showError(`Erro ao carregar meta: ${error.message}`);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchGoal();
   }, [goalId, user, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {

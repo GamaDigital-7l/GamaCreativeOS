@@ -54,22 +54,25 @@ export function AchievementForm({ achievementId, onSuccess }: AchievementFormPro
   });
 
   useEffect(() => {
-    if (achievementId && user) {
+    const fetchAchievement = async () => {
+      if (!achievementId || !user) return;
       setIsLoadingData(true);
-      supabase.from('gamification_achievements').select('*').eq('id', achievementId).single()
-        .then(({ data, error }) => {
-          if (error) {
-            showError(`Erro ao carregar conquista: ${error.message}`);
-          } else if (data) {
-            form.reset(data);
-          }
-        })
-        .catch((error) => {
-          console.error("Error in AchievementForm useEffect:", error);
+      try {
+        const { data, error } = await supabase.from('gamification_achievements').select('*').eq('id', achievementId).single();
+        if (error) {
           showError(`Erro ao carregar conquista: ${error.message}`);
-        })
-        .then(() => setIsLoadingData(false));
-    }
+        } else if (data) {
+          form.reset(data);
+        }
+      } catch (error: any) {
+        console.error("Error in AchievementForm useEffect:", error);
+        showError(`Erro ao carregar conquista: ${error.message}`);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchAchievement();
   }, [achievementId, user, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
