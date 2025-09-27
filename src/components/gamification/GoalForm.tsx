@@ -216,8 +216,7 @@ export function GoalForm({ goalId, onSuccess }: GoalFormProps) {
         <FormField control={form.control} name="reward_description" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Recompensa (Opcional)</FormLabel><FormControl><Input placeholder="Ex: +100 pontos, Medalha de Ouro" {...field} /></FormControl><FormMessage /></FormItem>)} />
         
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="h-4 w-4 mr-2" /> Salvar Meta</>}
-        </Button>
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="h-4 w-4 mr-2" /> Salvar Meta</>}</Button>
       </form>
     </Form>
   );

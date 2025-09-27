@@ -103,7 +103,7 @@ export function CustomFieldForm({ fieldId, onSuccess }: CustomFieldFormProps) {
       };
 
       if (fieldId) {
-        const { error } = await supabase.from('service_order_custom_fields').update(payload).eq('id', fieldId).eq('user.id', user.id);
+        const { error } = await supabase.from('service_order_custom_fields').update(payload).eq('id', fieldId).eq('user_id', user.id); // Corrected user.id access
         if (error) throw error;
         showSuccess("Campo personalizado atualizado com sucesso!");
       } else {
@@ -206,8 +206,7 @@ export function CustomFieldForm({ fieldId, onSuccess }: CustomFieldFormProps) {
         )} />
         
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="h-4 w-4 mr-2" /> Salvar Campo</>}
-        </Button>
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="h-4 w-4 mr-2" /> Salvar Campo</>}</Button>
       </form>
     </Form>
   );

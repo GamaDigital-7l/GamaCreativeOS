@@ -31,6 +31,13 @@ import { CustomBadge as Badge } from '@/components/shared/CustomBadge'; // Usand
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PurchaseRequestForm } from './PurchaseRequestForm';
 
+interface InventoryItemData {
+  id: string;
+  name: string;
+  sku?: string;
+  quantity: number;
+}
+
 interface PurchaseRequest {
   id: string;
   created_at: string;
@@ -38,12 +45,7 @@ interface PurchaseRequest {
   requested_quantity: number | null;
   status: 'pending' | 'ordered' | 'received' | 'cancelled';
   notes?: string;
-  inventory_items: {
-    id: string;
-    name: string;
-    sku?: string;
-    quantity: number;
-  } | null; // Ajustado para objeto único ou null
+  inventory_items: InventoryItemData | null; // Ajustado para objeto único ou null
 }
 
 export function PurchaseRequestList() {

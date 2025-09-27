@@ -56,7 +56,7 @@ export function NewInventoryItemForm() {
       selling_price: 0,
       supplier: "",
       category: "",
-      image_urls: [],
+      image_urls: [], // Default para array vazio de objetos
     },
   });
 

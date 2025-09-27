@@ -137,8 +137,7 @@ export function AchievementForm({ achievementId, onSuccess }: AchievementFormPro
         <FormField control={form.control} name="points_reward" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Award className="h-4 w-4" /> Pontos de Recompensa</FormLabel><FormControl><Input type="number" step="1" placeholder="100" {...field} /></FormControl><FormMessage /></FormItem>)} />
         
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="h-4 w-4 mr-2" /> Salvar Conquista</>}
-        </Button>
+          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="h-4 w-4 mr-2" /> Salvar Conquista</>}</Button>
       </form>
     </Form>
   );
